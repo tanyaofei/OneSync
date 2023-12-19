@@ -5,13 +5,17 @@ import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.Locking;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class LockingRepository extends Repository<Locking> {
+
+    private final static UUID SERVER_ID = UUID.randomUUID();
 
     public final static LockingRepository instance = new LockingRepository(Main.getInstance());
 
@@ -19,53 +23,62 @@ public class LockingRepository extends Repository<Locking> {
         super(plugin);
     }
 
-    public @Nullable Locking selectById(@NotNull UUID id) {
-        return super.selectById(id.toString());
+    public boolean isLocked(@NotNull UUID playerId) {
+        return Optional.ofNullable(this.selectById(playerId.toString())).isPresent();
     }
 
-    public int deleteAll() {
+    public boolean setLock(@NotNull UUID playerId, boolean lock) {
+        var modification = lock
+                ? "insert into `locking` (player_id, server_id) values (?, ?)"
+                : "delete from `locking` where player_id = ? and server_id = ?";
+
         return execute(connection -> {
-            var sql = """
-                    delete from onesync.locking
-                    """;
-            try (PreparedStatement stm = connection.prepareStatement(sql)) {
-                return stm.executeUpdate();
+            connection.setAutoCommit(false);
+            try {
+                try (PreparedStatement stm = connection.prepareStatement(modification)) {
+                    stm.setString(1, playerId.toString());
+                    stm.setString(2, SERVER_ID.toString());
+                    return stm.executeUpdate() > 0;
+                }
+            } finally {
+                connection.setAutoCommit(true);
             }
         });
     }
 
-    public int insertOrUpdate(@NotNull Locking locking) {
-        return execute(connection -> {
-            var sql = """
-                    replace into onesync.locking (uuid, locked)
-                    values (?, ?)
-                    """;
+    /**
+     * 解锁
+     * <p>
+     * <b>使用该方法前需要确保该玩家在所有服务器都下线了</b>
+     * </p>
+     *
+     * @param playerIds 玩家 ID 列表
+     * @return 是否解锁成功
+     */
+    public boolean unlock(@NotNull List<UUID> playerIds) {
+        if (playerIds.isEmpty()) {
+            return false;
+        }
+        var sql = "delete from `locking` where player_id in ("
+                + IntStream.range(0, playerIds.size()).mapToObj(x -> "?").collect(Collectors.joining(", "))
+                + ")";
+
+        execute(connection -> {
             try (PreparedStatement stm = connection.prepareStatement(sql)) {
-                stm.setString(1, locking.uuid().toString());
-                stm.setBoolean(2, locking.locked());
-                return stm.executeUpdate();
+                int i = 1;
+                for (var playerId : playerIds) {
+                    stm.setString(i++, playerId.toString());
+                }
+                stm.executeUpdate();
             }
         });
-    }
 
-    @Override
-    public @Nullable Locking selectById(@NotNull Serializable id) {
-        throw new UnsupportedOperationException();
+        return true;
     }
 
     @Override
     protected void initTables() {
-        super.execute(connection -> {
-            var stm = connection.createStatement();
-            stm.execute("create database if not exists onesync");
-            stm.execute("""
-                    create table if not exists onesync.locking
-                     (
-                         uuid   varchar(36) not null
-                             primary key,
-                         locked tinyint(1)  not null
-                     );
-                    """);
-        });
     }
+
+
 }

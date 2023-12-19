@@ -4,16 +4,20 @@ import io.github.hello09x.bedrock.database.Table;
 import io.github.hello09x.bedrock.database.TableField;
 import io.github.hello09x.bedrock.database.TableId;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Table("onesync.locking")
+@Table("locking")
 public record Locking(
 
-        @TableId("uuid")
-        UUID uuid,
+        @TableId("player_id")
+        UUID playerId,
 
-        @TableField("locked")
-        Boolean locked
+        @TableId("server_id")
+        UUID serverId,
+
+        @TableField("created_at")
+        LocalDateTime createdAt
 
 ) {
 }

@@ -1,55 +1,23 @@
 datasource:
-
-  # 引擎
-  # mysql 8.0 以上: com.mysql.cj.jdbc.Driver
-  # mysql 8.0 以下: com.mysql.jdbc.Driver
   driver-class: com.mysql.cj.jdbc.Driver
-
-  # mysql 连接地址
-  url: jdbc:mysql://127.0.0.1:3306
-
-  # 账号
+  url: jdbc:mysql://127.0.0.1:3306/onesync
   username: root
-
-  # 密码
   password: 123456
-
-  # 连接池大小, 固定为 2 即可
   size: 2
 
-sync:
 
-  # 是否同步背包以及末影箱
-  # 首次同步时, 多个服务器的背包和末影箱数据将会被正确合并处理
-  inventory: false
+synchronize:
 
-  # 是否同步玩家持久化数据, 这些数据通常是插件存档在玩家存档里的(很少插件会有)
-  # 首次同步时, 仅保留玩家第一个进入的服务器的数据
+  # 玩家背包及末影箱
+  inventory: true
+
+  # 玩家持久化数据 PersistentDataContainer(PDC)
   pdc: false
 
-  # 是否同步生命值以及最大生命值
-  # 首次同步时, 仅保留玩家第一个进入的服务器的数据
-  health: false
-
-  # 是否同步饥饿值
-  # 首次同步时, 仅保留玩家第一个进入的服务器的数据
-  food: false
-
-  # 是否同步经验值
-  # 首次同步时, 多个服务器的经验值将会被正确合并处理
-  exp: false
-
-# 快照设置
-# 快照是定时将玩家的数据记录备份，管理员可以通过快照给用户数据进行回档
-# 快照保存规则:
-#  1. 过去 3 天每 1 小时一份快照 (有变化时才保存)
-#  2. 当天每半小时一份快照 (有变化时才保存)
-# 意味着一名玩家最多同时存在 3 * 24 + (24 / 0.5) = 120 份快照
-# 假设你服务器 100 人，则服务器最大 12000 份快照，这对于 mysql 来说, 简直不值一提
-snapshot:
-
-  # 是否启用快照
-  enabled: true
-
-
-
+  # 玩家档案: 游戏模式, 是否 OP, 生命值, 最大生命值, 经验值, 饥饿值
+  profile:
+    game-mode: false
+    op: false
+    health: false
+    exp: false
+    food: false

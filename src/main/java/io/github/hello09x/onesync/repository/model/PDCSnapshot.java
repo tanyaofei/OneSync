@@ -6,17 +6,17 @@ import io.github.hello09x.bedrock.database.TableId;
 
 import java.util.UUID;
 
-@Table("onesync.experience")
-public record Experience(
+@Table("pdc_snapshot")
+public record PDCSnapshot(
 
-        @TableId("uuid")
-        UUID uuid,
+        @TableId("snapshot_id")
+        Long snapshotId,
 
-        @TableField("level")
-        Integer level,
+        @TableField("player_id")
+        UUID playerId,
 
-        @TableField("exp")
-        Float exp
+        @TableField("data")
+        byte[] data
 
 ) {
 }

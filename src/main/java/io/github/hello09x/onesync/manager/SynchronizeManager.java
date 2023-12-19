@@ -1,113 +1,124 @@
 package io.github.hello09x.onesync.manager;
 
-import com.google.common.base.Throwables;
 import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.config.OnesyncConfig;
-import io.github.hello09x.onesync.manager.impl.*;
+import io.github.hello09x.onesync.api.handler.SnapshotHandler;
+import io.github.hello09x.onesync.repository.LockingRepository;
+import io.github.hello09x.onesync.repository.constant.SnapshotCause;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 public class SynchronizeManager {
 
     public final static SynchronizeManager instance = new SynchronizeManager();
+    private final LockingRepository synchronizer = LockingRepository.instance;
+    private final SnapshotManager snapshotManager = SnapshotManager.instance;
+
+    private final Map<UUID, List<PreparedSnapshot>> prepared = new ConcurrentHashMap<>();
 
     private final static Logger log = Main.getInstance().getLogger();
 
-    private final InventorySynchronizeHandler inventories = InventorySynchronizeHandler.instance;
-    private final PDCSynchronizeHandler pdcs = PDCSynchronizeHandler.instance;
-    private final HealthSynchronizeHandler healths = HealthSynchronizeHandler.instance;
-    private final FoodSynchronizeHandler foods = FoodSynchronizeHandler.instance;
-    private final ExperienceSynchronizeHandler experiences = ExperienceSynchronizeHandler.instance;
-    private final OnesyncConfig config = OnesyncConfig.instance;
+    /**
+     * 玩家登陆游戏时提前准备好数据
+     *
+     * @param playerId 玩家 ID
+     */
+    public void prepare(@NotNull UUID playerId, long timeout) throws TimeoutException {
+        long time = System.currentTimeMillis();
+        while (synchronizer.isLocked(playerId)) {
+            if (System.currentTimeMillis() - time >= timeout) {
+                throw new TimeoutException("timeout");
+            }
+        }
 
-    private final Map<@NotNull UUID, @NotNull SynchronizedData> prepared = new ConcurrentHashMap<>();
+        var snapshots = new ArrayList<PreparedSnapshot>(SnapshotHandler.HANDLERS.size());
+        for (var handler : SnapshotHandler.HANDLERS) {
+            if (Bukkit.getPluginManager().isPluginEnabled(handler.plugin())) {
+                continue;
+            }
 
-    private static boolean catchException(@NotNull String action, @NotNull Runnable runnable) {
+            var snapshot = handler.getLatest(playerId);
+            if (snapshot == null) {
+                continue;
+            }
+
+            try {
+                snapshots.add(new PreparedSnapshot(
+                        (SnapshotHandler<Object>) handler,
+                        handler.getLatest(playerId)
+                ));
+            } catch (Throwable e) {
+                log.severe("准备 %s 的「%s」数据失败: %s".formatted(playerId, handler.snapshotType(), e.getMessage()));
+                throw e;
+            }
+        }
+
+        this.prepared.put(playerId, snapshots);
+    }
+
+    public void applyPrepared(@NotNull Player player) {
+        var snapshots = this.prepared.get(player.getUniqueId());
+        if (snapshots == null) {
+            throw new IllegalStateException("No prepared snapshots for player: " + player.getName() + "(" + player.getUniqueId() + ")");
+        }
+
         try {
-            runnable.run();
+            for (var s : snapshots) {
+                try {
+                    s.apply(player);
+                } catch (Throwable e) {
+                    log.severe("恢复 %s 的「%s」数据失败: %s".formatted(player.getName(), player.getUniqueId(), e.getMessage()));
+                    throw e;
+                }
+            }
+
+            this.synchronizer.setLock(player.getUniqueId(), true);  // 锁定玩家, 当玩家退出游戏时才解锁
+        } finally {
+            this.prepared.remove(player.getUniqueId());
+        }
+    }
+
+    public void save(@NotNull Player player, @NotNull SnapshotCause cause) {
+        try {
+            snapshotManager.create(player, cause);
+        } finally {
+            synchronizer.setLock(player.getUniqueId(), false);
+        }
+    }
+
+    public record PreparedSnapshot(
+
+            @NotNull
+            SnapshotHandler<Object> handler,
+
+            @Nullable
+            Object snapshot
+
+    ) {
+
+        public boolean apply(@NotNull Player player) {
+            var snapshot = this.snapshot;
+            if (snapshot == null) {
+                return false;
+            }
+
+            if (!Bukkit.getPluginManager().isPluginEnabled(handler().plugin())) {
+                return false;
+            }
+
+            this.handler.apply(player, snapshot);
             return true;
-        } catch (Throwable e) {
-            log.severe(action + "异常\n" + Throwables.getStackTraceAsString(e));
-            return false;
-        }
-    }
-
-    public void prepare(@NotNull UUID uuid) {
-        this.prepared.put(uuid, new SynchronizedData(
-                config.getSync().isInventory() ? inventories.load(uuid) : null,
-                config.getSync().isPdc() ? pdcs.load(uuid) : null,
-                config.getSync().isHealth() ? healths.load(uuid) : null,
-                config.getSync().isFood() ? foods.load(uuid) : null,
-                config.getSync().isExp() ? experiences.load(uuid) : null
-        ));
-    }
-
-    public void removePrepared(@NotNull UUID uuid) {
-        this.prepared.remove(uuid);
-    }
-
-    public boolean save(@NotNull Player player, boolean clean) {
-        var success = true;
-        if (config.getSync().isInventory()) {
-            success &= catchException("保存物品", () -> this.inventories.save(player, clean));
-        }
-        if (config.getSync().isPdc()) {
-            success &= catchException("保存 PDC", () -> this.pdcs.save(player, clean));
-        }
-        if (config.getSync().isHealth()) {
-            success &= catchException("保存生命值", () -> this.healths.save(player, clean));
-        }
-        if (config.getSync().isFood()) {
-            success &= catchException("保存饥饿值", () -> this.foods.save(player, clean));
-        }
-        if (config.getSync().isExp()) {
-            success &= catchException("保存经验值", () -> this.experiences.save(player, clean));
-        }
-        return success;
-    }
-
-    public boolean restore(@NotNull Player player) {
-        var data = this.prepared.get(player.getUniqueId());
-        if (data == null) {
-            return false;
         }
 
-        this.prepared.remove(player.getUniqueId());
-
-        {
-            var inv = data.inventory();
-            if (inv != null) {
-                inventories.apply(player, data.inventory());
-            }
-        }
-
-        {
-            var persistentData = data.pdc();
-            if (persistentData != null) {
-                pdcs.apply(player, persistentData);
-            }
-        }
-
-        {
-            var health = data.health();
-            if (health != null) {
-                healths.apply(player, health);
-            }
-        }
-
-        {
-            var experience = data.experience();
-            if (experience != null) {
-                experiences.apply(player, experience);
-            }
-        }
-
-        return true;
     }
 
 
