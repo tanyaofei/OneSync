@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.UUID;
 
 public class PDCSnapshotRepository extends Repository<PDCSnapshot> {
@@ -42,6 +43,26 @@ public class PDCSnapshotRepository extends Repository<PDCSnapshot> {
 
     @Override
     protected void initTables() {
+        execute(connection -> {
+            Statement stm = connection.createStatement();
+            var rs = stm.executeQuery("select * from information_schema.INNODB_TABLES where name = '%s'".formatted(connection.getCatalog() + "/" + "pdc_snapshot"));
+            if (rs.next()) {
+                return;
+            }
 
+            stm.executeUpdate("""
+                    create table pdc_snapshot
+                    (
+                        snapshot_id bigint   not null
+                            primary key,
+                        player_id   char(36) not null,
+                        data        blob     not null
+                    );
+                    """);
+            stm.executeUpdate("""
+                    create index pdc_snapshot_player_id_index
+                        on pdc_snapshot (player_id);
+                    """);
+        });
     }
 }

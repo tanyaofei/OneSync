@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 public class PDCSnapshotHandler implements SnapshotHandler<PDCSnapshot> {
@@ -51,6 +52,16 @@ public class PDCSnapshotHandler implements SnapshotHandler<PDCSnapshot> {
                 player.getUniqueId(),
                 data
         ));
+    }
+
+    @Override
+    public void remove(@NotNull List<Long> snapshotIds) {
+        repository.deleteByIds(snapshotIds);
+    }
+
+    @Override
+    public void remove(@NotNull Long snapshotId) {
+        repository.deleteById(snapshotId);
     }
 
     @Override

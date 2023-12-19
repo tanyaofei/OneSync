@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.List;
 import java.util.UUID;
 
@@ -46,19 +47,29 @@ public class InventorySnapshotRepository extends Repository<InventorySnapshot> {
         });
     }
 
-    public @NotNull List<InventorySnapshot> selectByPlayerId(@NotNull UUID playerId) {
-        var sql = "select * from inventory_snapshot where player_id = ? order by snapshot_id";
-        return execute(connection -> {
-            try (PreparedStatement stm = connection.prepareStatement(sql)) {
-                stm.setString(1, playerId.toString());
-                return mapMany(stm.executeQuery());
-            }
-        });
-    }
-
     @Override
     protected void initTables() {
-
+        execute(connection -> {
+            Statement stm = connection.createStatement();
+            var rs = stm.executeQuery("select * from information_schema.INNODB_TABLES where name = '%s'".formatted( connection.getCatalog() + "/" + "inventory_snapshot"));
+            if (rs.next()) {
+                return;
+            }
+            stm.executeUpdate("""
+                    create table inventory_snapshot
+                    (
+                        snapshot_id bigint   not null
+                            primary key,
+                        player_id   char(36) not null,
+                        items       json     not null,
+                        ender_items json     not null
+                    );
+                    """);
+            stm.executeUpdate("""
+                    create index inventory_snapshot_player_id_index
+                        on inventory_snapshot (player_id);
+                    """);
+        });
     }
 
 }

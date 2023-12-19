@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -50,6 +51,16 @@ public class InventorySnapshotHandler implements SnapshotHandler<InventorySnapsh
         );
 
         repository.insert(snapshot);
+    }
+
+    @Override
+    public void remove(@NotNull List<Long> snapshotIds) {
+        repository.deleteByIds(snapshotIds);
+    }
+
+    @Override
+    public void remove(@NotNull Long snapshotId) {
+        repository.deleteById(snapshotId);
     }
 
     @Override

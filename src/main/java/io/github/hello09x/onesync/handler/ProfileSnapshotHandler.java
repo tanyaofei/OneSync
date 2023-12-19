@@ -12,6 +12,7 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -37,8 +38,8 @@ public class ProfileSnapshotHandler implements SnapshotHandler<ProfileSnapshot> 
 
     @Override
     public void save(@NotNull Long snapshotId, @NotNull Player player) {
-        var gameMode = config.isGameMode() ? null : player.getGameMode();
-        var op = config.isOp() ? null : player.isOp();
+        var gameMode = config.isGameMode() ? player.getGameMode() : null;
+        var op = config.isOp() ? player.isOp() : null;
 
         Integer level = null;
         Float exp = null;
@@ -76,6 +77,16 @@ public class ProfileSnapshotHandler implements SnapshotHandler<ProfileSnapshot> 
         );
 
         repository.insert(profile);
+    }
+
+    @Override
+    public void remove(@NotNull List<Long> snapshotIds) {
+        repository.deleteByIds(snapshotIds);
+    }
+
+    @Override
+    public void remove(@NotNull Long snapshotId) {
+        repository.deleteById(snapshotId);
     }
 
     @Override

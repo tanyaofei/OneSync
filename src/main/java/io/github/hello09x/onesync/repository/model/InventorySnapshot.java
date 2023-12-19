@@ -2,6 +2,7 @@ package io.github.hello09x.onesync.repository.model;
 
 import io.github.hello09x.bedrock.database.Table;
 import io.github.hello09x.bedrock.database.TableField;
+import io.github.hello09x.bedrock.database.TableId;
 import io.github.hello09x.onesync.util.ItemStackMapTypeHandler;
 import org.bukkit.inventory.ItemStack;
 
@@ -18,7 +19,7 @@ import java.util.UUID;
 @Table("inventory_snapshot")
 public record InventorySnapshot(
 
-        @TableField("snapshot_id")
+        @TableId("snapshot_id")
         Long snapshotId,
 
         @TableField("player_id")

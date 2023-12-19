@@ -44,6 +44,20 @@ public interface SnapshotHandler<T> {
     void save(@NotNull Long snapshotId, @NotNull Player player);
 
     /**
+     * 删除
+     *
+     * @param snapshotIds 快照 ID
+     */
+    void remove(@NotNull List<Long> snapshotIds);
+
+    /**
+     * 删除
+     *
+     * @param snapshotId 快照 ID
+     */
+    void remove(@NotNull Long snapshotId);
+
+    /**
      * 应用快照
      *
      * @param player   玩家

@@ -8,6 +8,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.List;
+import java.util.UUID;
 
 public class SnapshotRepository extends Repository<Snapshot> {
 
@@ -32,6 +34,15 @@ public class SnapshotRepository extends Repository<Snapshot> {
         });
     }
 
+    public List<Snapshot> selectByPlayerId(@NotNull UUID playerId) {
+        var sql = "select * from `snapshot` where player_id = ?";
+        return execute(connection -> {
+           try (PreparedStatement stm = connection.prepareStatement(sql))  {
+               stm.setString(1, playerId.toString());
+               return mapMany(stm.executeQuery());
+           }
+        });
+    }
 
     public SnapshotRepository(@NotNull Plugin plugin) {
         super(plugin);
@@ -39,6 +50,27 @@ public class SnapshotRepository extends Repository<Snapshot> {
 
     @Override
     protected void initTables() {
+        execute(connection -> {
+            Statement stm = connection.createStatement();
+            var rs = stm.executeQuery("select * from information_schema.INNODB_TABLES where name = '%s'".formatted(connection.getCatalog() + "/" + "snapshot"));
+            if (rs.next()) {
+                return;
+            }
 
+            stm.executeUpdate("""
+                    create table `snapshot`
+                    (
+                        id         bigint auto_increment
+                            primary key,
+                        player_id  char(36)                           not null,
+                        cause      varchar(32)                        not null,
+                        created_at datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP
+                    );
+                    """);
+            stm.executeUpdate("""
+                    create index snapshot_player_id_index
+                        on `snapshot` (player_id);
+                    """);
+        });
     }
 }

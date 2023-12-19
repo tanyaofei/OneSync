@@ -4,6 +4,7 @@ import com.google.common.base.Throwables;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.manager.SynchronizeManager;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
+import org.apache.commons.lang3.time.StopWatch;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -13,6 +14,7 @@ import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
@@ -28,8 +30,11 @@ public class PlayerListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPreLogin(@NotNull AsyncPlayerPreLoginEvent event) {
+        var stopwatch = new StopWatch();
         try {
+            stopwatch.start();
             synchronizeManager.prepare(event.getUniqueId(), 1000);
+            stopwatch.stop();
         } catch (TimeoutException e) {
             log.info("为玩家 %s(%s) 准备数据超时".formatted(event.getPlayerProfile().getName(), event.getUniqueId()));
             event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, text("准备数据超时, 请联系管理员"));
@@ -50,7 +55,12 @@ public class PlayerListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(@NotNull PlayerQuitEvent event) {
-        synchronizeManager.save(event.getPlayer(), SnapshotCause.PLAYER_QUITED);
+        var player = event.getPlayer();
+        var stopwatch = new StopWatch();
+        stopwatch.start();
+        synchronizeManager.save(player, SnapshotCause.PLAYER_QUIT);
+        stopwatch.stop();
+        log.info("保存玩家 %s(%s) 数据完毕, 耗时: %dms".formatted(player.getName(), player.getUniqueId(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
     }
 
 }

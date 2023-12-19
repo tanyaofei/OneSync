@@ -1,10 +1,11 @@
+version: 1
+
 datasource:
   driver-class: com.mysql.cj.jdbc.Driver
   url: jdbc:mysql://127.0.0.1:3306/onesync
   username: root
   password: 123456
   size: 2
-
 
 synchronize:
 
@@ -21,3 +22,15 @@ synchronize:
     health: false
     exp: false
     food: false
+
+snapshot:
+
+  # 每位玩家最大快照数量
+  capacity: 45
+
+  # 保留玩家多少天的快照, 并且每天至少保留最后一份快照
+  keep-days: 7
+
+  # 何时保存玩家快照
+  when:
+    - WORLD_SAVE

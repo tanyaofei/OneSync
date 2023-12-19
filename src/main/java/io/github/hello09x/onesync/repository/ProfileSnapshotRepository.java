@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.sql.PreparedStatement;
-import java.sql.SQLType;
+import java.sql.Statement;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -68,6 +68,34 @@ public class ProfileSnapshotRepository extends Repository<ProfileSnapshot> {
 
     @Override
     protected void initTables() {
+        execute(connection -> {
+            Statement stm = connection.createStatement();
+            var rs = stm.executeQuery("select * from information_schema.INNODB_TABLES where name = '%s'".formatted(connection.getCatalog() + "/" + "profile_snapshot"));
+            if (rs.next()) {
+                return;
+            }
 
+            stm.executeUpdate("""
+                    create table profile_snapshot
+                    (
+                        snapshot_id bigint      not null
+                            primary key,
+                        player_id   char(36)    not null,
+                        game_mode   varchar(32) null,
+                        op          tinyint(1)  null,
+                        level       int         null,
+                        exp         float       null,
+                        health      double      null,
+                        max_health  double      null,
+                        food_level  int         null,
+                        saturation  float       null,
+                        exhaustion  float       null
+                    );
+                    """);
+            stm.executeUpdate("""
+                    create index profile_snapshot_player_id_index
+                        on profile_snapshot (player_id);
+                    """);
+        });
     }
 }

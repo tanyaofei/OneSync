@@ -7,6 +7,7 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,51 +34,46 @@ public class LockingRepository extends Repository<Locking> {
                 : "delete from `locking` where player_id = ? and server_id = ?";
 
         return execute(connection -> {
-            connection.setAutoCommit(false);
-            try {
-                try (PreparedStatement stm = connection.prepareStatement(modification)) {
-                    stm.setString(1, playerId.toString());
-                    stm.setString(2, SERVER_ID.toString());
-                    return stm.executeUpdate() > 0;
-                }
-            } finally {
-                connection.setAutoCommit(true);
+            try (PreparedStatement stm = connection.prepareStatement(modification)) {
+                stm.setString(1, playerId.toString());
+                stm.setString(2, SERVER_ID.toString());
+                return stm.executeUpdate() > 0;
             }
         });
     }
 
-    /**
-     * 解锁
-     * <p>
-     * <b>使用该方法前需要确保该玩家在所有服务器都下线了</b>
-     * </p>
-     *
-     * @param playerIds 玩家 ID 列表
-     * @return 是否解锁成功
-     */
-    public boolean unlock(@NotNull List<UUID> playerIds) {
-        if (playerIds.isEmpty()) {
-            return false;
-        }
-        var sql = "delete from `locking` where player_id in ("
-                + IntStream.range(0, playerIds.size()).mapToObj(x -> "?").collect(Collectors.joining(", "))
-                + ")";
-
-        execute(connection -> {
+    public int deleteByPlayerId(@NotNull UUID playerId) {
+        var sql = "delete from locking where player_id = ?";
+        return execute(connection -> {
             try (PreparedStatement stm = connection.prepareStatement(sql)) {
-                int i = 1;
-                for (var playerId : playerIds) {
-                    stm.setString(i++, playerId.toString());
-                }
-                stm.executeUpdate();
+                stm.setString(1, playerId.toString());
+                return stm.executeUpdate();
             }
         });
+    }
 
-        return true;
+    public int deleteAll() {
+        return execute(connection -> {
+            try (Statement stm = connection.createStatement()) {
+                return stm.executeUpdate("delete from locking");
+            }
+        });
     }
 
     @Override
     protected void initTables() {
+        execute(connection -> {
+            var stm = connection.createStatement();
+            stm.executeUpdate("""
+                    create table if not exists locking
+                    (
+                        player_id  char(36)                           not null
+                            primary key,
+                        server_id  char(36)                           null,
+                        created_at datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP
+                    );
+                    """);
+        });
     }
 
 

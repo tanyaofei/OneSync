@@ -5,12 +5,16 @@ public enum SnapshotCause {
     /**
      * 玩家退出
      */
-    PLAYER_QUITED,
+    PLAYER_QUIT,
 
     /**
-     * 定时
+     * 关闭插件
      */
-    TIMING
+    PLUGIN_DISABLE,
 
+    /**
+     * 世界保存
+     */
+    WORLD_SAVE
 
 }

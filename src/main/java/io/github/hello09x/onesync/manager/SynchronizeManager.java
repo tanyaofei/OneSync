@@ -1,19 +1,19 @@
 package io.github.hello09x.onesync.manager;
 
+import com.google.common.base.Throwables;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.repository.LockingRepository;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
+import org.apache.commons.lang3.time.StopWatch;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
@@ -93,6 +93,25 @@ public class SynchronizeManager {
         } finally {
             synchronizer.setLock(player.getUniqueId(), false);
         }
+    }
+
+    public void saveAll(@NotNull SnapshotCause cause) {
+        var players = Bukkit.getOnlinePlayers();
+        if (players.isEmpty()) {
+            return;
+        }
+
+        var stopwatch = new StopWatch();
+        stopwatch.start();
+        for (var player : players) {
+            try {
+                this.save(player, cause);
+            } catch (Throwable e) {
+                log.severe("保存玩家 %s(%s) 数据失败: %s".formatted(player.getName(), player.getUniqueId(), Throwables.getStackTraceAsString(e)));
+            }
+        }
+        stopwatch.stop();
+        log.info("[%s] 保存 %d 名玩家数据完毕, 耗时 %dms".formatted(cause, players.size(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
     }
 
     public record PreparedSnapshot(
