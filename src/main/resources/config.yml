@@ -15,12 +15,22 @@ synchronize:
   # 玩家持久化数据 PersistentDataContainer(PDC)
   pdc: false
 
-  # 玩家档案: 游戏模式, 是否 OP, 生命值, 最大生命值, 经验值, 饥饿值
+  # 玩家档案
   profile:
+
+    # 游戏模式
     game-mode: false
+
+    # 是否 OP
     op: false
+
+    # 生命值, 最大生命值
     health: false
+
+    # 经验
     exp: false
+
+    # 饥饿值, 饱食度, 饥饿度
     food: false
 
 snapshot:
@@ -28,7 +38,7 @@ snapshot:
   # 每位玩家最大快照数量
   capacity: 45
 
-  # 保留玩家多少天的快照, 并且每天至少保留最后一份快照
+  # 多少天内必须至少保存一份最后的快照
   keep-days: 7
 
   # 何时保存玩家快照
