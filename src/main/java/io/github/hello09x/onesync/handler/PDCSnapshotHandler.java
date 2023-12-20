@@ -70,9 +70,9 @@ public class PDCSnapshotHandler implements SnapshotHandler<PDCSnapshot> {
     }
 
     @Override
-    public void apply(@NotNull Player player, @NotNull PDCSnapshot snapshot) {
+    public boolean apply(@NotNull Player player, @NotNull PDCSnapshot snapshot) {
         if (!config.isPdc()) {
-            return;
+            return false;
         }
 
         try {
@@ -80,5 +80,6 @@ public class PDCSnapshotHandler implements SnapshotHandler<PDCSnapshot> {
         } catch (IOException e) {
             throw new Error(e);
         }
+        return true;
     }
 }

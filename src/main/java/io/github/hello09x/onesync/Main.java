@@ -1,10 +1,9 @@
 package io.github.hello09x.onesync;
 
 import io.github.hello09x.bedrock.menu.ChestMenuRegistry;
-import io.github.hello09x.bedrock.util.CommandItemRegistry;
 import io.github.hello09x.onesync.command.CommandRegistry;
 import io.github.hello09x.onesync.listener.PlayerListener;
-import io.github.hello09x.onesync.listener.WorldListener;
+import io.github.hello09x.onesync.listener.SnapshotListener;
 import io.github.hello09x.onesync.manager.LockingManager;
 import io.github.hello09x.onesync.manager.SynchronizeManager;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
@@ -31,7 +30,7 @@ public final class Main extends JavaPlugin {
         {
             var pm = super.getServer().getPluginManager();
             pm.registerEvents(PlayerListener.instance, this);
-            pm.registerEvents(WorldListener.instance, this);
+            pm.registerEvents(SnapshotListener.instance, this);
         }
 
         {

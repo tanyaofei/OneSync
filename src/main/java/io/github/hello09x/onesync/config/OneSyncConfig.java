@@ -45,6 +45,7 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
         private boolean health;
         private boolean exp;
         private boolean food;
+        private boolean advancement;
 
         public void reload(@NotNull FileConfiguration file) {
             this.inventory = file.getBoolean("synchronize.inventory", true);
@@ -54,6 +55,7 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
             this.health = file.getBoolean("synchronize.profile.health", false);
             this.exp = file.getBoolean("synchronize.profile.exp", false);
             this.food = file.getBoolean("synchronize.profile.food", false);
+            this.advancement = file.getBoolean("synchronize.advancement", false);
         }
     }
 

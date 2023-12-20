@@ -17,8 +17,8 @@ public class ItemStackMapTypeHandler implements TypeHandler<Map<Integer, ItemSta
 
     public final static ItemStackMapTypeHandler instance = new ItemStackMapTypeHandler();
 
-    public static final Gson GSON = new Gson();
-    public final static TypeToken<Map<Integer, byte[]>> BYTES_LIST_TYPE = new TypeToken<>() {
+    private static final Gson GSON = new Gson();
+    private final static TypeToken<Map<Integer, byte[]>> BYTES_LIST_TYPE = new TypeToken<>() {
     };
 
     @Override

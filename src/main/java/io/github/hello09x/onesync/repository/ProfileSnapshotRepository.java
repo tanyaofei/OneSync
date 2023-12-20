@@ -14,7 +14,6 @@ import java.util.UUID;
 
 public class ProfileSnapshotRepository extends Repository<ProfileSnapshot> {
 
-
     public final static ProfileSnapshotRepository instance = new ProfileSnapshotRepository(Main.getInstance());
 
     public int insert(@NotNull ProfileSnapshot snapshot) {

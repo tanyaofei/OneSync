@@ -71,6 +71,10 @@ public interface SnapshotHandler<T extends SnapshotComponent> {
      * @param player   玩家
      * @param snapshot 快照
      */
-    void apply(@NotNull Player player, @NotNull T snapshot);
+    boolean apply(@NotNull Player player, @NotNull T snapshot);
+
+    default boolean applyUnsafe(@NotNull Player player, SnapshotComponent snapshot) {
+        return this.apply(player, (T) snapshot);
+    }
 
 }

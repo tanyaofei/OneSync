@@ -1,26 +1,33 @@
 package io.github.hello09x.onesync.repository.model;
 
+import com.google.common.base.Throwables;
 import io.github.hello09x.bedrock.database.Table;
 import io.github.hello09x.bedrock.database.TableField;
 import io.github.hello09x.bedrock.database.TableId;
+import io.github.hello09x.bedrock.util.Components;
+import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
+import io.github.hello09x.onesync.handler.ProfileSnapshotHandler;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
+import java.util.stream.Stream;
 
+import static io.github.hello09x.bedrock.util.Components.noItalic;
 import static net.kyori.adventure.text.Component.*;
-import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
-import static net.kyori.adventure.text.format.NamedTextColor.WHITE;
+import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 /**
  * @param snapshotId 快照 ID
@@ -82,24 +89,50 @@ public record ProfileSnapshot(
 
 ) implements SnapshotComponent {
 
-        @Override
-        public @NotNull MenuItem[] toMenuItems(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> back) {
-                var item = new ItemStack(Material.APPLE);
-                item.editMeta(meta -> {
-                        meta.displayName(text("档案"));
-                        meta.lore(List.of(
-                                textOfChildren(text("游戏模式: ", GRAY), Optional.ofNullable(this.gameMode).map(v -> (Component) translatable(v, WHITE)).orElse(text("<无>", WHITE))),
-                                textOfChildren(text("OP: ", GRAY), text(Optional.ofNullable(this.op).map(v -> v ? "是" : "否").orElse("<无>"), WHITE)),
-                                textOfChildren(text("等级: ", GRAY), text(Optional.ofNullable(this.level).map(Object::toString).orElse("<无>"), WHITE)),
-                                textOfChildren(text("经验条: ", GRAY), text(Optional.ofNullable(this.exp).map(Object::toString).orElse("<无>"), WHITE)),
-                                textOfChildren(text("生命值: ", GRAY), text(Optional.ofNullable(this.health).map(Object::toString).orElse("<无>"), WHITE)),
-                                textOfChildren(text("最大生命值: ", GRAY), text(Optional.ofNullable(this.maxHealth).map(Object::toString).orElse("<无>"), WHITE)),
-                                textOfChildren(text("饥饿值: ", GRAY), text(Optional.ofNullable(this.foodLevel).map(Object::toString).orElse("<无>"), WHITE)),
-                                textOfChildren(text("饱食度: ", GRAY), text(Optional.ofNullable(this.saturation).map(Object::toString).orElse("<无>"), WHITE)),
-                                textOfChildren(text("饥饿度: ", GRAY), text(Optional.ofNullable(this.exhaustion).map(Object::toString).orElse("<无>"), WHITE))
-                        ));
-                });
-                return new MenuItem[]{new MenuItem(item)};
-        }
+    private final static Logger log = Main.getInstance().getLogger();
+
+    @Override
+    public @NotNull MenuItem[] toMenuItems(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> back) {
+        var item = new ItemStack(Material.PLAYER_HEAD);
+        item.editMeta(meta -> {
+            meta.displayName(noItalic("档案"));
+            meta.lore(Stream.of(
+                    textOfChildren(text("游戏模式: ", GRAY), Optional.ofNullable(this.gameMode).map(v -> (Component) translatable(v, WHITE)).orElse(text("<无>", WHITE))),
+                    textOfChildren(text("OP: ", GRAY), text(Optional.ofNullable(this.op).map(v -> v ? "是" : "否").orElse("<无>"), WHITE)),
+                    textOfChildren(text("等级: ", GRAY), text(Optional.ofNullable(this.level).map(Object::toString).orElse("<无>"), WHITE)),
+                    textOfChildren(text("经验条: ", GRAY), text(Optional.ofNullable(this.exp).map(Object::toString).orElse("<无>"), WHITE)),
+                    textOfChildren(text("生命值: ", GRAY), text(Optional.ofNullable(this.health).map(Object::toString).orElse("<无>"), WHITE)),
+                    textOfChildren(text("最大生命值: ", GRAY), text(Optional.ofNullable(this.maxHealth).map(Object::toString).orElse("<无>"), WHITE)),
+                    textOfChildren(text("饥饿值: ", GRAY), text(Optional.ofNullable(this.foodLevel).map(Object::toString).orElse("<无>"), WHITE)),
+                    textOfChildren(text("饱食度: ", GRAY), text(Optional.ofNullable(this.saturation).map(Object::toString).orElse("<无>"), WHITE)),
+                    textOfChildren(text("饥饿度: ", GRAY), text(Optional.ofNullable(this.exhaustion).map(Object::toString).orElse("<无>"), WHITE)),
+                    empty(),
+                    text("「右键」恢复数据", GRAY)
+            ).map(Components::noItalic).toList());
+        });
+        return new MenuItem[]{new MenuItem(item, event -> {
+            if (event.getClick() == ClickType.RIGHT) {
+                var player = Bukkit.getPlayer(this.playerId);
+                if (player == null) {
+                    viewer.sendMessage(text("该玩家不在线", RED));
+                    viewer.closeInventory();
+                    return;
+                }
+
+                try {
+                    if (!ProfileSnapshotHandler.getInstance().apply(player, this)) {
+                        viewer.sendMessage(text("没有恢复到数据, 这可能是因为并没有开启此项数据的同步功能", GRAY));
+                    } else {
+                        viewer.sendMessage(textOfChildren(text("为 ", GRAY), text(player.getName(), WHITE), text(" 恢复数据成功", GRAY)));
+                    }
+                } catch (Throwable e) {
+                    log.severe(Throwables.getStackTraceAsString(e));
+                    viewer.sendMessage(text("恢复数据失败", RED));
+                }
+
+                viewer.closeInventory();
+            }
+        })};
+    }
 
 }

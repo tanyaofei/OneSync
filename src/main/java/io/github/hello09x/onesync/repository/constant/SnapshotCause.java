@@ -24,7 +24,14 @@ public enum SnapshotCause {
     /**
      * 世界保存
      */
-    WORLD_SAVE(text("保存地图"));
+    WORLD_SAVE(text("保存地图")),
+
+    /**
+     * 玩家死亡
+     */
+    PLAYER_DEATH(text("玩家死亡"))
+
+    ;
 
     final Component displayName;
 

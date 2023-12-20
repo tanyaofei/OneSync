@@ -83,21 +83,28 @@ public class InventorySnapshotHandler implements SnapshotHandler<InventorySnapsh
     }
 
     @Override
-    public void apply(@NotNull Player player, @NotNull InventorySnapshot snapshot) {
+    public boolean apply(@NotNull Player player, @NotNull InventorySnapshot snapshot) {
         if (!config.isInventory()) {
-            return;
+            return false;
         }
 
-        this.applyInventory(player, snapshot);
-        this.applyEnderChest(player, snapshot);
+        return this.applyInventory(player, snapshot) | this.applyEnderChest(player, snapshot);
     }
 
-    public void applyInventory(@NotNull Player player, @NotNull InventorySnapshot snapshot) {
+    public boolean applyInventory(@NotNull Player player, @NotNull InventorySnapshot snapshot) {
+        if (!config.isInventory()) {
+            return false;
+        }
         this.apply(snapshot.items(), player.getInventory());
+        return true;
     }
 
-    public void applyEnderChest(@NotNull Player player, @NotNull InventorySnapshot snapshot) {
+    public boolean applyEnderChest(@NotNull Player player, @NotNull InventorySnapshot snapshot) {
+        if (!config.isInventory()) {
+            return false;
+        }
         this.apply(snapshot.enderItems(), player.getEnderChest());
+        return true;
     }
 
     public void apply(@NotNull Map<Integer, ItemStack> from, @NotNull Inventory to) {

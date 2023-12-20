@@ -15,6 +15,9 @@ synchronize:
   # 玩家持久化数据 PersistentDataContainer(PDC)
   pdc: false
 
+  # 玩家成就数据
+  advancement: false
+
   # 玩家档案
   profile:
 
@@ -43,6 +46,8 @@ snapshot:
 
   # 何时保存玩家快照
   # 除了这里可以指定的节点以外, 玩家退出游戏, 服务器关闭也会保存快照
-  # 可选值: WORLD_SAVE
+  # 可选值:
+    # WORLD_SAVE: 保存地图时触发, 约 5 分钟一次
+    # PLAYER_DEATH: 玩家死亡时触发, 适合死亡掉落的服务器
   when:
     - WORLD_SAVE

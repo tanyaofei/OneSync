@@ -21,6 +21,20 @@ public class ProfileSnapshotHandler implements SnapshotHandler<ProfileSnapshot> 
     private final ProfileSnapshotRepository repository = ProfileSnapshotRepository.instance;
     private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
 
+    private static ProfileSnapshotHandler instance;
+
+    public static ProfileSnapshotHandler getInstance() {
+        if (instance == null) {
+            instance = SnapshotHandler.HANDLERS
+                    .stream()
+                    .filter(handler -> handler.getClass() == ProfileSnapshotHandler.class)
+                    .map(ProfileSnapshotHandler.class::cast)
+                    .findAny()
+                    .orElseThrow();
+        }
+        return instance;
+    }
+
     @Override
     public @NotNull String snapshotType() {
         return "Profile";
@@ -95,28 +109,35 @@ public class ProfileSnapshotHandler implements SnapshotHandler<ProfileSnapshot> 
     }
 
     @Override
-    public void apply(@NotNull Player player, @NotNull ProfileSnapshot snapshot) {
+    public boolean apply(@NotNull Player player, @NotNull ProfileSnapshot snapshot) {
+        var success = false;
         if (config.isGameMode()) {
             Optional.ofNullable(snapshot.gameMode()).ifPresent(player::setGameMode);
+            success = true;
         }
         if (config.isOp()) {
             Optional.ofNullable(snapshot.op()).ifPresent(player::setOp);
+            success = true;
         }
         if (config.isExp()) {
             Optional.ofNullable(snapshot.level()).ifPresent(player::setLevel);
             Optional.ofNullable(snapshot.exp()).ifPresent(player::setExp);
+            success = true;
         }
         if (config.isHealth()) {
             Optional.ofNullable(snapshot.health()).ifPresent(player::setHealth);
             Optional.ofNullable(snapshot.maxHealth()).ifPresent(maxHealth -> {
                 Optional.ofNullable(player.getAttribute(Attribute.GENERIC_MAX_HEALTH)).ifPresent(attr -> attr.setBaseValue(maxHealth));
             });
+            success = true;
         }
         if (config.isFood()) {
             Optional.ofNullable(snapshot.foodLevel()).ifPresent(player::setFoodLevel);
             Optional.ofNullable(snapshot.saturation()).ifPresent(player::setSaturation);
             Optional.ofNullable(snapshot.exhaustion()).ifPresent(player::setExhaustion);
+            success = true;
         }
+        return success;
     }
 
 }
