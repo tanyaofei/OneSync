@@ -4,6 +4,7 @@ import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.manager.SnapshotManager;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
+import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -17,14 +18,20 @@ public class WorldListener implements Listener {
     public final static WorldListener instance = new WorldListener();
 
     private final static Logger log = Main.getInstance().getLogger();
-    private final SnapshotManager manager = SnapshotManager.instance;
+    private final SnapshotManager snapshotManager = SnapshotManager.instance;
     private final OneSyncConfig config = OneSyncConfig.instance;
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onSaveWorld(@NotNull WorldSaveEvent event) {
-        if (config.getSnapshot().getWhen().contains(SnapshotCause.WORLD_SAVE)) {
-            manager.createAll(SnapshotCause.WORLD_SAVE);
+        if (!config.getSnapshot().getWhen().contains(SnapshotCause.WORLD_SAVE)) {
+            return;
         }
+
+        if (!Bukkit.getWorlds().get(0).equals(event.getWorld())) {
+            return;
+        }
+
+        snapshotManager.createAll(SnapshotCause.WORLD_SAVE);
     }
 
 }

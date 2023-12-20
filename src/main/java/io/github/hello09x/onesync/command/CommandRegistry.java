@@ -2,10 +2,10 @@ package io.github.hello09x.onesync.command;
 
 import dev.jorel.commandapi.CommandPermission;
 import io.github.hello09x.onesync.command.impl.ReloadCommand;
+import io.github.hello09x.onesync.command.impl.SnapshotCommand;
 import io.github.hello09x.onesync.command.impl.UnlockCommand;
 
-import static io.github.hello09x.bedrock.command.Commands.command;
-import static io.github.hello09x.bedrock.command.Commands.player;
+import static io.github.hello09x.bedrock.command.Commands.*;
 
 public class CommandRegistry {
 
@@ -21,7 +21,12 @@ public class CommandRegistry {
                                 .executes(UnlockCommand.instance::unlock),
                         command("unlock-all")
                                 .withPermission(CommandPermission.OP)
-                                .executes(UnlockCommand.instance::unlockAll)
+                                .executes(UnlockCommand.instance::unlockAll),
+                        command("snapshot")
+                                .withPermission(CommandPermission.OP)
+                                .withArguments(player("player"))
+                                .withOptionalArguments(int32("page", 1))
+                                .executesPlayer(SnapshotCommand.instance::snapshot)
                 ).register();
     }
 

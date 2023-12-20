@@ -37,6 +37,11 @@ public class ProfileSnapshotHandler implements SnapshotHandler<ProfileSnapshot> 
     }
 
     @Override
+    public @Nullable ProfileSnapshot getOne(@NotNull Long snapshotId) {
+        return repository.selectById(snapshotId);
+    }
+
+    @Override
     public void save(@NotNull Long snapshotId, @NotNull Player player) {
         var gameMode = config.isGameMode() ? player.getGameMode() : null;
         var op = config.isOp() ? player.isOp() : null;

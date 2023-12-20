@@ -35,6 +35,11 @@ public class PDCSnapshotHandler implements SnapshotHandler<PDCSnapshot> {
     }
 
     @Override
+    public @Nullable PDCSnapshot getOne(@NotNull Long snapshotId) {
+        return repository.selectById(snapshotId);
+    }
+
+    @Override
     public void save(@NotNull Long snapshotId, @NotNull Player player) {
         if (!config.isPdc()) {
             return;

@@ -1,9 +1,11 @@
 package io.github.hello09x.onesync.repository;
 
 import io.github.hello09x.bedrock.database.Repository;
+import io.github.hello09x.bedrock.page.Page;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.Snapshot;
 import org.bukkit.plugin.Plugin;
+import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.PreparedStatement;
@@ -34,7 +36,7 @@ public class SnapshotRepository extends Repository<Snapshot> {
         });
     }
 
-    public List<Snapshot> selectByPlayerId(@NotNull UUID playerId) {
+    public @NotNull List<Snapshot> selectByPlayerId(@NotNull UUID playerId) {
         var sql = "select * from `snapshot` where player_id = ?";
         return execute(connection -> {
            try (PreparedStatement stm = connection.prepareStatement(sql))  {
@@ -42,6 +44,12 @@ public class SnapshotRepository extends Repository<Snapshot> {
                return mapMany(stm.executeQuery());
            }
         });
+    }
+
+    public @NotNull Page<Snapshot> selectPageByPlayerId(int page, int size, @NotNull UUID playerId) {
+        @Language("SQL")
+        var sql = "select * from `snapshot` where player_id = ? order by created_at desc";
+        return super.selectPage(page, size, sql, playerId.toString());
     }
 
     public SnapshotRepository(@NotNull Plugin plugin) {

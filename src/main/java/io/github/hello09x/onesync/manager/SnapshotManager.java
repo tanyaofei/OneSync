@@ -136,7 +136,8 @@ public class SnapshotManager {
             }
         }
         stopwatch.stop();
-        log.info("[%s] 保存所有 %d 名玩家数据完毕, 耗时 %dms".formatted(cause, players.size(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
+        log.info("[%s] 保存 %d 名玩家数据完毕, 耗时 %dms".formatted(cause, players.size(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
     }
+
 
 }

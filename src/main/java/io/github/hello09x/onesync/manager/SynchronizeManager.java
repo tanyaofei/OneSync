@@ -2,6 +2,7 @@ package io.github.hello09x.onesync.manager;
 
 import com.google.common.base.Throwables;
 import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.repository.LockingRepository;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
@@ -53,7 +54,7 @@ public class SynchronizeManager {
 
             try {
                 snapshots.add(new PreparedSnapshot(
-                        (SnapshotHandler<Object>) handler,
+                        (SnapshotHandler<SnapshotComponent>) handler,
                         handler.getLatest(playerId)
                 ));
             } catch (Throwable e) {
@@ -117,10 +118,10 @@ public class SynchronizeManager {
     public record PreparedSnapshot(
 
             @NotNull
-            SnapshotHandler<Object> handler,
+            SnapshotHandler<SnapshotComponent> handler,
 
             @Nullable
-            Object snapshot
+            SnapshotComponent snapshot
 
     ) {
 

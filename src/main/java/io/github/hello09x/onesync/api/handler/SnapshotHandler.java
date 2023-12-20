@@ -9,13 +9,13 @@ import java.util.List;
 import java.util.ServiceLoader;
 import java.util.UUID;
 
-public interface SnapshotHandler<T> {
+public interface SnapshotHandler<T extends SnapshotComponent> {
 
     @NotNull
-    List<? extends SnapshotHandler<?>> HANDLERS = ServiceLoader
+    List<? extends SnapshotHandler<? extends SnapshotComponent>> HANDLERS = ServiceLoader
             .load(SnapshotHandler.class, SnapshotHandler.class.getClassLoader())
             .stream()
-            .map(provider -> (SnapshotHandler<?>) provider.get())
+            .map(provider -> (SnapshotHandler<? extends SnapshotComponent>) provider.get())
             .toList();
 
     /**
@@ -35,6 +35,14 @@ public interface SnapshotHandler<T> {
      * @return 快照
      */
     @Nullable T getLatest(@NotNull UUID playerId);
+
+    /**
+     * 根据快照 ID 获取快照
+     *
+     * @param snapshotId 快照 ID
+     * @return 快照
+     */
+    @Nullable T getOne(@NotNull Long snapshotId);
 
     /**
      * 保存玩家数据

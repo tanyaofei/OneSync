@@ -1,5 +1,7 @@
 package io.github.hello09x.onesync;
 
+import io.github.hello09x.bedrock.menu.ChestMenuRegistry;
+import io.github.hello09x.bedrock.util.CommandItemRegistry;
 import io.github.hello09x.onesync.command.CommandRegistry;
 import io.github.hello09x.onesync.listener.PlayerListener;
 import io.github.hello09x.onesync.listener.WorldListener;
@@ -14,6 +16,9 @@ public final class Main extends JavaPlugin {
     @Getter
     private static Main instance;
 
+    @Getter
+    private static ChestMenuRegistry menuRegistry;
+
     @Override
     public void onLoad() {
         instance = this;
@@ -21,6 +26,7 @@ public final class Main extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        menuRegistry = new ChestMenuRegistry(this);
         CommandRegistry.register();
         {
             var pm = super.getServer().getPluginManager();

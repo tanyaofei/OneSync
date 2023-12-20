@@ -22,6 +22,20 @@ public class InventorySnapshotHandler implements SnapshotHandler<InventorySnapsh
     private final InventorySnapshotRepository repository = InventorySnapshotRepository.instance;
     private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
 
+    private static InventorySnapshotHandler instance;
+
+    public static InventorySnapshotHandler getInstance() {
+        if (instance == null) {
+            instance = SnapshotHandler.HANDLERS
+                    .stream()
+                    .filter(handler -> handler.getClass() == InventorySnapshotHandler.class)
+                    .map(InventorySnapshotHandler.class::cast)
+                    .findAny()
+                    .orElseThrow();
+        }
+        return instance;
+    }
+
     @Override
     public @NotNull String snapshotType() {
         return "Inventory";
@@ -35,6 +49,11 @@ public class InventorySnapshotHandler implements SnapshotHandler<InventorySnapsh
     @Override
     public @Nullable InventorySnapshot getLatest(@NotNull UUID playerId) {
         return repository.selectLatestByPlayerId(playerId);
+    }
+
+    @Override
+    public @Nullable InventorySnapshot getOne(@NotNull Long snapshotId) {
+        return repository.selectById(snapshotId);
     }
 
     @Override
@@ -69,16 +88,22 @@ public class InventorySnapshotHandler implements SnapshotHandler<InventorySnapsh
             return;
         }
 
-        var inv = player.getInventory();
-        for (var entry : snapshot.items().entrySet()) {
-            inv.setItem(entry.getKey(), entry.getValue());
-        }
+        this.applyInventory(player, snapshot);
+        this.applyEnderChest(player, snapshot);
+    }
 
-        var chest = player.getEnderChest();
-        for (var entry : snapshot.enderItems().entrySet()) {
-            chest.setItem(entry.getKey(), entry.getValue());
-        }
+    public void applyInventory(@NotNull Player player, @NotNull InventorySnapshot snapshot) {
+        this.apply(snapshot.items(), player.getInventory());
+    }
 
+    public void applyEnderChest(@NotNull Player player, @NotNull InventorySnapshot snapshot) {
+        this.apply(snapshot.enderItems(), player.getEnderChest());
+    }
+
+    public void apply(@NotNull Map<Integer, ItemStack> from, @NotNull Inventory to) {
+        for (int i = to.getSize() - 1; i >= 0; i--) {
+            to.setItem(i, from.get(i));
+        }
     }
 
     private static @NotNull Map<Integer, ItemStack> asMap(@NotNull Inventory inventory) {
