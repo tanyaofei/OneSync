@@ -8,7 +8,6 @@ import io.github.hello09x.onesync.repository.model.AdvancementSnapshot;
 import org.bukkit.Bukkit;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,6 +21,8 @@ import java.util.stream.StreamSupport;
 
 public class AdvancementSnapshotHandler implements SnapshotHandler<AdvancementSnapshot> {
 
+    public final static AdvancementSnapshotHandler instance = new AdvancementSnapshotHandler();
+
     private final static Logger log = Main.getInstance().getLogger();
     private final AdvancementSnapshotRepository repository = AdvancementSnapshotRepository.instance;
 
@@ -34,11 +35,6 @@ public class AdvancementSnapshotHandler implements SnapshotHandler<AdvancementSn
     @Override
     public @NotNull String snapshotType() {
         return "成就";
-    }
-
-    @Override
-    public @NotNull Plugin plugin() {
-        return Main.getInstance();
     }
 
     @Override

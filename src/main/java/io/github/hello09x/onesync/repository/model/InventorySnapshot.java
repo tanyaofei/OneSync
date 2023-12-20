@@ -130,8 +130,8 @@ public record InventorySnapshot(
 
                 try {
                     switch (type) {
-                        case INVENTORY -> InventorySnapshotHandler.getInstance().applyInventory(player, this);
-                        case ENDER_CHEST -> InventorySnapshotHandler.getInstance().applyEnderChest(player, this);
+                        case INVENTORY -> InventorySnapshotHandler.instance.apply(player, this);
+                        case ENDER_CHEST -> InventorySnapshotHandler.instance.applyEnderChest(player, this);
                         default -> throw new UnsupportedOperationException("Unsupported type: " + type.name());
                     }
                 } catch (Throwable e) {

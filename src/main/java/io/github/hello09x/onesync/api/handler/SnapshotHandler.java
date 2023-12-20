@@ -1,10 +1,13 @@
 package io.github.hello09x.onesync.api.handler;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.UUID;
@@ -18,15 +21,21 @@ public interface SnapshotHandler<T extends SnapshotComponent> {
             .map(provider -> (SnapshotHandler<? extends SnapshotComponent>) provider.get())
             .toList();
 
+    @NotNull
+    static Collection<? extends SnapshotHandler<? extends SnapshotComponent>> getImpl() {
+        return Bukkit
+                .getServicesManager()
+                .getRegistrations(SnapshotHandler.class)
+                .stream()
+                .map(RegisteredServiceProvider::getProvider)
+                .map(impl -> (SnapshotHandler<? extends SnapshotComponent>) impl)
+                .toList();
+    }
+
     /**
      * @return 快照名称
      */
     @NotNull String snapshotType();
-
-    /**
-     * @return 插件
-     */
-    @NotNull Plugin plugin();
 
     /**
      * 获取玩家最新的快照

@@ -120,7 +120,7 @@ public record ProfileSnapshot(
                 }
 
                 try {
-                    if (!ProfileSnapshotHandler.getInstance().apply(player, this)) {
+                    if (!ProfileSnapshotHandler.instance.apply(player, this)) {
                         viewer.sendMessage(text("没有恢复到数据, 这可能是因为并没有开启此项数据的同步功能", GRAY));
                     } else {
                         viewer.sendMessage(textOfChildren(text("为 ", GRAY), text(player.getName(), WHITE), text(" 恢复数据成功", GRAY)));

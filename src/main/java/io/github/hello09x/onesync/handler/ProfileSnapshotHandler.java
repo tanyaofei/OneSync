@@ -18,31 +18,14 @@ import java.util.UUID;
 
 public class ProfileSnapshotHandler implements SnapshotHandler<ProfileSnapshot> {
 
+    public final static ProfileSnapshotHandler instance = new ProfileSnapshotHandler();
+
     private final ProfileSnapshotRepository repository = ProfileSnapshotRepository.instance;
     private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
 
-    private static ProfileSnapshotHandler instance;
-
-    public static ProfileSnapshotHandler getInstance() {
-        if (instance == null) {
-            instance = SnapshotHandler.HANDLERS
-                    .stream()
-                    .filter(handler -> handler.getClass() == ProfileSnapshotHandler.class)
-                    .map(ProfileSnapshotHandler.class::cast)
-                    .findAny()
-                    .orElseThrow();
-        }
-        return instance;
-    }
-
     @Override
     public @NotNull String snapshotType() {
-        return "Profile";
-    }
-
-    @Override
-    public @NotNull Plugin plugin() {
-        return Main.getInstance();
+        return "档案";
     }
 
     @Override

@@ -16,17 +16,13 @@ import java.util.UUID;
 
 public class PDCSnapshotHandler implements SnapshotHandler<PDCSnapshot> {
 
+    public final static PDCSnapshotHandler instance = new PDCSnapshotHandler();
     private final PDCSnapshotRepository repository = PDCSnapshotRepository.instance;
     private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
 
     @Override
     public @NotNull String snapshotType() {
         return "PDC";
-    }
-
-    @Override
-    public @NotNull Plugin plugin() {
-        return Main.getInstance();
     }
 
     @Override

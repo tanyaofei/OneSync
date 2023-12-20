@@ -42,7 +42,7 @@ public record AdvancementSnapshot(
         item.editMeta(meta -> {
             meta.displayName(noItalic("成就"));
             meta.lore(List.of(
-                    text("该数据无法预览", GRAY)
+                    text("该数据不支持预览", GRAY)
             ));
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         });

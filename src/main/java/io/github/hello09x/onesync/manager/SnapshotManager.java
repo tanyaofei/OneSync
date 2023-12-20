@@ -39,7 +39,7 @@ public class SnapshotManager {
                 null
         ));
 
-        for (var handler : SnapshotHandler.HANDLERS) {
+        for (var handler : SnapshotHandler.getImpl()) {
             try {
                 handler.save(snapshotId, player);
             } catch (Throwable e) {
@@ -105,11 +105,7 @@ public class SnapshotManager {
             }
 
             repository.deleteByIds(removing);
-            for (var handler : SnapshotHandler.HANDLERS) {
-                if (!handler.plugin().isEnabled()) {
-                    continue;
-                }
-
+            for (var handler : SnapshotHandler.getImpl()) {
                 handler.remove(removing);
             }
         });

@@ -41,12 +41,8 @@ public class SynchronizeManager {
             }
         }
 
-        var snapshots = new ArrayList<PreparedSnapshot>(SnapshotHandler.HANDLERS.size());
-        for (var handler : SnapshotHandler.HANDLERS) {
-            if (Bukkit.getPluginManager().isPluginEnabled(handler.plugin())) {
-                continue;
-            }
-
+        var snapshots = new ArrayList<PreparedSnapshot>();
+        for (var handler : SnapshotHandler.getImpl()) {
             var snapshot = handler.getLatest(playerId);
             if (snapshot == null) {
                 continue;
@@ -130,11 +126,6 @@ public class SynchronizeManager {
             if (snapshot == null) {
                 return false;
             }
-
-            if (!Bukkit.getPluginManager().isPluginEnabled(handler().plugin())) {
-                return false;
-            }
-
             this.handler.apply(player, snapshot);
             return true;
         }

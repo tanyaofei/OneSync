@@ -25,7 +25,6 @@ public class MenuManager {
 
     public final static MenuManager instance = new MenuManager();
     private final static Logger log = Main.getInstance().getLogger();
-
     private final SnapshotRepository repository = SnapshotRepository.instance;
 
 
@@ -110,11 +109,7 @@ public class MenuManager {
         var menu = Main.getMenuRegistry().createMenu(54, text("%s 的快照 [%d]".formatted(owner.getName(), snapshot.id())));
 
         var components = new ArrayList<SnapshotComponent.MenuItem>();
-        for (var handler : SnapshotHandler.HANDLERS) {
-            if (!handler.plugin().isEnabled()) {
-                continue;
-            }
-
+        for (var handler : SnapshotHandler.getImpl()) {
             var component = handler.getOne(snapshot.id());
             if (component == null) {
                 continue;
@@ -149,11 +144,7 @@ public class MenuManager {
             return;
         }
 
-        for (var handler : SnapshotHandler.HANDLERS) {
-            if (!handler.plugin().isEnabled()) {
-                continue;
-            }
-
+        for (var handler : SnapshotHandler.getImpl()) {
             var s = handler.getOne(id);
             if (s == null) {
                 continue;

@@ -19,31 +19,14 @@ import java.util.UUID;
 
 public class InventorySnapshotHandler implements SnapshotHandler<InventorySnapshot> {
 
+    public final static InventorySnapshotHandler instance = new InventorySnapshotHandler();
     private final InventorySnapshotRepository repository = InventorySnapshotRepository.instance;
     private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
 
-    private static InventorySnapshotHandler instance;
-
-    public static InventorySnapshotHandler getInstance() {
-        if (instance == null) {
-            instance = SnapshotHandler.HANDLERS
-                    .stream()
-                    .filter(handler -> handler.getClass() == InventorySnapshotHandler.class)
-                    .map(InventorySnapshotHandler.class::cast)
-                    .findAny()
-                    .orElseThrow();
-        }
-        return instance;
-    }
 
     @Override
     public @NotNull String snapshotType() {
-        return "Inventory";
-    }
-
-    @Override
-    public @NotNull Plugin plugin() {
-        return Main.getInstance();
+        return "背包/末影箱";
     }
 
     @Override
