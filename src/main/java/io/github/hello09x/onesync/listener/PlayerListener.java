@@ -42,6 +42,8 @@ public class PlayerListener implements Listener {
             log.severe(Throwables.getStackTraceAsString(e));
             event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, text("无法为你准备玩家数据, 请联系管理员"));
         }
+
+        log.info("为玩家 %s(%s) 准备数据完毕, 耗时 %dms".formatted(event.getPlayerProfile().getName(), event.getUniqueId(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

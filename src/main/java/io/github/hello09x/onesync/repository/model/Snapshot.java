@@ -52,13 +52,13 @@ public record Snapshot(
     private final static DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     public @NotNull ItemStack toMenuItem() {
-        var item = new ItemStack(Material.MUSIC_DISC_13);
+        var item = new ItemStack(this.cause.getIcon());
         item.editMeta(meta -> {
             meta.displayName(noItalic("快照"));
             meta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
             meta.lore(Stream.of(
                     textOfChildren(text("编号: ", GRAY), text("#" + this.id, WHITE)),
-                    textOfChildren(text("节点: ", GRAY), this.cause.getDisplayName().color(WHITE)),
+                    textOfChildren(text("节点: ", GRAY), this.cause.getDisplayName()),
                     textOfChildren(text("时间: ", GRAY), text(stringifyTime(this.createdAt), WHITE)),
                     empty(),
                     text("「左键」查看详情", GRAY),
