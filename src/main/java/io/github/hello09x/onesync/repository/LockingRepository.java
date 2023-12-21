@@ -67,10 +67,10 @@ public class LockingRepository extends Repository<Locking> {
             stm.executeUpdate("""
                     create table if not exists locking
                     (
-                        player_id  char(36)                           not null
+                        player_id  char(36)                           not null comment '玩家 ID'
                             primary key,
-                        server_id  char(36)                           null,
-                        created_at datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP
+                        server_id  char(36)                           not null comment '服务器 ID',
+                        created_at datetime default CURRENT_TIMESTAMP not null comment '创建时间'
                     );
                     """);
         });

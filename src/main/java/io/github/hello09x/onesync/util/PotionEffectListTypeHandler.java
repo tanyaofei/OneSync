@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Objects;
 
 public class PotionEffectListTypeHandler implements TypeHandler<List<PotionEffect>> {
 
@@ -35,11 +36,15 @@ public class PotionEffectListTypeHandler implements TypeHandler<List<PotionEffec
         }
 
         var mapList = Main.getGson().fromJson(value, TYPE);
-        return mapList.stream().map(SerializedPotionEffect::toPotionEffect).toList();
+        return mapList
+                .stream()
+                .map(SerializedPotionEffect::toPotionEffect)
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     public record SerializedPotionEffect(
-            int type,
+            String type,
             int duration,
             int amplifier,
             boolean ambient,
@@ -47,12 +52,17 @@ public class PotionEffectListTypeHandler implements TypeHandler<List<PotionEffec
             boolean icon
     ) {
         public SerializedPotionEffect(@NotNull PotionEffect effect) {
-            this(effect.getType().getId(), effect.getDuration(), effect.getAmplifier(), effect.isAmbient(), effect.hasParticles(), effect.hasIcon());
+            this(effect.getType().getName(), effect.getDuration(), effect.getAmplifier(), effect.isAmbient(), effect.hasParticles(), effect.hasIcon());
         }
 
-        public @NotNull PotionEffect toPotionEffect() {
+        public @Nullable PotionEffect toPotionEffect() {
+            var type = PotionEffectType.getByName(this.type);
+            if (type == null) {
+                // 遇到版本升级可能出现 null
+                return null;
+            }
             return new PotionEffect(
-                    PotionEffectType.getById(this.type),
+                    type,
                     this.duration,
                     this.amplifier,
                     this.ambient,

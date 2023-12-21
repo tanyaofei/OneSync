@@ -43,10 +43,10 @@ public class AdvancementSnapshotRepository extends Repository<AdvancementSnapsho
             stm.executeUpdate("""
                     create table advancement_snapshot
                     (
-                        snapshot_id  bigint   not null
+                        snapshot_id  bigint   not null comment '快照 ID'
                             primary key,
-                        player_id    char(36) not null,
-                        advancements json     not null
+                        player_id    char(36) not null comment '玩家 ID',
+                        advancements json     not null comment '成就数据'
                     );
                     """);
             stm.executeUpdate("""

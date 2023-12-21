@@ -21,6 +21,11 @@ public class ProfileSnapshotHandler implements SnapshotHandler<ProfileSnapshot> 
     private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
 
     @Override
+    public boolean important() {
+        return true;
+    }
+
+    @Override
     public @NotNull String snapshotType() {
         return "档案";
     }
@@ -56,6 +61,11 @@ public class ProfileSnapshotHandler implements SnapshotHandler<ProfileSnapshot> 
             exhaustion = player.getExhaustion();
         }
 
+        Integer remainingAir = null;
+        if (config.isAir()) {
+            remainingAir = player.getRemainingAir();
+        }
+
         var profile = new ProfileSnapshot(
                 snapshotId,
                 player.getUniqueId(),
@@ -67,7 +77,8 @@ public class ProfileSnapshotHandler implements SnapshotHandler<ProfileSnapshot> 
                 maxHealth,
                 foodLevel,
                 saturation,
-                exhaustion
+                exhaustion,
+                remainingAir
         );
 
         repository.insert(profile);
@@ -100,6 +111,9 @@ public class ProfileSnapshotHandler implements SnapshotHandler<ProfileSnapshot> 
             Optional.ofNullable(snapshot.foodLevel()).ifPresent(player::setFoodLevel);
             Optional.ofNullable(snapshot.saturation()).ifPresent(player::setSaturation);
             Optional.ofNullable(snapshot.exhaustion()).ifPresent(player::setExhaustion);
+        }
+        if (config.isAir() || force) {
+            Optional.ofNullable(snapshot.remainingAir()).ifPresent(player::setRemainingAir);
         }
     }
 

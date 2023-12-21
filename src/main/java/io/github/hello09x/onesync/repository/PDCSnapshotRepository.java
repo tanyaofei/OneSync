@@ -43,10 +43,10 @@ public class PDCSnapshotRepository extends Repository<PDCSnapshot> {
             stm.executeUpdate("""
                     create table pdc_snapshot
                     (
-                        snapshot_id bigint   not null
+                        snapshot_id bigint   not null comment '快照 ID'
                             primary key,
-                        player_id   char(36) not null,
-                        data        blob     not null
+                        player_id   char(36) not null comment '玩家 ID',
+                        `data`      blob     not null comment 'PDC 数据'
                     );
                     """);
             stm.executeUpdate("""

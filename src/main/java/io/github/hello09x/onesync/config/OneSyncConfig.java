@@ -45,6 +45,7 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
         private boolean health;
         private boolean exp;
         private boolean food;
+        private boolean air;
         private boolean advancements;
         private boolean potionEffects;
 
@@ -56,6 +57,7 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
             this.health = file.getBoolean("synchronize.profile.health", false);
             this.exp = file.getBoolean("synchronize.profile.exp", false);
             this.food = file.getBoolean("synchronize.profile.food", false);
+            this.air = file.getBoolean("synchronize.profile.air", false);
             this.advancements = file.getBoolean("synchronize.advancements", false);
             this.potionEffects = file.getBoolean("synchronize.potion-effects", false);
         }

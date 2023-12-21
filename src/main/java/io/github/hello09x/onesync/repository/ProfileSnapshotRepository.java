@@ -32,9 +32,10 @@ public class ProfileSnapshotRepository extends Repository<ProfileSnapshot> {
                     max_health,
                     food_level,
                     saturation,
-                    exhaustion
+                    exhaustion,
+                    remaining_air
                 )
-                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         return execute(connection -> {
             try (PreparedStatement stm = connection.prepareStatement(sql)) {
@@ -49,6 +50,7 @@ public class ProfileSnapshotRepository extends Repository<ProfileSnapshot> {
                 stm.setObject(9, snapshot.foodLevel());
                 stm.setObject(10, snapshot.saturation());
                 stm.setObject(11, snapshot.exhaustion());
+                stm.setObject(12, snapshot.remainingAir());
                 return stm.executeUpdate();
             }
         });
@@ -66,18 +68,19 @@ public class ProfileSnapshotRepository extends Repository<ProfileSnapshot> {
             stm.executeUpdate("""
                     create table profile_snapshot
                     (
-                        snapshot_id bigint      not null
+                        snapshot_id   bigint      not null comment '快照 ID'
                             primary key,
-                        player_id   char(36)    not null,
-                        game_mode   varchar(32) null,
-                        op          tinyint(1)  null,
-                        level       int         null,
-                        exp         float       null,
-                        health      double      null,
-                        max_health  double      null,
-                        food_level  int         null,
-                        saturation  float       null,
-                        exhaustion  float       null
+                        player_id     char(36)    not null comment '玩家 ID',
+                        game_mode     varchar(32) null comment '游戏模式',
+                        op            tinyint(1)  null comment '是否 OP',
+                        level         int         null comment '等级',
+                        exp           float       null comment '当前经验值',
+                        health        double      null comment '生命值',
+                        max_health    double      null comment '最大生命值',
+                        food_level    int         null comment '饥饿值',
+                        saturation    float       null comment '饱食度',
+                        exhaustion    float       null comment '饥饿程度',
+                        remaining_air int         null comment '氧气值'
                     );
                     """);
             stm.executeUpdate("""

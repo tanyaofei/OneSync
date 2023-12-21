@@ -20,6 +20,11 @@ public class PotionEffectSnapshotHandler implements SnapshotHandler<PotionEffect
 
 
     @Override
+    public boolean important() {
+        return false;
+    }
+
+    @Override
     public @NotNull String snapshotType() {
         return "效果";
     }

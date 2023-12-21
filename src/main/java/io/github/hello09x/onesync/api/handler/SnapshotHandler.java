@@ -26,6 +26,14 @@ public interface SnapshotHandler<T extends SnapshotComponent> {
     }
 
     /**
+     * 返回这些数据是否重要
+     * <p>不重要的数据在恢复时如果发生异常, 也允许玩家加入游戏</p>
+     *
+     * @return 是否重要
+     */
+    boolean important();
+
+    /**
      * @return 快照名称
      */
     @NotNull String snapshotType();
@@ -79,7 +87,6 @@ public interface SnapshotHandler<T extends SnapshotComponent> {
     default void applyUnsafe(@NotNull Player player, SnapshotComponent snapshot) {
         this.applyUnsafe(player, snapshot, false);
     }
-
 
     /**
      * 应用快照

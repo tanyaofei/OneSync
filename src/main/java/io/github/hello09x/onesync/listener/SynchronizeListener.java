@@ -33,7 +33,7 @@ public class SynchronizeListener implements Listener {
         var stopwatch = new StopWatch();
         try {
             stopwatch.start();
-            synchronizeManager.prepare(event.getUniqueId(), event.getPlayerProfile().getName(), 1000);
+            synchronizeManager.prepare(event.getUniqueId(), event.getPlayerProfile().getName(), 2000);
             stopwatch.stop();
             log.info("为玩家 %s(%s) 准备数据完毕, 耗时 %dms".formatted(event.getPlayerProfile().getName(), event.getUniqueId(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
         } catch (TimeoutException e) {

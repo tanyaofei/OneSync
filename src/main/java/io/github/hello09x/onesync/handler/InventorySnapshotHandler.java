@@ -25,6 +25,11 @@ public class InventorySnapshotHandler implements SnapshotHandler<InventorySnapsh
     private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
 
     @Override
+    public boolean important() {
+        return true;
+    }
+
+    @Override
     public @NotNull String snapshotType() {
         return "背包/末影箱";
     }
@@ -44,7 +49,8 @@ public class InventorySnapshotHandler implements SnapshotHandler<InventorySnapsh
                 snapshotId,
                 player.getUniqueId(),
                 asMap(player.getInventory()),
-                asMap(player.getEnderChest())
+                asMap(player.getEnderChest()),
+                player.getInventory().getHeldItemSlot()
         );
 
         repository.insert(snapshot);
@@ -66,6 +72,7 @@ public class InventorySnapshotHandler implements SnapshotHandler<InventorySnapsh
             return;
         }
         this.apply(snapshot.items(), player.getInventory());
+        player.getInventory().setHeldItemSlot(snapshot.heldItemSlot());
     }
 
     public void applyEnderChest(@NotNull Player player, @NotNull InventorySnapshot snapshot, boolean force) {

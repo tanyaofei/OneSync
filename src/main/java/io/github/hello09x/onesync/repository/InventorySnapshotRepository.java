@@ -20,8 +20,8 @@ public class InventorySnapshotRepository extends Repository<InventorySnapshot> {
 
     public int insert(@NotNull InventorySnapshot snapshot) {
         var sql = """
-                insert into inventory_snapshot (snapshot_id, player_id, items, ender_items)
-                values (?, ?, ?, ?)
+                insert into inventory_snapshot (snapshot_id, player_id, items, ender_items, held_item_slot)
+                values (?, ?, ?, ?, ?)
                 """;
         return execute(connection -> {
             try (PreparedStatement stm = connection.prepareStatement(sql)) {
@@ -29,6 +29,7 @@ public class InventorySnapshotRepository extends Repository<InventorySnapshot> {
                 stm.setString(2, snapshot.playerId().toString());
                 ItemStackMapTypeHandler.instance.setParameter(stm, 3, snapshot.items());
                 ItemStackMapTypeHandler.instance.setParameter(stm, 4, snapshot.enderItems());
+                stm.setInt(5, snapshot.heldItemSlot());
                 return stm.executeUpdate();
             }
         });
@@ -45,11 +46,12 @@ public class InventorySnapshotRepository extends Repository<InventorySnapshot> {
             stm.executeUpdate("""
                     create table inventory_snapshot
                     (
-                        snapshot_id bigint   not null
+                        snapshot_id        bigint        not null comment '快照 ID'
                             primary key,
-                        player_id   char(36) not null,
-                        items       json     not null,
-                        ender_items json     not null
+                        player_id          char(36)      not null comment '玩家 ID',
+                        items              json          not null comment '背包物品',
+                        ender_items        json          not null comment '末影箱物品',
+                        held_item_slot     int default 0 not null comment '选中的物品槽'
                     );
                     """);
             stm.executeUpdate("""

@@ -44,7 +44,11 @@ public record PotionEffectSnapshot(
             meta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
             meta.lore(this.effects
                     .stream()
-                    .map(effect -> textOfChildren(translatable(effect.getType()), text(": "), text(effect.getAmplifier()), text(" - "), text((effect.getDuration() / 20) + " 秒")).color(WHITE))
+                    .map(effect -> textOfChildren(
+                                    translatable(effect.getType()), text(": "),
+                                    text(effect.getAmplifier()),
+                                    text(" | "), text(effect.isInfinite() ? "永久" : (effect.getDuration() / 20) + " 秒")).color(WHITE)
+                    )
                     .map(Components::noItalic)
                     .toList());
         });

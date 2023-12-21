@@ -47,7 +47,10 @@ public record InventorySnapshot(
         Map<Integer, ItemStack> items,
 
         @TableField(value = "ender_items", typeHandler = ItemStackMapTypeHandler.class)
-        Map<Integer, ItemStack> enderItems
+        Map<Integer, ItemStack> enderItems,
+
+        @TableField(value = "held_item_slot")
+        Integer heldItemSlot
 
 
 ) implements SnapshotComponent {

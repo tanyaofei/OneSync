@@ -41,10 +41,10 @@ public class PotionEffectSnapshotRepository extends Repository<PotionEffectSnaps
             stm.executeUpdate("""
                     create table potion_effect_snapshot
                     (
-                        snapshot_id bigint   not null
+                        snapshot_id bigint   not null comment '快照 ID'
                             primary key,
-                        player_id   char(36) not null,
-                        effects     json     not null
+                        player_id   char(36) not null comment '玩家 ID',
+                        effects     json     not null comment '效果'
                     );
                     """);
             stm.executeUpdate("""

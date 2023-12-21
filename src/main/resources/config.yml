@@ -39,6 +39,9 @@ synchronize:
     # 饥饿值, 饱食度, 饥饿度
     food: false
 
+    # 氧气值
+    air: false
+
 snapshot:
 
   # 每位玩家最大快照数量

@@ -86,7 +86,9 @@ public class SynchronizeManager {
                         handler.snapshotType(),
                         e.getMessage())
                 );
-                throw e;
+                if (handler.important()) {
+                    throw e;
+                }
             }
         }
 
@@ -114,7 +116,9 @@ public class SynchronizeManager {
                             player.getUniqueId(),
                             e.getMessage()
                     ));
-                    throw e;
+                    if (pair.registration.getProvider().important()) {
+                        throw e;
+                    }
                 }
             }
 

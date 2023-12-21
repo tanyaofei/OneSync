@@ -81,9 +81,9 @@ public class SnapshotRepository extends Repository<Snapshot> {
                     (
                         id         bigint auto_increment
                             primary key,
-                        player_id  char(36)                           not null,
-                        cause      varchar(32)                        not null,
-                        created_at datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP
+                        player_id  char(36)                           not null comment '玩家 ID',
+                        cause      varchar(32)                        not null comment '节点',
+                        created_at datetime default CURRENT_TIMESTAMP not null comment '创建时间'
                     );
                     """);
             stm.executeUpdate("""

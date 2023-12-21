@@ -45,7 +45,7 @@ public class ItemStackMapTypeHandler implements TypeHandler<Map<Integer, ItemSta
         var bytes = GSON.fromJson(value, BYTES_LIST_TYPE);
         var items = new HashMap<Integer, ItemStack>(bytes.size(), 1.0F);
         for (var entry : bytes.entrySet()) {
-            items.put(entry.getKey(), ItemStack.deserializeBytes(entry.getValue()));
+            items.put(entry.getKey(), ItemStack.deserializeBytes(entry.getValue()));    // 遇到版本升级 MC 会自动处理
         }
         return items;
     }

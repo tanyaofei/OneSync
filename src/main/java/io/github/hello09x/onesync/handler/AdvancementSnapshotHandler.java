@@ -33,6 +33,11 @@ public class AdvancementSnapshotHandler implements SnapshotHandler<AdvancementSn
             .collect(Collectors.toMap(adv -> adv.getKey().asString(), Function.identity()));
 
     @Override
+    public boolean important() {
+        return false;
+    }
+
+    @Override
     public @NotNull String snapshotType() {
         return "成就";
     }
