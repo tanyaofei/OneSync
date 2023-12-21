@@ -43,9 +43,12 @@ public class SynchronizeManager {
     /**
      * 玩家登陆游戏时提前准备好数据
      *
-     * @param playerId 玩家 ID
+     * @param playerId   玩家 ID
+     * @param playerName 玩家名称
+     * @param timeout    超时时间
+     * @return 是否完全成功
      */
-    public void prepare(@NotNull UUID playerId, @Nullable String playerName, long timeout) throws TimeoutException {
+    public boolean prepare(@NotNull UUID playerId, @Nullable String playerName, long timeout) throws TimeoutException {
         this.prepared.remove(playerId);
         long startedAt = System.currentTimeMillis();
         while (synchronizer.isLocked(playerId)) {
@@ -53,7 +56,7 @@ public class SynchronizeManager {
                 throw new TimeoutException("Timeout after %dms".formatted(timeout));
             }
             try {
-                Thread.sleep(startedAt / 10);
+                Thread.sleep(startedAt / 100);
             } catch (InterruptedException ignored) {
 
             }
@@ -62,9 +65,10 @@ public class SynchronizeManager {
         var snapshot = snapshotManager.getLatest(playerId);
         if (snapshot == null) {
             this.prepared.put(playerId, Collections.emptyList());
-            return;
+            return true;
         }
 
+        boolean fullySuccess = true;
         var snapshots = new ArrayList<PreparedSnapshot>();
         for (var registration : SnapshotHandler.getRegistrations()) {
             var handler = registration.getProvider();
@@ -88,27 +92,44 @@ public class SynchronizeManager {
                 );
                 if (handler.important()) {
                     throw e;
+                } else {
+                    fullySuccess = false;
                 }
             }
         }
 
         this.prepared.put(playerId, snapshots);
+        return fullySuccess;
     }
 
-    public void applyPrepared(@NotNull Player player) {
+    /**
+     * 应用已经准备好的快照数据
+     *
+     * @param player 玩家
+     * @return 是否完全成功
+     */
+    public boolean applyPrepared(@NotNull Player player) {
         var pairs = this.prepared.get(player.getUniqueId());
         if (pairs == null) {
             throw new IllegalStateException("No prepared snapshots for player: " + player.getName() + "(" + player.getUniqueId() + ")");
         }
 
+        boolean fullySuccess = true;
         try {
             for (var pair : pairs) {
+                var registration = pair.registration;
                 var snapshot = pair.snapshot;
                 if (snapshot == null) {
                     continue;
                 }
+                if (!registration.getPlugin().isEnabled()) {
+                    log.warning("插件 [%s] 已卸载, 无法恢复它提供的数据".formatted(registration.getPlugin().getName()));
+                    continue;
+                }
+
+                var handler = registration.getProvider();
                 try {
-                    pair.registration.getProvider().applyUnsafe(player, snapshot);
+                    handler.applyUnsafe(player, snapshot);
                 } catch (Throwable e) {
                     log.severe("恢复 %s 由 [%s] 提供的「%s」数据失败: %s".formatted(
                             player.getName(),
@@ -116,8 +137,10 @@ public class SynchronizeManager {
                             player.getUniqueId(),
                             e.getMessage()
                     ));
-                    if (pair.registration.getProvider().important()) {
+                    if (handler.important()) {
                         throw e;
+                    } else {
+                        fullySuccess = false;
                     }
                 }
             }
@@ -126,6 +149,8 @@ public class SynchronizeManager {
         } finally {
             this.prepared.remove(player.getUniqueId());
         }
+
+        return fullySuccess;
     }
 
     public void save(@NotNull Player player, @NotNull SnapshotCause cause) {
@@ -148,6 +173,7 @@ public class SynchronizeManager {
             try {
                 this.save(player, cause);
             } catch (Throwable e) {
+                // 因为玩家退出时调用此方法并不能取消操作, 因此只能继续执行
                 log.severe("保存玩家 %s(%s) 数据失败: %s".formatted(player.getName(), player.getUniqueId(), Throwables.getStackTraceAsString(e)));
             }
         }
@@ -164,16 +190,6 @@ public class SynchronizeManager {
             SnapshotComponent snapshot
 
     ) {
-
-        public boolean apply(@NotNull Player player) {
-            var snapshot = this.snapshot;
-            if (snapshot == null) {
-                return false;
-            }
-
-            this.registration.getProvider().applyUnsafe(player, snapshot);
-            return true;
-        }
 
     }
 
