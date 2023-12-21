@@ -31,7 +31,7 @@ public interface SnapshotHandler<T extends SnapshotComponent> {
      *
      * @return 是否重要
      */
-    boolean important();
+    boolean isImportant();
 
     /**
      * @return 快照名称

@@ -20,7 +20,7 @@ public class PotionEffectSnapshotHandler implements SnapshotHandler<PotionEffect
 
 
     @Override
-    public boolean important() {
+    public boolean isImportant() {
         return false;
     }
 

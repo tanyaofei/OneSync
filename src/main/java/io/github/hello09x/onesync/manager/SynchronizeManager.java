@@ -90,7 +90,7 @@ public class SynchronizeManager {
                         handler.snapshotType(),
                         e.getMessage())
                 );
-                if (handler.important()) {
+                if (handler.isImportant()) {
                     throw e;
                 } else {
                     fullySuccess = false;
@@ -137,7 +137,7 @@ public class SynchronizeManager {
                             player.getUniqueId(),
                             e.getMessage()
                     ));
-                    if (handler.important()) {
+                    if (handler.isImportant()) {
                         throw e;
                     } else {
                         fullySuccess = false;

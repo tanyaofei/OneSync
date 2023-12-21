@@ -18,7 +18,7 @@ public class PDCSnapshotHandler implements SnapshotHandler<PDCSnapshot> {
     private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
 
     @Override
-    public boolean important() {
+    public boolean isImportant() {
         return true;
     }
 

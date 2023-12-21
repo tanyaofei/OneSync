@@ -33,7 +33,7 @@ public class AdvancementSnapshotHandler implements SnapshotHandler<AdvancementSn
             .collect(Collectors.toMap(adv -> adv.getKey().asString(), Function.identity()));
 
     @Override
-    public boolean important() {
+    public boolean isImportant() {
         return false;
     }
 
