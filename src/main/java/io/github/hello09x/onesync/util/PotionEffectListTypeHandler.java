@@ -12,7 +12,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 
 public class PotionEffectListTypeHandler implements TypeHandler<List<PotionEffect>> {
 
