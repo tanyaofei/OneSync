@@ -30,7 +30,7 @@ public class LockingRepository extends Repository<Locking> {
 
     public boolean setLock(@NotNull UUID playerId, boolean lock) {
         var modification = lock
-                ? "insert into `locking` (player_id, server_id) values (?, ?)"
+                ? "replace into `locking` (player_id, server_id) values (?, ?)"
                 : "delete from `locking` where player_id = ? and server_id = ?";
 
         return execute(connection -> {

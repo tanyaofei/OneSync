@@ -57,7 +57,7 @@ public final class Main extends JavaPlugin {
             messenger.registerOutgoingPluginChannel(this, LockingManager.CHANNEL);
         }
 
-        LockingManager.instance.relock();   // 热重载
+        LockingManager.instance.relockAll();   // 热重载
     }
 
     @Override
