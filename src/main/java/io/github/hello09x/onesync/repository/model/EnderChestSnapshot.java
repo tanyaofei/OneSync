@@ -3,20 +3,17 @@ package io.github.hello09x.onesync.repository.model;
 import io.github.hello09x.bedrock.database.Table;
 import io.github.hello09x.bedrock.database.TableField;
 import io.github.hello09x.bedrock.database.TableId;
-import io.github.hello09x.bedrock.database.typehandler.JsonTypeHandler;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
-import io.github.hello09x.onesync.api.handler.SnapshotHandler;
-import io.github.hello09x.onesync.handler.AdvancementSnapshotHandler;
+import io.github.hello09x.onesync.util.ItemStackMapTypeHandler;
+import io.github.hello09x.onesync.util.MenuTemplate;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -24,11 +21,11 @@ import java.util.function.Consumer;
 
 import static io.github.hello09x.bedrock.util.Components.noItalic;
 import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
-import static net.kyori.adventure.text.format.NamedTextColor.WHITE;
+import static net.kyori.adventure.text.Component.textOfChildren;
+import static net.kyori.adventure.text.format.NamedTextColor.*;
 
-@Table("advancement_snapshot")
-public record AdvancementSnapshot(
+@Table("ender_chest_snapshot")
+public record EnderChestSnapshot(
 
         @TableId("snapshot_id")
         Long snapshotId,
@@ -36,8 +33,8 @@ public record AdvancementSnapshot(
         @TableField("player_id")
         UUID playerId,
 
-        @TableField(value = "advancements", typeHandler = JsonTypeHandler.class)
-        Map<String, Collection<String>> advancements
+        @TableField(value = "items", typeHandler = ItemStackMapTypeHandler.class)
+        Map<Integer, ItemStack> items
 
 ) implements SnapshotComponent {
 
@@ -48,15 +45,13 @@ public record AdvancementSnapshot(
 
     @Override
     public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> back) {
-        var item = new ItemStack(Material.GRASS_BLOCK);
+        var item = new ItemStack(Material.ENDER_CHEST);
         item.editMeta(meta -> {
-            meta.displayName(noItalic("成就", WHITE));
-            meta.lore(List.of(
-                    text("该数据不支持预览", GRAY)
-            ));
-            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+            meta.displayName(noItalic("末影箱", LIGHT_PURPLE));
+            meta.lore(List.of(noItalic(textOfChildren(text("物品: ", GRAY), text(this.items.size(), WHITE))))
+            );
         });
-        return new MenuItem(item);
-    }
 
+        return new MenuItem(item, ignored -> MenuTemplate.openInventoryMenu(viewer, text("末影箱"), this.items, back));
+    }
 }

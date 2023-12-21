@@ -5,8 +5,12 @@ import io.github.hello09x.bedrock.database.TableField;
 import io.github.hello09x.bedrock.database.TableId;
 import io.github.hello09x.bedrock.util.Components;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
+import io.github.hello09x.onesync.api.handler.SnapshotHandler;
+import io.github.hello09x.onesync.handler.PotionEffectSnapshotHandler;
 import io.github.hello09x.onesync.util.PotionEffectListTypeHandler;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemFlag;
@@ -18,8 +22,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import static io.github.hello09x.bedrock.util.Components.noItalic;
 import static net.kyori.adventure.text.Component.*;
-import static net.kyori.adventure.text.format.NamedTextColor.WHITE;
+import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 @Table("potion_effect_snapshot")
 public record PotionEffectSnapshot(
@@ -36,23 +41,33 @@ public record PotionEffectSnapshot(
 ) implements SnapshotComponent {
 
     @Override
-    public @NotNull MenuItem[] toMenuItems(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> back) {
+    public @NotNull OfflinePlayer owner() {
+        return Bukkit.getOfflinePlayer(this.playerId);
+    }
+
+    @Override
+    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> back) {
         var item = new ItemStack(Material.POTION);
         item.editMeta(meta -> {
-            meta.displayName(text("效果"));
+            meta.displayName(noItalic("效果", DARK_PURPLE));
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             meta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
-            meta.lore(this.effects
-                    .stream()
-                    .map(effect -> textOfChildren(
-                                    translatable(effect.getType()), text(": "),
-                                    text(effect.getAmplifier()),
-                                    text(" | "), text(effect.isInfinite() ? "永久" : (effect.getDuration() / 20) + " 秒")).color(WHITE)
-                    )
-                    .map(Components::noItalic)
-                    .toList());
+
+            if (this.effects.isEmpty()) {
+                meta.lore(List.of(text("无", GRAY)));
+            } else {
+                meta.lore(this.effects
+                        .stream()
+                        .map(effect -> textOfChildren(
+                                translatable(effect.getType()), text(": "),
+                                text(effect.getAmplifier()),
+                                text(" | "), text(effect.isInfinite() ? "永久" : (effect.getDuration() / 20) + " 秒")).color(WHITE)
+                        )
+                        .map(Components::noItalic)
+                        .toList());
+            }
         });
-        return new MenuItem[]{new MenuItem(item)};
+        return new MenuItem(item);
     }
 
 }

@@ -5,15 +5,12 @@ import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.InventorySnapshotRepository;
 import io.github.hello09x.onesync.repository.model.InventorySnapshot;
+import io.github.hello09x.onesync.util.InventoryHelper;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 
 public class InventorySnapshotHandler implements SnapshotHandler<InventorySnapshot> {
@@ -48,8 +45,7 @@ public class InventorySnapshotHandler implements SnapshotHandler<InventorySnapsh
         var snapshot = new InventorySnapshot(
                 snapshotId,
                 player.getUniqueId(),
-                asMap(player.getInventory()),
-                asMap(player.getEnderChest()),
+                InventoryHelper.toMap(player.getInventory()),
                 player.getInventory().getHeldItemSlot()
         );
 
@@ -63,43 +59,12 @@ public class InventorySnapshotHandler implements SnapshotHandler<InventorySnapsh
 
     @Override
     public void apply(@NotNull Player player, @NotNull InventorySnapshot snapshot, boolean force) {
-        this.applyInventory(player, snapshot, force);
-        this.applyEnderChest(player, snapshot, force);
-    }
-
-    public void applyInventory(@NotNull Player player, @NotNull InventorySnapshot snapshot, boolean force) {
         if (!config.isInventory() && !force) {
             return;
         }
-        this.apply(snapshot.items(), player.getInventory());
+
+        InventoryHelper.replace(player.getInventory(), snapshot.items());
         player.getInventory().setHeldItemSlot(snapshot.heldItemSlot());
-    }
-
-    public void applyEnderChest(@NotNull Player player, @NotNull InventorySnapshot snapshot, boolean force) {
-        if (!config.isInventory() && !force) {
-            return;
-        }
-        this.apply(snapshot.enderItems(), player.getEnderChest());
-    }
-
-    public void apply(@NotNull Map<Integer, ItemStack> from, @NotNull Inventory to) {
-        for (int i = to.getSize() - 1; i >= 0; i--) {
-            to.setItem(i, from.get(i));
-        }
-    }
-
-    private static @NotNull Map<Integer, ItemStack> asMap(@NotNull Inventory inventory) {
-        var items = new HashMap<Integer, ItemStack>(inventory.getSize(), 1.0F);
-        var itr = inventory.iterator();
-        while (itr.hasNext()) {
-            var i = itr.nextIndex();
-            var item = itr.next();
-            if (item == null) {
-                continue;
-            }
-            items.put(i, item);
-        }
-        return items;
     }
 
 }

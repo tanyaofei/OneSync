@@ -1,5 +1,6 @@
 package io.github.hello09x.onesync.api.handler;
 
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -10,19 +11,22 @@ import java.util.function.Consumer;
 
 public interface SnapshotComponent {
 
+    /**
+     * @return 快照所属玩家
+     */
+    @NotNull OfflinePlayer owner();
 
     /**
      * 转换为箱子菜单物品
      *
      * @return 箱子菜单物品
      */
-    @NotNull MenuItem[] toMenuItems(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> back);
+    @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> back);
 
     record MenuItem(
 
             @NotNull
             ItemStack item,
-
             @Nullable
             Consumer<InventoryClickEvent> onClick
 

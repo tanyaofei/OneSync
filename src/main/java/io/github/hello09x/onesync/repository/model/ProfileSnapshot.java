@@ -7,11 +7,13 @@ import io.github.hello09x.bedrock.database.TableId;
 import io.github.hello09x.bedrock.util.Components;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
+import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.handler.ProfileSnapshotHandler;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -96,10 +98,15 @@ public record ProfileSnapshot(
     private final static Logger log = Main.getInstance().getLogger();
 
     @Override
-    public @NotNull MenuItem[] toMenuItems(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> back) {
+    public @NotNull OfflinePlayer owner() {
+        return Bukkit.getOfflinePlayer(this.playerId);
+    }
+
+    @Override
+    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> back) {
         var item = new ItemStack(Material.PLAYER_HEAD);
         item.editMeta(meta -> {
-            meta.displayName(noItalic("档案"));
+            meta.displayName(noItalic("档案", YELLOW));
             meta.lore(Stream.of(
                     textOfChildren(text("游戏模式: ", GRAY), Optional.ofNullable(this.gameMode).map(v -> (Component) translatable(v, WHITE)).orElse(text("<无>", WHITE))),
                     textOfChildren(text("OP: ", GRAY), text(Optional.ofNullable(this.op).map(v -> v ? "是" : "否").orElse("<无>"), WHITE)),
@@ -115,7 +122,7 @@ public record ProfileSnapshot(
                     text("「右键」恢复数据", GRAY)
             ).map(Components::noItalic).toList());
         });
-        return new MenuItem[]{new MenuItem(item, event -> {
+        return new MenuItem(item, event -> {
             if (event.getClick() == ClickType.RIGHT) {
                 var player = Bukkit.getPlayer(this.playerId);
                 if (player == null) {
@@ -134,7 +141,7 @@ public record ProfileSnapshot(
 
                 viewer.closeInventory();
             }
-        })};
+        });
     }
 
 }

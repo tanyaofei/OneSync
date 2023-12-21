@@ -2,6 +2,7 @@ package io.github.hello09x.onesync.manager;
 
 import com.google.common.base.Throwables;
 import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.SnapshotRepository;
@@ -64,6 +65,10 @@ public class SnapshotManager {
      */
     public void createForAll(@NotNull SnapshotCause cause) {
         var players = Bukkit.getOnlinePlayers();
+        if (players.isEmpty()) {
+            return;
+        }
+
         var stopwatch = new StopWatch();
         stopwatch.start();
         for (var player : players) {

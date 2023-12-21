@@ -38,6 +38,7 @@ public final class Main extends JavaPlugin {
 
         {
             var sm = Bukkit.getServicesManager();
+            sm.register(SnapshotHandler.class, EnderChestSnapshotHandler.instance, this, ServicePriority.Highest);
             sm.register(SnapshotHandler.class, InventorySnapshotHandler.instance, this, ServicePriority.Highest);
             sm.register(SnapshotHandler.class, ProfileSnapshotHandler.instance, this, ServicePriority.High);
             sm.register(SnapshotHandler.class, AdvancementSnapshotHandler.instance, this, ServicePriority.Normal);

@@ -39,6 +39,7 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
     @ToString
     public final static class Synchronize {
         private boolean inventory;
+        private boolean enderChest;
         private boolean pdc;
         private boolean gameMode;
         private boolean op;
@@ -51,6 +52,7 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
 
         public void reload(@NotNull FileConfiguration file) {
             this.inventory = file.getBoolean("synchronize.inventory", true);
+            this.enderChest = file.getBoolean("synchronize.ender-chest", true);
             this.pdc = file.getBoolean("synchronize.pdc", false);
             this.gameMode = file.getBoolean("synchronize.profile.game-mode", false);
             this.op = file.getBoolean("synchronize.profile.op", false);

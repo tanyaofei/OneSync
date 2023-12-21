@@ -9,8 +9,11 @@ datasource:
 
 synchronize:
 
-  # 玩家背包及末影箱
+  # 玩家背包
   inventory: true
+
+  # 末影箱
+  ender-chest: true
 
   # 玩家持久化数据 PersistentDataContainer(PDC)
   pdc: false

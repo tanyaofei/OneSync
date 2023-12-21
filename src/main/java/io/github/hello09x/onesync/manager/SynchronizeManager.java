@@ -72,12 +72,11 @@ public class SynchronizeManager {
         var snapshots = new ArrayList<PreparedSnapshot>();
         for (var registration : SnapshotHandler.getRegistrations()) {
             var handler = registration.getProvider();
-            var component = handler.getOne(snapshot.id());
-            if (component == null) {
-                continue;
-            }
-
             try {
+                var component = handler.getOne(snapshot.id());
+                if (component == null) {
+                    continue;
+                }
                 snapshots.add(new PreparedSnapshot(
                         registration,
                         component
@@ -119,15 +118,16 @@ public class SynchronizeManager {
             for (var pair : pairs) {
                 var registration = pair.registration;
                 var snapshot = pair.snapshot;
+                var handler = registration.getProvider();
+
                 if (snapshot == null) {
                     continue;
                 }
                 if (!registration.getPlugin().isEnabled()) {
-                    log.warning("插件 [%s] 已卸载, 无法为 %s 恢复它提供的数据".formatted(player.getName(), registration.getPlugin().getName()));
+                    log.warning("插件 [%s] 已卸载, 无法为 %s 恢复它提供的「%s」数据".formatted(player.getName(), registration.getPlugin().getName(), handler.snapshotType()));
                     continue;
                 }
 
-                var handler = registration.getProvider();
                 try {
                     handler.applyUnsafe(player, snapshot);
                 } catch (Throwable e) {

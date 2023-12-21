@@ -13,13 +13,14 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
+import static io.github.hello09x.bedrock.util.Components.noItalic;
+import static net.kyori.adventure.text.Component.empty;
 import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.format.NamedTextColor.RED;
+import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 public class MenuManager {
 
@@ -51,13 +52,15 @@ public class MenuManager {
                     menu,
                     i,
                     snapshot.toMenuItem(),
-                    event -> this.openSnapshot(viewer, snapshot.id(), x -> {
+                    event -> {
                         if (event.getClick() == ClickType.LEFT) {
-                            this.openSnapshotPage(viewer, page, player);
-                        } else {
+                            // 左键打开详情
+                            this.openSnapshot(viewer, snapshot.id(), x -> this.openSnapshotPage(viewer, page, player));
+                        } else if (event.getClick() == ClickType.RIGHT) {
+                            // 右键恢复
                             this.applySnapshot(viewer, snapshot.id());
                         }
-                    }));
+                    });
         }
 
         if (page != 1) {
@@ -84,7 +87,7 @@ public class MenuManager {
                 menu,
                 49,
                 Material.BARRIER,
-                text("关闭"),
+                noItalic("关闭", RED),
                 event -> viewer.closeInventory()
         );
 
@@ -108,24 +111,77 @@ public class MenuManager {
         var owner = Bukkit.getOfflinePlayer(snapshot.playerId());
         var menu = Main.getMenuRegistry().createMenu(54, text("%s 的快照 [%d]".formatted(owner.getName(), snapshot.id())));
 
-        var components = new ArrayList<SnapshotComponent.MenuItem>();
+        int i = 0;
         for (var service : SnapshotHandler.getImpl()) {
-            var component = service.getOne(snapshot.id());
-            if (component == null) {
+            var sc = service.getOne(snapshot.id());
+            if (sc == null) {
                 continue;
             }
-            var items = component.toMenuItems(viewer, event -> this.openSnapshot(viewer, id, back));
-            components.addAll(Arrays.asList(items));
+
+            var item = sc.toMenuItem(viewer, event -> this.openSnapshot(viewer, id, back));
+            Main.getMenuRegistry().setButton(menu, i++, item.item(), event -> {
+                if (event.getClick() == ClickType.RIGHT) {
+                    // 右键打开恢复界面
+                    this.openSnapshotApplyConfirm(viewer, service, sc, x -> this.openSnapshot(viewer, id, back));
+                } else if (item.onClick() != null) {
+                    // 左键传递到物品的自定义点击事件
+                    item.onClick().accept(event);
+                }
+            });
+            if (i == 45) {
+                break;
+            }
         }
 
-        var itr = components.listIterator();
-        while (itr.hasNext() && itr.nextIndex() < 45) {
-            var i = itr.nextIndex();
-            var item = itr.next();
-            Main.getMenuRegistry().setButton(menu, i, item.item(), item.onClick());
-        }
-        Main.getMenuRegistry().setButton(menu, 49, Material.BARRIER, text("返回"), back);
+        Main.getMenuRegistry().setButton(menu, 49, Material.BARRIER, noItalic("返回"), back);
 
+        viewer.openInventory(menu);
+    }
+
+    /**
+     * 打开确认恢复快照某一项数据的页面
+     *
+     * @param viewer   查看者
+     * @param handler  快照处理器
+     * @param snapshot 快照
+     * @param back     返回上一页
+     */
+    public <T extends SnapshotComponent> void openSnapshotApplyConfirm(
+            @NotNull Player viewer,
+            @NotNull SnapshotHandler<T> handler,
+            @NotNull T snapshot,
+            @NotNull Consumer<InventoryClickEvent> back
+    ) {
+        var menu = Main.getMenuRegistry().createMenu(54, text("确认恢复?"));
+        Stream.of(12, 13, 14, 21, 23, 30, 31, 32).forEach(slot -> Main.getMenuRegistry().setButton(
+                menu,
+                slot,
+                Material.BLACK_STAINED_GLASS_PANE,
+                empty(),
+                null
+        ));
+
+        Main.getMenuRegistry().setButton(menu, 22, Material.GREEN_STAINED_GLASS_PANE, noItalic("确定", GREEN), event -> {
+            try {
+                var owner = snapshot.owner().getPlayer();
+                if (owner == null) {
+                    viewer.sendMessage(text("该玩家不在线", RED));
+                    return;
+                }
+
+                try {
+                    handler.apply(owner, snapshot, true);
+                    viewer.sendMessage(text("恢复数据成功", GRAY));
+                } catch (Throwable e) {
+                    log.severe(Throwables.getStackTraceAsString(e));
+                    viewer.sendMessage(text("恢复数据失败: " + e.getMessage()));
+                }
+            } finally {
+                viewer.closeInventory();
+            }
+        });
+
+        Main.getMenuRegistry().setButton(menu, 49, Material.BARRIER, noItalic("取消"), back);
         viewer.openInventory(menu);
     }
 
