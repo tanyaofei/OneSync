@@ -9,6 +9,7 @@ import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import org.apache.commons.lang3.time.StopWatch;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,33 +29,63 @@ public class SynchronizeManager {
 
     private final static Logger log = Main.getInstance().getLogger();
 
+
+    /**
+     * 判断玩家是否已经准备好了数据, 这同时意味着玩家只是登陆了还没加入数据, 当前的数据是脏的
+     *
+     * @param playerId 玩家 ID
+     * @return 是否已经准备好了
+     */
+    public boolean isPrepared(@NotNull UUID playerId) {
+        return this.prepared.containsKey(playerId);
+    }
+
     /**
      * 玩家登陆游戏时提前准备好数据
      *
      * @param playerId 玩家 ID
      */
-    public void prepare(@NotNull UUID playerId, long timeout) throws TimeoutException {
-        long time = System.currentTimeMillis();
+    public void prepare(@NotNull UUID playerId, @Nullable String playerName, long timeout) throws TimeoutException {
+        this.prepared.remove(playerId);
+        long startedAt = System.currentTimeMillis();
         while (synchronizer.isLocked(playerId)) {
-            if (System.currentTimeMillis() - time >= timeout) {
-                throw new TimeoutException("timeout");
+            if (System.currentTimeMillis() - startedAt >= timeout) {
+                throw new TimeoutException("Timeout after %dms".formatted(timeout));
+            }
+            try {
+                Thread.sleep(startedAt / 10);
+            } catch (InterruptedException ignored) {
+
             }
         }
 
+        var snapshot = snapshotManager.getLatest(playerId);
+        if (snapshot == null) {
+            this.prepared.put(playerId, Collections.emptyList());
+            return;
+        }
+
         var snapshots = new ArrayList<PreparedSnapshot>();
-        for (var handler : SnapshotHandler.getImpl()) {
-            var snapshot = handler.getLatest(playerId);
-            if (snapshot == null) {
+        for (var registration : SnapshotHandler.getRegistrations()) {
+            var handler = registration.getProvider();
+            var component = handler.getOne(snapshot.id());
+            if (component == null) {
                 continue;
             }
 
             try {
                 snapshots.add(new PreparedSnapshot(
-                        (SnapshotHandler<SnapshotComponent>) handler,
-                        handler.getLatest(playerId)
+                        registration,
+                        component
                 ));
             } catch (Throwable e) {
-                log.severe("准备 %s 的「%s」数据失败: %s".formatted(playerId, handler.snapshotType(), e.getMessage()));
+                log.severe("准备 %s(%s) 由 [%s] 提供的「%s」数据失败: %s".formatted(
+                        playerName,
+                        playerId,
+                        registration.getPlugin().getName(),
+                        handler.snapshotType(),
+                        e.getMessage())
+                );
                 throw e;
             }
         }
@@ -63,17 +94,26 @@ public class SynchronizeManager {
     }
 
     public void applyPrepared(@NotNull Player player) {
-        var snapshots = this.prepared.get(player.getUniqueId());
-        if (snapshots == null) {
+        var pairs = this.prepared.get(player.getUniqueId());
+        if (pairs == null) {
             throw new IllegalStateException("No prepared snapshots for player: " + player.getName() + "(" + player.getUniqueId() + ")");
         }
 
         try {
-            for (var s : snapshots) {
+            for (var pair : pairs) {
+                var snapshot = pair.snapshot;
+                if (snapshot == null) {
+                    continue;
+                }
                 try {
-                    s.apply(player);
+                    pair.registration.getProvider().applyUnsafe(player, snapshot);
                 } catch (Throwable e) {
-                    log.severe("恢复 %s 的「%s」数据失败: %s".formatted(player.getName(), player.getUniqueId(), e.getMessage()));
+                    log.severe("恢复 %s 由 [%s] 提供的「%s」数据失败: %s".formatted(
+                            player.getName(),
+                            pair.registration.getPlugin().getName(),
+                            player.getUniqueId(),
+                            e.getMessage()
+                    ));
                     throw e;
                 }
             }
@@ -113,8 +153,8 @@ public class SynchronizeManager {
 
     public record PreparedSnapshot(
 
-            @NotNull
-            SnapshotHandler<SnapshotComponent> handler,
+            @SuppressWarnings("rawtypes")
+            RegisteredServiceProvider<SnapshotHandler> registration,
 
             @Nullable
             SnapshotComponent snapshot
@@ -126,7 +166,8 @@ public class SynchronizeManager {
             if (snapshot == null) {
                 return false;
             }
-            this.handler.apply(player, snapshot);
+
+            this.registration.getProvider().applyUnsafe(player, snapshot);
             return true;
         }
 

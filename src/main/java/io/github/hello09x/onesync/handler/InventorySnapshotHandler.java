@@ -8,30 +8,25 @@ import io.github.hello09x.onesync.repository.model.InventorySnapshot;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import java.util.logging.Logger;
 
 public class InventorySnapshotHandler implements SnapshotHandler<InventorySnapshot> {
 
     public final static InventorySnapshotHandler instance = new InventorySnapshotHandler();
+    private final static Logger log = Main.getInstance().getLogger();
+
     private final InventorySnapshotRepository repository = InventorySnapshotRepository.instance;
     private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
-
 
     @Override
     public @NotNull String snapshotType() {
         return "背包/末影箱";
-    }
-
-    @Override
-    public @Nullable InventorySnapshot getLatest(@NotNull UUID playerId) {
-        return repository.selectLatestByPlayerId(playerId);
     }
 
     @Override
@@ -61,33 +56,23 @@ public class InventorySnapshotHandler implements SnapshotHandler<InventorySnapsh
     }
 
     @Override
-    public void remove(@NotNull Long snapshotId) {
-        repository.deleteById(snapshotId);
+    public void apply(@NotNull Player player, @NotNull InventorySnapshot snapshot, boolean force) {
+        this.applyInventory(player, snapshot, force);
+        this.applyEnderChest(player, snapshot, force);
     }
 
-    @Override
-    public boolean apply(@NotNull Player player, @NotNull InventorySnapshot snapshot) {
-        if (!config.isInventory()) {
-            return false;
-        }
-
-        return this.applyInventory(player, snapshot) | this.applyEnderChest(player, snapshot);
-    }
-
-    public boolean applyInventory(@NotNull Player player, @NotNull InventorySnapshot snapshot) {
-        if (!config.isInventory()) {
-            return false;
+    public void applyInventory(@NotNull Player player, @NotNull InventorySnapshot snapshot, boolean force) {
+        if (!config.isInventory() && !force) {
+            return;
         }
         this.apply(snapshot.items(), player.getInventory());
-        return true;
     }
 
-    public boolean applyEnderChest(@NotNull Player player, @NotNull InventorySnapshot snapshot) {
-        if (!config.isInventory()) {
-            return false;
+    public void applyEnderChest(@NotNull Player player, @NotNull InventorySnapshot snapshot, boolean force) {
+        if (!config.isInventory() && !force) {
+            return;
         }
         this.apply(snapshot.enderItems(), player.getEnderChest());
-        return true;
     }
 
     public void apply(@NotNull Map<Integer, ItemStack> from, @NotNull Inventory to) {
@@ -102,6 +87,9 @@ public class InventorySnapshotHandler implements SnapshotHandler<InventorySnapsh
         while (itr.hasNext()) {
             var i = itr.nextIndex();
             var item = itr.next();
+            if (item == null) {
+                continue;
+            }
             items.put(i, item);
         }
         return items;

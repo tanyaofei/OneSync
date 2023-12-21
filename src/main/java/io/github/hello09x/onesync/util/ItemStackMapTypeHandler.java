@@ -30,10 +30,7 @@ public class ItemStackMapTypeHandler implements TypeHandler<Map<Integer, ItemSta
         var bytes = new HashMap<Integer, byte[]>(value.size(), 1.0F);
         for (var entry : value.entrySet()) {
             var item = entry.getValue();
-            if (item == null) {
-                continue;
-            }
-            bytes.put(entry.getKey(), item.serializeAsBytes());
+            bytes.put(entry.getKey(), item == null ? null : item.serializeAsBytes());
         }
         stm.setString(i, GSON.toJson(bytes));
     }

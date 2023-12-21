@@ -60,7 +60,7 @@ public record InventorySnapshot(
         inventory.editMeta(meta -> {
             meta.displayName(noItalic("背包"));
             meta.lore(List.of(
-                            noItalic(textOfChildren(text("物品: ", GRAY), text(this.items.size(), WHITE))),
+                    noItalic(textOfChildren(text("物品: ", GRAY), text(this.items.size(), WHITE))),
                             empty(),
                             noItalic("「左键」查看详情", GRAY),
                             noItalic("「右键」恢复数据", GRAY)
@@ -130,8 +130,8 @@ public record InventorySnapshot(
 
                 try {
                     switch (type) {
-                        case INVENTORY -> InventorySnapshotHandler.instance.apply(player, this);
-                        case ENDER_CHEST -> InventorySnapshotHandler.instance.applyEnderChest(player, this);
+                        case INVENTORY -> InventorySnapshotHandler.instance.applyInventory(player, this, true);
+                        case ENDER_CHEST -> InventorySnapshotHandler.instance.applyEnderChest(player, this, true);
                         default -> throw new UnsupportedOperationException("Unsupported type: " + type.name());
                     }
                 } catch (Throwable e) {

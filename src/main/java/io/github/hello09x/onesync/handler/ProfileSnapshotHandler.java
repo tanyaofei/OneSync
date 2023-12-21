@@ -1,6 +1,5 @@
 package io.github.hello09x.onesync.handler;
 
-import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.ProfileSnapshotRepository;
@@ -8,13 +7,11 @@ import io.github.hello09x.onesync.repository.model.ProfileSnapshot;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 public class ProfileSnapshotHandler implements SnapshotHandler<ProfileSnapshot> {
 
@@ -26,11 +23,6 @@ public class ProfileSnapshotHandler implements SnapshotHandler<ProfileSnapshot> 
     @Override
     public @NotNull String snapshotType() {
         return "档案";
-    }
-
-    @Override
-    public @Nullable ProfileSnapshot getLatest(@NotNull UUID playerId) {
-        return repository.selectLatestByPlayerId(playerId);
     }
 
     @Override
@@ -87,40 +79,28 @@ public class ProfileSnapshotHandler implements SnapshotHandler<ProfileSnapshot> 
     }
 
     @Override
-    public void remove(@NotNull Long snapshotId) {
-        repository.deleteById(snapshotId);
-    }
-
-    @Override
-    public boolean apply(@NotNull Player player, @NotNull ProfileSnapshot snapshot) {
-        var success = false;
-        if (config.isGameMode()) {
+    public void apply(@NotNull Player player, @NotNull ProfileSnapshot snapshot, boolean force) {
+        if (config.isGameMode() || force) {
             Optional.ofNullable(snapshot.gameMode()).ifPresent(player::setGameMode);
-            success = true;
         }
-        if (config.isOp()) {
+        if (config.isOp() || force) {
             Optional.ofNullable(snapshot.op()).ifPresent(player::setOp);
-            success = true;
         }
-        if (config.isExp()) {
+        if (config.isExp() || force) {
             Optional.ofNullable(snapshot.level()).ifPresent(player::setLevel);
             Optional.ofNullable(snapshot.exp()).ifPresent(player::setExp);
-            success = true;
         }
-        if (config.isHealth()) {
+        if (config.isHealth() || force) {
             Optional.ofNullable(snapshot.health()).ifPresent(player::setHealth);
             Optional.ofNullable(snapshot.maxHealth()).ifPresent(maxHealth -> {
                 Optional.ofNullable(player.getAttribute(Attribute.GENERIC_MAX_HEALTH)).ifPresent(attr -> attr.setBaseValue(maxHealth));
             });
-            success = true;
         }
-        if (config.isFood()) {
+        if (config.isFood() || force) {
             Optional.ofNullable(snapshot.foodLevel()).ifPresent(player::setFoodLevel);
             Optional.ofNullable(snapshot.saturation()).ifPresent(player::setSaturation);
             Optional.ofNullable(snapshot.exhaustion()).ifPresent(player::setExhaustion);
-            success = true;
         }
-        return success;
     }
 
 }

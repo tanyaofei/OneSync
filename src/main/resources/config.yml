@@ -16,7 +16,10 @@ synchronize:
   pdc: false
 
   # 玩家成就数据
-  advancement: false
+  advancements: false
+
+  # 效果, 如药水效果、Buff
+  potion-effects: false
 
   # 玩家档案
   profile:

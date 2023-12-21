@@ -1,18 +1,15 @@
 package io.github.hello09x.onesync.handler;
 
-import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.PDCSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.PDCSnapshot;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
 
 public class PDCSnapshotHandler implements SnapshotHandler<PDCSnapshot> {
 
@@ -23,11 +20,6 @@ public class PDCSnapshotHandler implements SnapshotHandler<PDCSnapshot> {
     @Override
     public @NotNull String snapshotType() {
         return "PDC";
-    }
-
-    @Override
-    public @Nullable PDCSnapshot getLatest(@NotNull UUID playerId) {
-        return repository.selectLatestByPlayerId(playerId);
     }
 
     @Override
@@ -61,14 +53,9 @@ public class PDCSnapshotHandler implements SnapshotHandler<PDCSnapshot> {
     }
 
     @Override
-    public void remove(@NotNull Long snapshotId) {
-        repository.deleteById(snapshotId);
-    }
-
-    @Override
-    public boolean apply(@NotNull Player player, @NotNull PDCSnapshot snapshot) {
-        if (!config.isPdc()) {
-            return false;
+    public void apply(@NotNull Player player, @NotNull PDCSnapshot snapshot, boolean force) {
+        if (!config.isPdc() && !force) {
+            return;
         }
 
         try {
@@ -76,6 +63,5 @@ public class PDCSnapshotHandler implements SnapshotHandler<PDCSnapshot> {
         } catch (IOException e) {
             throw new Error(e);
         }
-        return true;
     }
 }

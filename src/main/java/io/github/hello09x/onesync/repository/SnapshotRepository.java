@@ -7,6 +7,7 @@ import io.github.hello09x.onesync.repository.model.Snapshot;
 import org.bukkit.plugin.Plugin;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -39,10 +40,20 @@ public class SnapshotRepository extends Repository<Snapshot> {
     public @NotNull List<Snapshot> selectByPlayerId(@NotNull UUID playerId) {
         var sql = "select * from `snapshot` where player_id = ?";
         return execute(connection -> {
-           try (PreparedStatement stm = connection.prepareStatement(sql))  {
-               stm.setString(1, playerId.toString());
-               return mapMany(stm.executeQuery());
-           }
+            try (PreparedStatement stm = connection.prepareStatement(sql)) {
+                stm.setString(1, playerId.toString());
+                return mapMany(stm.executeQuery());
+            }
+        });
+    }
+
+    public @Nullable Snapshot selectLatestByPlayerId(@NotNull UUID playerId) {
+        var sql = "select * from `snapshot` where player_id = ? order by id desc limit 1";
+        return execute(connection -> {
+            try (PreparedStatement stm = connection.prepareStatement(sql)) {
+                stm.setString(1, playerId.toString());
+                return mapOne(stm.executeQuery());
+            }
         });
     }
 

@@ -32,16 +32,6 @@ public class AdvancementSnapshotRepository extends Repository<AdvancementSnapsho
         });
     }
 
-    public @Nullable AdvancementSnapshot selectLatestByPlayerId(@NotNull UUID playerId) {
-        var sql = "select * from advancement_snapshot where player_id = ? order by snapshot_id limit 1";
-        return execute(connection -> {
-            try (PreparedStatement stm = connection.prepareStatement(sql)) {
-                stm.setString(1, playerId.toString());
-                return mapOne(stm.executeQuery());
-            }
-        });
-    }
-
     @Override
     protected void initTables() {
         execute(connection -> {

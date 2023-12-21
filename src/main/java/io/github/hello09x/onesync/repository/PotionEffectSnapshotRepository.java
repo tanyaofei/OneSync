@@ -2,30 +2,29 @@ package io.github.hello09x.onesync.repository;
 
 import io.github.hello09x.bedrock.database.Repository;
 import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.repository.model.PDCSnapshot;
+import io.github.hello09x.onesync.repository.model.PotionEffectSnapshot;
+import io.github.hello09x.onesync.util.PotionEffectListTypeHandler;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.UUID;
 
-public class PDCSnapshotRepository extends Repository<PDCSnapshot> {
+public class PotionEffectSnapshotRepository extends Repository<PotionEffectSnapshot> {
 
-    public final static PDCSnapshotRepository instance = new PDCSnapshotRepository(Main.getInstance());
+    public final static PotionEffectSnapshotRepository instance = new PotionEffectSnapshotRepository(Main.getInstance());
 
-    public PDCSnapshotRepository(@NotNull Plugin plugin) {
+    public PotionEffectSnapshotRepository(@NotNull Plugin plugin) {
         super(plugin);
     }
 
-    public int insert(@NotNull PDCSnapshot snapshot) {
-        var sql = "insert into pdc_snapshot (snapshot_id, player_id, `data`) values (?, ?, ?)";
+    public int insert(@NotNull PotionEffectSnapshot snapshot) {
+        var sql = "insert into potion_effect_snapshot (snapshot_id, player_id, effects) values (?, ?, ?)";
         return execute(connection -> {
             try (PreparedStatement stm = connection.prepareStatement(sql)) {
                 stm.setLong(1, snapshot.snapshotId());
                 stm.setString(2, snapshot.playerId().toString());
-                stm.setBytes(3, snapshot.data());
+                PotionEffectListTypeHandler.instance.setParameter(stm, 3, snapshot.effects());
                 return stm.executeUpdate();
             }
         });
@@ -35,23 +34,22 @@ public class PDCSnapshotRepository extends Repository<PDCSnapshot> {
     protected void initTables() {
         execute(connection -> {
             Statement stm = connection.createStatement();
-            var rs = stm.executeQuery("select * from information_schema.INNODB_TABLES where name = '%s'".formatted(connection.getCatalog() + "/" + "pdc_snapshot"));
+            var rs = stm.executeQuery("select * from information_schema.INNODB_TABLES where name = '%s'".formatted(connection.getCatalog() + "/" + "potion_effect_snapshot"));
             if (rs.next()) {
                 return;
             }
-
             stm.executeUpdate("""
-                    create table pdc_snapshot
+                    create table potion_effect_snapshot
                     (
                         snapshot_id bigint   not null
                             primary key,
                         player_id   char(36) not null,
-                        data        blob     not null
+                        effects     json     not null
                     );
                     """);
             stm.executeUpdate("""
-                    create index pdc_snapshot_player_id_index
-                        on pdc_snapshot (player_id);
+                    create index potion_effect_snapshot_player_id_index
+                        on potion_effect_snapshot (player_id);
                     """);
         });
     }

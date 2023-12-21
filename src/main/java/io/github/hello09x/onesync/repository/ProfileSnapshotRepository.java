@@ -5,16 +5,19 @@ import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.ProfileSnapshot;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.Optional;
-import java.util.UUID;
 
 public class ProfileSnapshotRepository extends Repository<ProfileSnapshot> {
 
     public final static ProfileSnapshotRepository instance = new ProfileSnapshotRepository(Main.getInstance());
+
+
+    public ProfileSnapshotRepository(@NotNull Plugin plugin) {
+        super(plugin);
+    }
 
     public int insert(@NotNull ProfileSnapshot snapshot) {
         var sql = """
@@ -49,20 +52,6 @@ public class ProfileSnapshotRepository extends Repository<ProfileSnapshot> {
                 return stm.executeUpdate();
             }
         });
-    }
-
-    public @Nullable ProfileSnapshot selectLatestByPlayerId(@NotNull UUID playerId) {
-        var sql = "select * from profile_snapshot where player_id = ? order by snapshot_id limit 1";
-        return execute(connection -> {
-            try (PreparedStatement stm = connection.prepareStatement(sql)) {
-                stm.setString(1, playerId.toString());
-                return mapOne(stm.executeQuery());
-            }
-        });
-    }
-
-    public ProfileSnapshotRepository(@NotNull Plugin plugin) {
-        super(plugin);
     }
 
     @Override

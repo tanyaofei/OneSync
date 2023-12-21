@@ -32,7 +32,7 @@ public class SnapshotListener implements Listener {
             return;
         }
 
-        snapshotManager.createAll(SnapshotCause.WORLD_SAVE);
+        snapshotManager.createForAll(SnapshotCause.WORLD_SAVE);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

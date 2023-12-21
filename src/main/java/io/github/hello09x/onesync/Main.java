@@ -1,14 +1,12 @@
 package io.github.hello09x.onesync;
 
+import com.google.gson.Gson;
 import io.github.hello09x.bedrock.menu.ChestMenuRegistry;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.command.CommandRegistry;
-import io.github.hello09x.onesync.handler.AdvancementSnapshotHandler;
-import io.github.hello09x.onesync.handler.InventorySnapshotHandler;
-import io.github.hello09x.onesync.handler.PDCSnapshotHandler;
-import io.github.hello09x.onesync.handler.ProfileSnapshotHandler;
-import io.github.hello09x.onesync.listener.PlayerListener;
+import io.github.hello09x.onesync.handler.*;
 import io.github.hello09x.onesync.listener.SnapshotListener;
+import io.github.hello09x.onesync.listener.SynchronizeListener;
 import io.github.hello09x.onesync.manager.LockingManager;
 import io.github.hello09x.onesync.manager.SynchronizeManager;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
@@ -24,6 +22,9 @@ public final class Main extends JavaPlugin {
 
     @Getter
     private static ChestMenuRegistry menuRegistry;
+
+    @Getter
+    private final static Gson gson = new Gson();
 
     @Override
     public void onLoad() {
@@ -41,11 +42,12 @@ public final class Main extends JavaPlugin {
             sm.register(SnapshotHandler.class, ProfileSnapshotHandler.instance, this, ServicePriority.High);
             sm.register(SnapshotHandler.class, AdvancementSnapshotHandler.instance, this, ServicePriority.Normal);
             sm.register(SnapshotHandler.class, PDCSnapshotHandler.instance, this, ServicePriority.Normal);
+            sm.register(SnapshotHandler.class, PotionEffectSnapshotHandler.instance, this, ServicePriority.Normal);
         }
 
         {
             var pm = super.getServer().getPluginManager();
-            pm.registerEvents(PlayerListener.instance, this);
+            pm.registerEvents(SynchronizeListener.instance, this);
             pm.registerEvents(SnapshotListener.instance, this);
         }
 

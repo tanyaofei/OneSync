@@ -45,7 +45,8 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
         private boolean health;
         private boolean exp;
         private boolean food;
-        private boolean advancement;
+        private boolean advancements;
+        private boolean potionEffects;
 
         public void reload(@NotNull FileConfiguration file) {
             this.inventory = file.getBoolean("synchronize.inventory", true);
@@ -55,7 +56,8 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
             this.health = file.getBoolean("synchronize.profile.health", false);
             this.exp = file.getBoolean("synchronize.profile.exp", false);
             this.food = file.getBoolean("synchronize.profile.food", false);
-            this.advancement = file.getBoolean("synchronize.advancement", false);
+            this.advancements = file.getBoolean("synchronize.advancements", false);
+            this.potionEffects = file.getBoolean("synchronize.potion-effects", false);
         }
     }
 
@@ -67,11 +69,14 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
 
         private int keepDays;
 
+        private boolean compress;
+
         private Set<SnapshotCause> when = Collections.emptySet();
 
         public void reload(@NotNull FileConfiguration file) {
             this.capacity = file.getInt("snapshot.capacity", 45);
             this.keepDays = file.getInt("snapshot.keep-days", 7);
+            this.compress = file.getBoolean("snapshot.compress", false);
             this.when = file.getStringList("snapshot.when").stream().map(name -> {
                 try {
                     return SnapshotCause.valueOf(name);

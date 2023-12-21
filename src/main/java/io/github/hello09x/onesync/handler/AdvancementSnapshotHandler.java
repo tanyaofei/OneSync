@@ -5,6 +5,7 @@ import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.AdvancementSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.AdvancementSnapshot;
+import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.entity.Player;
@@ -13,7 +14,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -38,32 +38,28 @@ public class AdvancementSnapshotHandler implements SnapshotHandler<AdvancementSn
     }
 
     @Override
-    public @Nullable AdvancementSnapshot getLatest(@NotNull UUID playerId) {
-        return repository.selectLatestByPlayerId(playerId);
-    }
-
-    @Override
     public @Nullable AdvancementSnapshot getOne(@NotNull Long snapshotId) {
         return repository.selectById(snapshotId);
     }
 
     @Override
     public void save(@NotNull Long snapshotId, @NotNull Player player) {
-        if (!config.isAdvancement()) {
+        if (!config.isAdvancements()) {
             return;
         }
         var advancements = StreamSupport.
                 stream(((Iterable<Advancement>) Bukkit::advancementIterator).spliterator(), false)
-                .collect(Collectors.toMap(
-                        advancement -> advancement.getKey().asString(),
-                        advancement -> player.getAdvancementProgress(advancement).getAwardedCriteria()
-                ));
+                .map(advancement -> Pair.of(advancement.getKey().asString(), player.getAdvancementProgress(advancement).getAwardedCriteria()))
+                .filter(pair -> !pair.getValue().isEmpty())
+                .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
 
-        repository.insert(new AdvancementSnapshot(
+        var snapshot = new AdvancementSnapshot(
                 snapshotId,
                 player.getUniqueId(),
                 advancements
-        ));
+        );
+
+        repository.insert(snapshot);
     }
 
     @Override
@@ -72,15 +68,11 @@ public class AdvancementSnapshotHandler implements SnapshotHandler<AdvancementSn
     }
 
     @Override
-    public void remove(@NotNull Long snapshotId) {
-        repository.deleteById(snapshotId);
-    }
-
-    @Override
-    public boolean apply(@NotNull Player player, @NotNull AdvancementSnapshot snapshot) {
-        if (!config.isAdvancement()) {
-            return false;
+    public void apply(@NotNull Player player, @NotNull AdvancementSnapshot snapshot, boolean force) {
+        if (!config.isAdvancements() && !force) {
+            return;
         }
+
         for (var entry : ADVANCEMENTS.entrySet()) {
             var key = entry.getKey();
             var advancement = entry.getValue();
@@ -94,6 +86,6 @@ public class AdvancementSnapshotHandler implements SnapshotHandler<AdvancementSn
                 }
             }
         }
-        return true;
+
     }
 }

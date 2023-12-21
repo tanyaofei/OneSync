@@ -109,8 +109,8 @@ public class MenuManager {
         var menu = Main.getMenuRegistry().createMenu(54, text("%s 的快照 [%d]".formatted(owner.getName(), snapshot.id())));
 
         var components = new ArrayList<SnapshotComponent.MenuItem>();
-        for (var handler : SnapshotHandler.getImpl()) {
-            var component = handler.getOne(snapshot.id());
+        for (var service : SnapshotHandler.getImpl()) {
+            var component = service.getOne(snapshot.id());
             if (component == null) {
                 continue;
             }
