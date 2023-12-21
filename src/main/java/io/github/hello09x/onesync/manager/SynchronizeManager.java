@@ -123,7 +123,7 @@ public class SynchronizeManager {
                     continue;
                 }
                 if (!registration.getPlugin().isEnabled()) {
-                    log.warning("插件 [%s] 已卸载, 无法恢复它提供的数据".formatted(registration.getPlugin().getName()));
+                    log.warning("插件 [%s] 已卸载, 无法为 %s 恢复它提供的数据".formatted(player.getName(), registration.getPlugin().getName()));
                     continue;
                 }
 
