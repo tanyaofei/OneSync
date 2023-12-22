@@ -143,8 +143,8 @@ public class SynchronizeManager {
             }
         }
 
-        this.prepared.remove(player.getUniqueId());
         lockingManager.lock(player.getUniqueId());  // 锁定玩家, 当玩家退出游戏时才解锁
+        this.prepared.remove(player.getUniqueId());
         return complete;
     }
 
