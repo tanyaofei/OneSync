@@ -21,8 +21,7 @@ public final class Main extends JavaPlugin {
     private static Main instance;
 
     @Getter
-    private static ChestMenuRegistry menuRegistry;
-
+    private static ChestMenuRegistry chestMenuRegistry;
     @Getter
     private final static Gson gson = new Gson();
 
@@ -33,7 +32,7 @@ public final class Main extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        menuRegistry = new ChestMenuRegistry(this);
+        chestMenuRegistry = new ChestMenuRegistry(this);
         CommandRegistry.register();
 
         {

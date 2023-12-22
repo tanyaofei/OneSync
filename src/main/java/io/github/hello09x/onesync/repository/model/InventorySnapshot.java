@@ -54,12 +54,12 @@ public record InventorySnapshot(
     }
 
     @Override
-    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> back) {
+    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onCancel) {
         var item = new ItemStack(Material.CHEST);
         item.editMeta(meta -> {
             meta.displayName(noItalic("背包", GOLD));
             meta.lore(List.of(noItalic(textOfChildren(text("物品: ", GRAY), text(this.items.size(), WHITE)))));
         });
-        return new MenuItem(item, ignored -> MenuTemplate.openInventoryMenu(viewer, text("末影箱"), this.items, back));
+        return new MenuItem(item, ignored -> MenuTemplate.openInventoryMenu(viewer, text("末影箱"), this.items, onCancel));
     }
 }

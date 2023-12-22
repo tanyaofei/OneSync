@@ -44,7 +44,7 @@ public record EnderChestSnapshot(
     }
 
     @Override
-    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> back) {
+    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onCancel) {
         var item = new ItemStack(Material.ENDER_CHEST);
         item.editMeta(meta -> {
             meta.displayName(noItalic("末影箱", LIGHT_PURPLE));
@@ -52,6 +52,6 @@ public record EnderChestSnapshot(
             );
         });
 
-        return new MenuItem(item, ignored -> MenuTemplate.openInventoryMenu(viewer, text("末影箱"), this.items, back));
+        return new MenuItem(item, ignored -> MenuTemplate.openInventoryMenu(viewer, text("末影箱"), this.items, onCancel));
     }
 }

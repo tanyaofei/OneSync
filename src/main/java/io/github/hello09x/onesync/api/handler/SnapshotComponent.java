@@ -19,9 +19,11 @@ public interface SnapshotComponent {
     /**
      * 转换为箱子菜单物品
      *
+     * @param viewer   操作者
+     * @param onCancel 取消操作, 实现者如果需要创建新的箱子菜单, 可以将点击事件执行到这个函数来返回上一层页面
      * @return 箱子菜单物品
      */
-    @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> back);
+    @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onCancel);
 
     record MenuItem(
 

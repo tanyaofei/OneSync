@@ -1,5 +1,6 @@
 package io.github.hello09x.onesync.util;
 
+import io.github.hello09x.bedrock.menu.ChestMenu;
 import io.github.hello09x.onesync.Main;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
@@ -12,13 +13,14 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import static io.github.hello09x.bedrock.util.Components.noItalic;
+import static net.kyori.adventure.text.Component.text;
 
 public class MenuTemplate {
 
-    public static void openInventoryMenu(@NotNull Player viewer, @NotNull Component title, @NotNull Map<Integer, ItemStack> items, @NotNull Consumer<InventoryClickEvent> back) {
-        var menu = Main.getMenuRegistry().createMenu(54, title);
+    public static void openInventoryMenu(@NotNull Player viewer, @NotNull Component title, @NotNull Map<Integer, ItemStack> items, @NotNull Consumer<InventoryClickEvent> onCancel) {
+        var menu = Main.getChestMenuRegistry().createMenu(54, title, onCancel);
         for (var entry : items.entrySet()) {
-            Main.getMenuRegistry().setButton(menu, entry.getKey(), entry.getValue(), e -> {
+            menu.setButton(entry.getKey(), entry.getValue(), e -> {
                 var item = e.getCurrentItem();
                 if (item == null) {
                     return;
@@ -28,9 +30,7 @@ public class MenuTemplate {
             });
         }
 
-        Main.getMenuRegistry().setButton(menu, 49, Material.BARRIER, noItalic("取消"), back);
-
-        viewer.openInventory(menu);
+        viewer.openInventory(menu.getInventory());
     }
 
 
