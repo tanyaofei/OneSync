@@ -58,7 +58,11 @@ public record InventorySnapshot(
         var item = new ItemStack(Material.CHEST);
         item.editMeta(meta -> {
             meta.displayName(noItalic("背包", GOLD));
-            meta.lore(List.of(noItalic(textOfChildren(text("物品: ", GRAY), text(this.items.size(), WHITE)))));
+            meta.lore(List.of(
+                    noItalic(textOfChildren(text("物品: ", GRAY), text(this.items.size(), WHITE))),
+                    empty(),
+                    noItalic("「左键」查看详情", GRAY)
+            ));
         });
         return new MenuItem(item, ignored -> MenuTemplate.openInventoryMenu(viewer, text("末影箱"), this.items, onCancel));
     }

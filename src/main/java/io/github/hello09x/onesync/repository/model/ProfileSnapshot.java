@@ -118,8 +118,7 @@ public record ProfileSnapshot(
                     textOfChildren(text("饱食度: ", GRAY), text(Optional.ofNullable(this.saturation).map(Object::toString).orElse("<无>"), WHITE)),
                     textOfChildren(text("饥饿度: ", GRAY), text(Optional.ofNullable(this.exhaustion).map(Object::toString).orElse("<无>"), WHITE)),
                     textOfChildren(text("氧气值: ", GRAY), text(Optional.ofNullable(this.remainingAir).map(air -> air / 20 + " 秒").orElse("<无>"), WHITE)),
-                    empty(),
-                    text("「右键」恢复数据", GRAY)
+                    empty()
             ).map(Components::noItalic).toList());
         });
         return new MenuItem(item, event -> {

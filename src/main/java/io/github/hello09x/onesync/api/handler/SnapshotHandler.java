@@ -17,21 +17,14 @@ public interface SnapshotHandler<T extends SnapshotComponent> {
         return Bukkit.getServicesManager().getRegistrations(SnapshotHandler.class);
     }
 
-    @SuppressWarnings("rawtypes")
-    static Collection<SnapshotHandler> getImpl() {
+    @SuppressWarnings("uncheck")
+    static <T extends SnapshotComponent> Collection<SnapshotHandler<T>> getImpl() {
         return Bukkit.getServicesManager().getRegistrations(SnapshotHandler.class)
                 .stream()
                 .map(RegisteredServiceProvider::getProvider)
+                .map(handler -> (SnapshotHandler<T>) handler)
                 .toList();
     }
-
-    /**
-     * 返回这些数据是否重要
-     * <p>不重要的数据在恢复时如果发生异常, 也允许玩家加入游戏</p>
-     *
-     * @return 是否重要
-     */
-    boolean isImportant();
 
     /**
      * @return 快照名称

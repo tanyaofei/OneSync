@@ -4,8 +4,6 @@ import io.github.hello09x.bedrock.database.Table;
 import io.github.hello09x.bedrock.database.TableField;
 import io.github.hello09x.bedrock.database.TableId;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
-import io.github.hello09x.onesync.api.handler.SnapshotHandler;
-import io.github.hello09x.onesync.handler.PDCSnapshotHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -19,6 +17,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import static io.github.hello09x.bedrock.util.Components.noItalic;
+import static net.kyori.adventure.text.Component.empty;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.DARK_GREEN;
 import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
@@ -43,7 +42,10 @@ public record PDCSnapshot(
         var item = new ItemStack(Material.STRUCTURE_VOID);
         item.editMeta(meta -> {
             meta.displayName(noItalic("PDC", DARK_GREEN));
-            meta.lore(List.of(text("该数据不支持预览", GRAY)));
+            meta.lore(List.of(
+                    text("该数据不支持预览", GRAY),
+                    empty()
+            ));
         });
         return new MenuItem(item);
     }

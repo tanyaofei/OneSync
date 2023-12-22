@@ -45,9 +45,8 @@ public class SynchronizeManager {
      * @param playerId   玩家 ID
      * @param playerName 玩家名称
      * @param timeout    超时时间
-     * @return 是否完全成功
      */
-    public boolean prepare(@NotNull UUID playerId, @Nullable String playerName, long timeout) throws TimeoutException {
+    public void prepare(@NotNull UUID playerId, @Nullable String playerName, long timeout) throws TimeoutException {
         this.prepared.remove(playerId);
         long startedAt = System.currentTimeMillis();
         while (lockingManager.isLocked(playerId)) {
@@ -64,10 +63,9 @@ public class SynchronizeManager {
         var snapshot = snapshotManager.getLatest(playerId);
         if (snapshot == null) {
             this.prepared.put(playerId, Collections.emptyList());
-            return true;
+            return;
         }
 
-        boolean completed = true;
         var snapshots = new ArrayList<PreparedSnapshot>();
         for (var registration : SnapshotHandler.getRegistrations()) {
             var handler = registration.getProvider();
@@ -88,31 +86,24 @@ public class SynchronizeManager {
                         handler.snapshotType(),
                         e.getMessage())
                 );
-                if (handler.isImportant()) {
-                    throw e;
-                } else {
-                    completed = false;
-                }
+                throw e;
             }
         }
 
         this.prepared.put(playerId, snapshots);
-        return completed;
     }
 
     /**
      * 应用已经准备好的快照数据
      *
      * @param player 玩家
-     * @return 是否完全成功
      */
-    public boolean applyPrepared(@NotNull Player player) {
+    public void applyPrepared(@NotNull Player player) {
         var pairs = this.prepared.get(player.getUniqueId());
         if (pairs == null) {
             throw new IllegalStateException("No prepared snapshots for player: " + player.getName() + "(" + player.getUniqueId() + ")");
         }
 
-        boolean complete = true;
         for (var pair : pairs) {
             var registration = pair.registration;
             var snapshot = pair.snapshot;
@@ -135,17 +126,12 @@ public class SynchronizeManager {
                         player.getUniqueId(),
                         e.getMessage()
                 ));
-                if (handler.isImportant()) {
-                    throw e;
-                } else {
-                    complete = false;
-                }
+                throw e;
             }
         }
 
         lockingManager.lock(player.getUniqueId());  // 锁定玩家, 当玩家退出游戏时才解锁
-        this.prepared.remove(player.getUniqueId());
-        return complete;
+        this.prepared.remove(player.getUniqueId()); // 如果发生异常了, 则不移除玩家, 玩家下线时如果还存在准备好的数据, 则不会触发保存
     }
 
     public void save(@NotNull Player player, @NotNull SnapshotCause cause) {
@@ -165,6 +151,9 @@ public class SynchronizeManager {
         var stopwatch = new StopWatch();
         stopwatch.start();
         for (var player : players) {
+            if (this.isPrepared(player.getUniqueId())) {
+                continue;
+            }
             try {
                 this.save(player, cause);
             } catch (Throwable e) {

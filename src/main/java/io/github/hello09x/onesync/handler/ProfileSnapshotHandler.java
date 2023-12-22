@@ -21,11 +21,6 @@ public class ProfileSnapshotHandler implements SnapshotHandler<ProfileSnapshot> 
     private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
 
     @Override
-    public boolean isImportant() {
-        return true;
-    }
-
-    @Override
     public @NotNull String snapshotType() {
         return "档案";
     }

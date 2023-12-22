@@ -20,8 +20,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import static io.github.hello09x.bedrock.util.Components.noItalic;
-import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.Component.textOfChildren;
+import static net.kyori.adventure.text.Component.*;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 @Table("ender_chest_snapshot")
@@ -48,8 +47,11 @@ public record EnderChestSnapshot(
         var item = new ItemStack(Material.ENDER_CHEST);
         item.editMeta(meta -> {
             meta.displayName(noItalic("末影箱", LIGHT_PURPLE));
-            meta.lore(List.of(noItalic(textOfChildren(text("物品: ", GRAY), text(this.items.size(), WHITE))))
-            );
+            meta.lore(List.of(
+                    noItalic(textOfChildren(text("物品: ", GRAY), text(this.items.size(), WHITE))),
+                    empty(),
+                    noItalic("「左键」查看详情", GRAY)
+            ));
         });
 
         return new MenuItem(item, ignored -> MenuTemplate.openInventoryMenu(viewer, text("末影箱"), this.items, onCancel));

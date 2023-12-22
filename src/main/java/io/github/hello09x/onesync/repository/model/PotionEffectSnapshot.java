@@ -5,8 +5,6 @@ import io.github.hello09x.bedrock.database.TableField;
 import io.github.hello09x.bedrock.database.TableId;
 import io.github.hello09x.bedrock.util.Components;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
-import io.github.hello09x.onesync.api.handler.SnapshotHandler;
-import io.github.hello09x.onesync.handler.PotionEffectSnapshotHandler;
 import io.github.hello09x.onesync.util.PotionEffectListTypeHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -21,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static io.github.hello09x.bedrock.util.Components.noItalic;
 import static net.kyori.adventure.text.Component.*;
@@ -56,18 +55,56 @@ public record PotionEffectSnapshot(
             if (this.effects.isEmpty()) {
                 meta.lore(List.of(text("无", GRAY)));
             } else {
-                meta.lore(this.effects
-                        .stream()
-                        .map(effect -> textOfChildren(
-                                translatable(effect.getType()), text(": "),
-                                text(effect.getAmplifier()),
-                                text(" | "), text(effect.isInfinite() ? "永久" : (effect.getDuration() / 20) + " 秒")).color(WHITE)
-                        )
+                meta.lore(Stream
+                        .concat(this.effects
+                                .stream()
+                                .map(effect -> textOfChildren(
+                                        translatable(effect.getType(), GRAY), space(), text(getLevel(effect.getAmplifier()), GRAY),
+                                        text(" : ", GRAY),
+                                        text(getDuration(effect.getDuration()))
+                                ).color(WHITE)), Stream.of(empty()))
                         .map(Components::noItalic)
                         .toList());
             }
         });
         return new MenuItem(item);
+    }
+
+    private static @NotNull String getLevel(int amplifier) {
+        var level = amplifier + 1;
+        return switch (level) {
+            case 1 -> "I";
+            case 2 -> "II";
+            case 3 -> "III";
+            case 4 -> "IV";
+            case 5 -> "V";
+            case 6 -> "VI";
+            case 7 -> "VII";
+            case 8 -> "VIII";
+            case 9 -> "XI";
+            case 10 -> "X";
+            default -> String.valueOf(level);
+        };
+    }
+
+    private static @NotNull String getDuration(int ticks) {
+        if (ticks == PotionEffect.INFINITE_DURATION) {
+            return "∞";
+        }
+        var total = ticks / 20;
+
+        var hours = total / 3600;
+        var minutes = (total % 3600) / 60;
+        var seconds = total % 60;
+
+        if (hours == 0) {
+            if (minutes == 0) {
+                return "%02d".formatted(seconds);
+            }
+            return "%02d:%02d".formatted(minutes, seconds);
+        } else {
+            return "%02d:%02d:%02d".formatted(hours, minutes, seconds);
+        }
     }
 
 }

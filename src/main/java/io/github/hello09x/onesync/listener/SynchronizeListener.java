@@ -31,10 +31,9 @@ public class SynchronizeListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPreLogin(@NotNull AsyncPlayerPreLoginEvent event) {
         var stopwatch = new StopWatch();
-        boolean complete;
         try {
             stopwatch.start();
-            complete = synchronizeManager.prepare(event.getUniqueId(), event.getPlayerProfile().getName(), 2000);
+            synchronizeManager.prepare(event.getUniqueId(), event.getPlayerProfile().getName(), 2000);
             stopwatch.stop();
         } catch (TimeoutException e) {
             log.info("准备玩家 %s(%s) 数据超时".formatted(event.getPlayerProfile().getName(), event.getUniqueId()));
@@ -47,9 +46,6 @@ public class SynchronizeListener implements Listener {
         }
 
         log.info("为玩家 %s(%s) 准备数据完毕, 耗时 %dms".formatted(event.getPlayerProfile().getName(), event.getUniqueId(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
-        if (!complete) {
-            log.warning("玩家 %s(%s) 的数据没有全部准备, 但允许进入服务器".formatted(event.getPlayerProfile().getName(), event.getUniqueId()));
-        }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -60,16 +56,11 @@ public class SynchronizeListener implements Listener {
             return;
         }
 
-        boolean complete;
         try {
-            complete = synchronizeManager.applyPrepared(player);
+             synchronizeManager.applyPrepared(player);
         } catch (Throwable e) {
             player.kick(text("无法为你恢复玩家数据, 请联系管理员"), PlayerKickEvent.Cause.PLUGIN);
             return;
-        }
-
-        if (!complete) {
-            log.warning("玩家 %s 的数据没有全部恢复, 但允许进入服务器".formatted(player.getName()));
         }
     }
 
@@ -77,7 +68,7 @@ public class SynchronizeListener implements Listener {
     public void onQuit(@NotNull PlayerQuitEvent event) {
         var player = event.getPlayer();
         if (synchronizeManager.isPrepared(player.getUniqueId())) {
-            log.info("%s 存在未恢复数据, 本次「退出」游戏不会保存玩家数据。这可能是由于恢复数据时失败导致".formatted(player.getName()));
+            log.info("%s 存在未恢复数据, 本次「退出游戏」不会保存玩家数据。这可能是由于恢复数据时发生错误导致的「退出游戏」".formatted(player.getName()));
             return;
         }
 

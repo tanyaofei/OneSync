@@ -2,7 +2,6 @@ package io.github.hello09x.onesync.manager;
 
 import com.google.common.base.Throwables;
 import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.SnapshotRepository;
@@ -28,12 +27,16 @@ public class SnapshotManager {
     private final OneSyncConfig.Snapshot config = OneSyncConfig.instance.getSnapshot();
 
     /**
-     * 创建快照
+     * 创建快照, 如果该玩家正在登陆, 并未恢复完数据, 则不会为他创建快照
      *
      * @param player 玩家
      * @param cause  创建原因
      */
     public void create(@NotNull Player player, @NotNull SnapshotCause cause) {
+        if (SynchronizeManager.instance.isPrepared(player.getUniqueId())) {
+            throw new IllegalStateException("%s has prepared snapshot that hasn't be used to restore, could not create snapshot for him".formatted(player.getName()));
+        }
+
         var snapshotId = repository.insert(new Snapshot(
                 null,
                 player.getUniqueId(),
@@ -72,6 +75,10 @@ public class SnapshotManager {
         var stopwatch = new StopWatch();
         stopwatch.start();
         for (var player : players) {
+            if (SynchronizeManager.instance.isPrepared(player.getUniqueId())) {
+                continue;
+            }
+
             try {
                 this.create(player, cause);
             } catch (Throwable e) {
@@ -144,25 +151,38 @@ public class SnapshotManager {
                     }
                 }
 
-                repository.deleteByIds(removing);
-                for (var registration : SnapshotHandler.getRegistrations()) {
-                    try {
-                        registration.getProvider().remove(removing);
-                    } catch (Throwable e) {
-                        var player = Bukkit.getOfflinePlayer(playerId);
-                        log.severe("删除 %s 由 [%s] 提供的「%s」快照失败: %s".formatted(
-                                player.getName(),
-                                registration.getPlugin().getName(),
-                                registration.getProvider().snapshotType(),
-                                Throwables.getStackTraceAsString(e)
-                        ));
-                    }
-                }
+                this.remove(removing.toArray(Long[]::new));
             } catch (Throwable e) {
-                log.severe("删除快照失败: " + Throwables.getStackTraceAsString(e));
+                log.severe("清理快照失败: " + Throwables.getStackTraceAsString(e));
             }
         });
     }
 
+    public void remove(Long @NotNull ... ids) {
+        if (ids.length == 0) {
+            return;
+        }
 
+        if (ids.length == 1) {
+            var id = ids[0];
+            repository.deleteById(id);
+            for (var handler : SnapshotHandler.getImpl()) {
+                try {
+                    handler.remove(Collections.singletonList(id));
+                } catch (Throwable e) {
+                    log.warning(Throwables.getStackTraceAsString(e));
+                }
+            }
+        } else {
+            var idList = Arrays.asList(ids);
+            repository.deleteByIds(idList);
+            for (var handler : SnapshotHandler.getImpl()) {
+                try {
+                    handler.remove(idList);
+                } catch (Throwable e) {
+                    log.warning(Throwables.getStackTraceAsString(e));
+                }
+            }
+        }
+    }
 }

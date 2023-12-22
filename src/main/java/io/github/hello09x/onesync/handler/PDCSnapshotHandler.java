@@ -18,11 +18,6 @@ public class PDCSnapshotHandler implements SnapshotHandler<PDCSnapshot> {
     private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
 
     @Override
-    public boolean isImportant() {
-        return true;
-    }
-
-    @Override
     public @NotNull String snapshotType() {
         return "PDC";
     }

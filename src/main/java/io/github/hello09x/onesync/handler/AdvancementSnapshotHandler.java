@@ -1,10 +1,14 @@
 package io.github.hello09x.onesync.handler;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.AdvancementSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.AdvancementSnapshot;
+import lombok.SneakyThrows;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.advancement.Advancement;
@@ -14,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -28,14 +33,11 @@ public class AdvancementSnapshotHandler implements SnapshotHandler<AdvancementSn
 
     private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
 
+    private final MutableObject<AdvancementSnapshot> theLast = new MutableObject<>();
+
     private final static Map<String, Advancement> ADVANCEMENTS = StreamSupport
             .stream(((Iterable<Advancement>) Bukkit::advancementIterator).spliterator(), false)
             .collect(Collectors.toMap(adv -> adv.getKey().asString(), Function.identity()));
-
-    @Override
-    public boolean isImportant() {
-        return false;
-    }
 
     @Override
     public @NotNull String snapshotType() {
@@ -43,8 +45,11 @@ public class AdvancementSnapshotHandler implements SnapshotHandler<AdvancementSn
     }
 
     @Override
+    @SneakyThrows
     public @Nullable AdvancementSnapshot getOne(@NotNull Long snapshotId) {
-        return repository.selectById(snapshotId);
+        return Optional.ofNullable(theLast.getValue())
+                .filter(snapshot -> snapshot.snapshotId().equals(snapshotId))
+                .orElseGet(() -> repository.selectById(snapshotId));
     }
 
     @Override
@@ -65,11 +70,13 @@ public class AdvancementSnapshotHandler implements SnapshotHandler<AdvancementSn
         );
 
         repository.insert(snapshot);
+        theLast.setValue(snapshot);
     }
 
     @Override
     public void remove(@NotNull List<Long> snapshotIds) {
         repository.deleteByIds(snapshotIds);
+        theLast.setValue(null);
     }
 
     @Override

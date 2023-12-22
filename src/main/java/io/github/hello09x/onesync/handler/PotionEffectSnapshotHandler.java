@@ -18,12 +18,6 @@ public class PotionEffectSnapshotHandler implements SnapshotHandler<PotionEffect
     private final PotionEffectSnapshotRepository repository = PotionEffectSnapshotRepository.instance;
     private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
 
-
-    @Override
-    public boolean isImportant() {
-        return false;
-    }
-
     @Override
     public @NotNull String snapshotType() {
         return "效果";
