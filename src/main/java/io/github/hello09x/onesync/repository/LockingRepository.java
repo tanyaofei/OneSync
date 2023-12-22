@@ -5,7 +5,10 @@ import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.Locking;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.naming.ServiceUnavailableException;
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
@@ -24,8 +27,12 @@ public class LockingRepository extends Repository<Locking> {
         super(plugin);
     }
 
-    public boolean isLocked(@NotNull UUID playerId) {
-        return Optional.ofNullable(this.selectById(playerId.toString())).isPresent();
+    public @Nullable Locking selectById(@NotNull UUID id) {
+        return super.selectById(id);
+    }
+
+    public @Nullable Locking selectById(@NotNull Serializable id) {
+        throw new UnsupportedOperationException();
     }
 
     public boolean setLock(@NotNull UUID playerId, boolean lock) {

@@ -42,12 +42,12 @@ public class UnlockCommand {
             sender.sendMessage(text("该玩家在线, 无须解锁", GRAY));
             return;
         }
-        manager.removeLock(player);
+        manager.relock(player);
         MESSAGES.forEach(sender::sendMessage);
     }
 
     public void unlockAll(@NotNull CommandSender sender, @NotNull CommandArguments args) {
-        manager.removeAllLocks();
+        manager.relockAll();
         MESSAGES.forEach(sender::sendMessage);
     }
 

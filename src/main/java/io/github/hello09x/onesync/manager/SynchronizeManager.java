@@ -4,7 +4,6 @@ import com.google.common.base.Throwables;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
-import io.github.hello09x.onesync.repository.LockingRepository;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import org.apache.commons.lang3.time.StopWatch;
 import org.bukkit.Bukkit;
@@ -22,7 +21,7 @@ import java.util.logging.Logger;
 public class SynchronizeManager {
 
     public final static SynchronizeManager instance = new SynchronizeManager();
-    private final LockingRepository synchronizer = LockingRepository.instance;
+    private final LockingManager lockingManager = LockingManager.instance;
     private final SnapshotManager snapshotManager = SnapshotManager.instance;
 
     private final Map<UUID, List<PreparedSnapshot>> prepared = new ConcurrentHashMap<>();
@@ -51,12 +50,12 @@ public class SynchronizeManager {
     public boolean prepare(@NotNull UUID playerId, @Nullable String playerName, long timeout) throws TimeoutException {
         this.prepared.remove(playerId);
         long startedAt = System.currentTimeMillis();
-        while (synchronizer.isLocked(playerId)) {
+        while (lockingManager.isLocked(playerId)) {
             if (System.currentTimeMillis() - startedAt >= timeout) {
                 throw new TimeoutException("Timeout after %dms".formatted(timeout));
             }
             try {
-                Thread.sleep(startedAt / 100);
+                Thread.sleep(100);
             } catch (InterruptedException ignored) {
 
             }
@@ -68,7 +67,7 @@ public class SynchronizeManager {
             return true;
         }
 
-        boolean fullySuccess = true;
+        boolean completed = true;
         var snapshots = new ArrayList<PreparedSnapshot>();
         for (var registration : SnapshotHandler.getRegistrations()) {
             var handler = registration.getProvider();
@@ -92,13 +91,13 @@ public class SynchronizeManager {
                 if (handler.isImportant()) {
                     throw e;
                 } else {
-                    fullySuccess = false;
+                    completed = false;
                 }
             }
         }
 
         this.prepared.put(playerId, snapshots);
-        return fullySuccess;
+        return completed;
     }
 
     /**
@@ -113,51 +112,47 @@ public class SynchronizeManager {
             throw new IllegalStateException("No prepared snapshots for player: " + player.getName() + "(" + player.getUniqueId() + ")");
         }
 
-        boolean fullySuccess = true;
-        try {
-            for (var pair : pairs) {
-                var registration = pair.registration;
-                var snapshot = pair.snapshot;
-                var handler = registration.getProvider();
+        boolean complete = true;
+        for (var pair : pairs) {
+            var registration = pair.registration;
+            var snapshot = pair.snapshot;
+            var handler = registration.getProvider();
 
-                if (snapshot == null) {
-                    continue;
-                }
-                if (!registration.getPlugin().isEnabled()) {
-                    log.warning("插件 [%s] 已卸载, 无法为 %s 恢复它提供的「%s」数据".formatted(player.getName(), registration.getPlugin().getName(), handler.snapshotType()));
-                    continue;
-                }
-
-                try {
-                    handler.applyUnsafe(player, snapshot);
-                } catch (Throwable e) {
-                    log.severe("恢复 %s 由 [%s] 提供的「%s」数据失败: %s".formatted(
-                            player.getName(),
-                            pair.registration.getPlugin().getName(),
-                            player.getUniqueId(),
-                            e.getMessage()
-                    ));
-                    if (handler.isImportant()) {
-                        throw e;
-                    } else {
-                        fullySuccess = false;
-                    }
-                }
+            if (snapshot == null) {
+                continue;
+            }
+            if (!registration.getPlugin().isEnabled()) {
+                log.warning("插件 [%s] 已卸载, 无法为 %s 恢复它提供的「%s」数据".formatted(player.getName(), registration.getPlugin().getName(), handler.snapshotType()));
+                continue;
             }
 
-            this.synchronizer.setLock(player.getUniqueId(), true);  // 锁定玩家, 当玩家退出游戏时才解锁
-        } finally {
-            this.prepared.remove(player.getUniqueId());
+            try {
+                handler.applyUnsafe(player, snapshot);
+            } catch (Throwable e) {
+                log.severe("恢复 %s 由 [%s] 提供的「%s」数据失败: %s".formatted(
+                        player.getName(),
+                        pair.registration.getPlugin().getName(),
+                        player.getUniqueId(),
+                        e.getMessage()
+                ));
+                if (handler.isImportant()) {
+                    throw e;
+                } else {
+                    complete = false;
+                }
+            }
         }
 
-        return fullySuccess;
+        this.prepared.remove(player.getUniqueId());
+        lockingManager.lock(player.getUniqueId());  // 锁定玩家, 当玩家退出游戏时才解锁
+        return complete;
     }
 
     public void save(@NotNull Player player, @NotNull SnapshotCause cause) {
         try {
             snapshotManager.create(player, cause);
         } finally {
-            synchronizer.setLock(player.getUniqueId(), false);
+            lockingManager.unlock(player);
         }
     }
 

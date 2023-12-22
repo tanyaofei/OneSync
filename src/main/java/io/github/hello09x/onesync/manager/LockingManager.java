@@ -24,23 +24,52 @@ public class LockingManager implements PluginMessageListener {
     private final LockingRepository repository = LockingRepository.instance;
 
     public final static String CHANNEL = "onesync:locking";
-    public final static String SUB_CHANNEL_RELOCK = "relock";
+    public final static String SUB_CHANNEL_RELOCK = "Relock";
 
+    private final static String RELOCK_ALL = "ALL";
+
+    /**
+     * 判断玩家是否已上锁
+     *
+     * @param playerId 玩家 ID
+     * @return 是否已上锁
+     */
+    public boolean isLocked(@NotNull UUID playerId) {
+        return this.repository.selectById(playerId) != null;
+    }
 
     /**
      * 如果玩家存在于当前服务器, 则对他上锁
      *
      * @param playerId 玩家 ID
      */
-    public void relock(@NotNull UUID playerId) {
+    public void lock(@NotNull UUID playerId) {
         Optional.ofNullable(Bukkit.getPlayer(playerId))
                 .ifPresent(p -> repository.setLock(p.getUniqueId(), true));
     }
 
     /**
+     * 对玩家上锁
+     *
+     * @param player 玩家
+     */
+    public void lock(@NotNull Player player) {
+        repository.setLock(player.getUniqueId(), true);
+    }
+
+    /**
+     * 对玩家解锁
+     *
+     * @param player 玩家
+     */
+    public void unlock(@NotNull Player player) {
+        repository.setLock(player.getUniqueId(), false);
+    }
+
+    /**
      * 对所有当前服务器在线的玩家上锁
      */
-    public void relockAll() {
+    public void lockAll() {
         for (var p : Bukkit.getOnlinePlayers()) {
             try {
                 repository.setLock(p.getUniqueId(), true);
@@ -55,9 +84,9 @@ public class LockingManager implements PluginMessageListener {
      *
      * @param player 玩家
      */
-    public void removeLock(@NotNull OfflinePlayer player) {
+    public void relock(@NotNull OfflinePlayer player) {
         repository.deleteByPlayerId(player.getUniqueId());
-        this.relock(player.getUniqueId());
+        this.lock(player.getUniqueId());
 
         var r = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
         if (r != null) {
@@ -71,15 +100,15 @@ public class LockingManager implements PluginMessageListener {
     /**
      * 移除所有锁, 无论这个锁是哪台服务器上的, 之后再让所有服务器对在线的玩家上锁
      */
-    public void removeAllLocks() {
+    public void relockAll() {
         repository.deleteAll();
-        this.relockAll();
+        this.lockAll();
 
         var r = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
         if (r != null) {
             var message = ByteStreams.newDataOutput();
             message.writeUTF(SUB_CHANNEL_RELOCK);
-            message.writeUTF("ALL");
+            message.writeUTF(RELOCK_ALL);
             r.sendPluginMessage(Main.getInstance(), CHANNEL, message.toByteArray());
         }
     }
@@ -101,10 +130,10 @@ public class LockingManager implements PluginMessageListener {
 
         log.info("接收到「relock」消息");
         var arg = in.readUTF();
-        if (arg.equals("ALL")) {
-            this.relockAll();
+        if (arg.equals(RELOCK_ALL)) {
+            this.lockAll();
         } else {
-            this.relock(UUID.fromString(arg));
+            this.lock(UUID.fromString(arg));
         }
     }
 }

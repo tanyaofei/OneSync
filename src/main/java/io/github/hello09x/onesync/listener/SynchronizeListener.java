@@ -31,10 +31,10 @@ public class SynchronizeListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPreLogin(@NotNull AsyncPlayerPreLoginEvent event) {
         var stopwatch = new StopWatch();
-        boolean fullySuccess;
+        boolean complete;
         try {
             stopwatch.start();
-            fullySuccess = synchronizeManager.prepare(event.getUniqueId(), event.getPlayerProfile().getName(), 2000);
+            complete = synchronizeManager.prepare(event.getUniqueId(), event.getPlayerProfile().getName(), 2000);
             stopwatch.stop();
         } catch (TimeoutException e) {
             log.info("准备玩家 %s(%s) 数据超时".formatted(event.getPlayerProfile().getName(), event.getUniqueId()));
@@ -47,7 +47,7 @@ public class SynchronizeListener implements Listener {
         }
 
         log.info("为玩家 %s(%s) 准备数据完毕, 耗时 %dms".formatted(event.getPlayerProfile().getName(), event.getUniqueId(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
-        if (!fullySuccess) {
+        if (!complete) {
             log.warning("玩家 %s(%s) 的数据没有全部准备, 但允许进入服务器".formatted(event.getPlayerProfile().getName(), event.getUniqueId()));
         }
     }
@@ -60,15 +60,15 @@ public class SynchronizeListener implements Listener {
             return;
         }
 
-        boolean fullySuccess;
+        boolean complete;
         try {
-            fullySuccess = synchronizeManager.applyPrepared(player);
+            complete = synchronizeManager.applyPrepared(player);
         } catch (Throwable e) {
             player.kick(text("无法为你恢复玩家数据, 请联系管理员"), PlayerKickEvent.Cause.PLUGIN);
             return;
         }
 
-        if (!fullySuccess) {
+        if (!complete) {
             log.warning("玩家 %s 的数据没有全部恢复, 但允许进入服务器".formatted(player.getName()));
         }
     }
