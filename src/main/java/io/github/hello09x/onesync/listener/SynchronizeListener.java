@@ -43,13 +43,13 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
     /**
      * 玩家在 FINISH_CONFIGURATION 之后预加载数据
      *
-     * @see #onQuit(PlayerQuitEvent) 玩家切换服务器时, 会等待另外一个服务器执行完毕, 再执行此方法
+     * @see #onQuit(PlayerQuitEvent) 执行时, 会先阻塞等待另外一个服务器保存数据
      */
     public void onPreJoin(@NotNull PacketEvent event) {
         var stopwatch = new StopWatch();
         var player = event.getPlayer();
         stopwatch.start();
-        synchronizeManager.prepare(player.getUniqueId(), player.getName(), 2000);
+        synchronizeManager.prepare(player.getUniqueId(), player.getName(), 1000);
         stopwatch.stop();
         if (Main.isDebugging()) {
             log.info("加载 %s(%s) 数据完毕, 耗时 %d ms".formatted(player.getName(), player.getUniqueId(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
@@ -74,7 +74,7 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
     /**
      * 玩家退出游戏时
      *
-     * @see #onPreJoin(PacketEvent) 玩家切换服务器时, 会等待此方法执行完毕
+     * @see #onPreJoin(PacketEvent) 玩家切换服务器时, 另外一个服务器加载数据前, 会等待此方法执行完毕
      */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(@NotNull PlayerQuitEvent event) {

@@ -32,7 +32,7 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
 
     @Override
     protected void reload(@NotNull FileConfiguration file) {
-        this.debug = file.getBoolean("debug", false);
+        this.debug = file.getBoolean("debug", true);
         this.synchronize.reload(file);
         this.snapshot.reload(file);
     }
