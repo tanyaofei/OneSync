@@ -106,42 +106,48 @@ public class SynchronizeManager {
      * @param player 玩家
      */
     public void applyPrepared(@NotNull Player player) {
-        var reason = this.prepareFailed.get(player.getUniqueId());
-        if (reason != null) {
-            player.kick(reason);
+        try {
+            var reason = this.prepareFailed.get(player.getUniqueId());
+            if (reason != null) {
+                player.kick(reason);
+                return;
+            }
+
+            var pairs = this.prepared.get(player.getUniqueId());
+            if (pairs == null) {
+                player.kick(text("[OneSync] 服务器尚未为你加载数据, 请重新登录"));
+                return;
+            }
+
+            for (var pair : pairs) {
+                var registration = pair.registration;
+                var snapshot = pair.snapshot;
+                var handler = registration.getProvider();
+
+                if (snapshot == null) {
+                    continue;
+                }
+                if (!registration.getPlugin().isEnabled()) {
+                    log.warning("插件 [%s] 已卸载, 无法为 %s 恢复它提供的「%s」数据".formatted(player.getName(), registration.getPlugin().getName(), handler.snapshotType()));
+                    continue;
+                }
+
+                try {
+                    handler.applyUnsafe(player, snapshot);
+                } catch (Throwable e) {
+                    log.severe("恢复 %s 由 [%s] 提供的「%s」数据失败: %s".formatted(
+                            player.getName(),
+                            pair.registration.getPlugin().getName(),
+                            player.getUniqueId(),
+                            e.getMessage()
+                    ));
+                    throw e;
+                }
+            }
+        } catch (Throwable e) {
+            player.kick(text("无法为你恢复玩家数据, 请联系管理员"));
+            log.severe(Throwables.getStackTraceAsString(e));
             return;
-        }
-
-        var pairs = this.prepared.get(player.getUniqueId());
-        if (pairs == null) {
-            player.kick(text("[OneSync] 服务器尚未为你加载数据, 请重新登录"));
-            return;
-        }
-
-        for (var pair : pairs) {
-            var registration = pair.registration;
-            var snapshot = pair.snapshot;
-            var handler = registration.getProvider();
-
-            if (snapshot == null) {
-                continue;
-            }
-            if (!registration.getPlugin().isEnabled()) {
-                log.warning("插件 [%s] 已卸载, 无法为 %s 恢复它提供的「%s」数据".formatted(player.getName(), registration.getPlugin().getName(), handler.snapshotType()));
-                continue;
-            }
-
-            try {
-                handler.applyUnsafe(player, snapshot);
-            } catch (Throwable e) {
-                log.severe("恢复 %s 由 [%s] 提供的「%s」数据失败: %s".formatted(
-                        player.getName(),
-                        pair.registration.getPlugin().getName(),
-                        player.getUniqueId(),
-                        e.getMessage()
-                ));
-                throw e;
-            }
         }
 
         lockingManager.lock(player.getUniqueId());  // 锁定玩家, 当玩家退出游戏时才解锁

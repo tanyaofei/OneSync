@@ -1,6 +1,6 @@
 name: OneSync
 version: '${project.version}'
-main: io.github.hello09x.onesync.bukkit.Main
+main: io.github.hello09x.onesync.Main
 api-version: '1.20'
 depend:
   - CommandAPI
