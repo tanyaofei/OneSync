@@ -6,6 +6,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -32,10 +33,15 @@ public class UnlockCommand {
             MINI_MESSAGE.deserialize("<gray><i>当服务器异常关闭, 数据库异常, 没有完成解锁的过程时才需要执行此命令</i></gray>"),
             MINI_MESSAGE.deserialize("<gray>此命令作用后, 将会释放所有锁</gray>, <gold>并让所有服务器重新对当前在线的玩家上锁</gold>"),
             text("=========================================================================", GRAY),
-            text("解锁成功", WHITE),
+            text(">> 解锁成功 <<", WHITE),
             text("=========================================================================", GRAY)
     );
 
+    /**
+     * 解锁指定玩家
+     * @param sender
+     * @param args
+     */
     public void unlock(@NotNull CommandSender sender, @NotNull CommandArguments args) {
         var player = (OfflinePlayer) Objects.requireNonNull(args.get("player"));
         if (player.getPlayer() != null) {

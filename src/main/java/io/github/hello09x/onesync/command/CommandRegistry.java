@@ -18,7 +18,7 @@ public class CommandRegistry {
                                 .executes(ReloadCommand.instance::reload),
                         command("unlock")
                                 .withPermission(CommandPermission.OP)
-                                .withArguments(player("player"))
+                                .withArguments(offlinePlayer("player"))
                                 .executes(UnlockCommand.instance::unlock),
                         command("unlock-all")
                                 .withPermission(CommandPermission.OP)
