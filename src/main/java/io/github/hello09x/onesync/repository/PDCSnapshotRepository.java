@@ -1,15 +1,13 @@
 package io.github.hello09x.onesync.repository;
 
-import io.github.hello09x.bedrock.database.Repository;
 import io.github.hello09x.onesync.Main;
+import io.github.hello09x.bedrock.database.Repository;
 import io.github.hello09x.onesync.repository.model.PDCSnapshot;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.UUID;
 
 public class PDCSnapshotRepository extends Repository<PDCSnapshot> {
 

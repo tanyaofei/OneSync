@@ -1,12 +1,12 @@
 package io.github.hello09x.onesync.manager;
 
-import com.google.common.base.Throwables;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.SnapshotRepository;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import io.github.hello09x.onesync.repository.model.Snapshot;
+import com.google.common.base.Throwables;
 import org.apache.commons.lang3.time.StopWatch;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -31,9 +31,10 @@ public class SnapshotManager {
      *
      * @param player 玩家
      * @param cause  创建原因
+     * @return 快照 ID
      */
-    public void create(@NotNull Player player, @NotNull SnapshotCause cause) {
-        if (SynchronizeManager.instance.isPrepared(player.getUniqueId())) {
+    public @NotNull Long create(@NotNull Player player, @NotNull SnapshotCause cause) {
+        if (SynchronizeManager.instance.shouldNotSaveSnapshot(player.getUniqueId())) {
             throw new IllegalStateException("%s has prepared snapshot that hasn't be used to restore, could not create snapshot for him".formatted(player.getName()));
         }
 
@@ -59,28 +60,27 @@ public class SnapshotManager {
         }
 
         this.wipeAsync(player.getUniqueId());
+        return snapshotId;
     }
 
     /**
-     * 为所有在线玩家创建快照
+     * 为指定的玩家创建快照
      *
-     * @param cause 创建原因
+     * @param players 玩家
+     * @param cause   创建原因
      */
-    public void createForAll(@NotNull SnapshotCause cause) {
-        var players = Bukkit.getOnlinePlayers();
-        if (players.isEmpty()) {
-            return;
-        }
-
+    public int create(@NotNull Collection<? extends Player> players, @NotNull SnapshotCause cause) {
         var stopwatch = new StopWatch();
         stopwatch.start();
+        int success = 0;
         for (var player : players) {
-            if (SynchronizeManager.instance.isPrepared(player.getUniqueId())) {
+            if (SynchronizeManager.instance.shouldNotSaveSnapshot(player.getUniqueId())) {
                 continue;
             }
 
             try {
                 this.create(player, cause);
+                success++;
             } catch (Throwable e) {
                 log.severe("[%s] - 保存 %s 快照失败: %s".formatted(
                         cause,
@@ -89,7 +89,22 @@ public class SnapshotManager {
             }
         }
         stopwatch.stop();
-        log.info("[%s] - 保存 %d 名玩家快照完毕, 耗时 %dms".formatted(cause, players.size(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
+        log.info("[%s] - 保存 %d 名玩家快照完毕, 耗时 %d ms".formatted(cause, players.size(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
+        return success;
+    }
+
+    /**
+     * 为所有在线玩家创建快照
+     *
+     * @param cause 创建原因
+     */
+    public int createForAll(@NotNull SnapshotCause cause) {
+        var players = Bukkit.getOnlinePlayers();
+        if (players.isEmpty()) {
+            return 0;
+        }
+
+        return this.create(players, cause);
     }
 
     /**

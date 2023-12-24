@@ -1,11 +1,11 @@
 package io.github.hello09x.onesync.repository.model;
 
+import io.github.hello09x.onesync.api.handler.SnapshotComponent;
+import io.github.hello09x.onesync.util.PotionEffectListTypeHandler;
 import io.github.hello09x.bedrock.database.Table;
 import io.github.hello09x.bedrock.database.TableField;
 import io.github.hello09x.bedrock.database.TableId;
 import io.github.hello09x.bedrock.util.Components;
-import io.github.hello09x.onesync.api.handler.SnapshotComponent;
-import io.github.hello09x.onesync.util.PotionEffectListTypeHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -21,9 +21,10 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static io.github.hello09x.bedrock.util.Components.noItalic;
 import static net.kyori.adventure.text.Component.*;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
+
+import static io.github.hello09x.bedrock.util.Components.noItalic;
 
 @Table("potion_effect_snapshot")
 public record PotionEffectSnapshot(

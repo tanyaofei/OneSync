@@ -1,9 +1,10 @@
 package io.github.hello09x.onesync.command;
 
-import dev.jorel.commandapi.CommandPermission;
 import io.github.hello09x.onesync.command.impl.ReloadCommand;
 import io.github.hello09x.onesync.command.impl.SnapshotCommand;
 import io.github.hello09x.onesync.command.impl.UnlockCommand;
+import dev.jorel.commandapi.CommandPermission;
+import dev.jorel.commandapi.arguments.EntitySelectorArgument;
 
 import static io.github.hello09x.bedrock.command.Commands.*;
 
@@ -24,9 +25,13 @@ public class CommandRegistry {
                                 .executes(UnlockCommand.instance::unlockAll),
                         command("snapshot")
                                 .withPermission(CommandPermission.OP)
-                                .withArguments(player("player"))
+                                .withArguments(offlinePlayer("player"))
                                 .withOptionalArguments(int32("page", 1))
-                                .executesPlayer(SnapshotCommand.instance::snapshot)
+                                .executesPlayer(SnapshotCommand.instance::snapshot),
+                        command("save")
+                                .withPermission(CommandPermission.OP)
+                                .withArguments(new EntitySelectorArgument.ManyPlayers("players"))
+                                .executes(SnapshotCommand.instance::save)
                 ).register();
     }
 

@@ -1,9 +1,9 @@
 package io.github.hello09x.onesync.repository;
 
-import io.github.hello09x.bedrock.database.Repository;
 import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.repository.model.PotionEffectSnapshot;
 import io.github.hello09x.onesync.util.PotionEffectListTypeHandler;
+import io.github.hello09x.bedrock.database.Repository;
+import io.github.hello09x.onesync.repository.model.PotionEffectSnapshot;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 

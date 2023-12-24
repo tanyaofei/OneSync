@@ -1,6 +1,6 @@
 package io.github.hello09x.onesync.handler;
 
-import io.github.hello09x.onesync.api.handler.SnapshotHandler;
+import io.github.hello09x.onesync.api.handler.CachedSnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.PDCSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.PDCSnapshot;
@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.util.List;
 
-public class PDCSnapshotHandler implements SnapshotHandler<PDCSnapshot> {
+public class PDCSnapshotHandler extends CachedSnapshotHandler<PDCSnapshot> {
 
     public final static PDCSnapshotHandler instance = new PDCSnapshotHandler();
     private final PDCSnapshotRepository repository = PDCSnapshotRepository.instance;
@@ -23,14 +23,14 @@ public class PDCSnapshotHandler implements SnapshotHandler<PDCSnapshot> {
     }
 
     @Override
-    public @Nullable PDCSnapshot getOne(@NotNull Long snapshotId) {
+    public @Nullable PDCSnapshot getOne0(@NotNull Long snapshotId) {
         return repository.selectById(snapshotId);
     }
 
     @Override
-    public void save(@NotNull Long snapshotId, @NotNull Player player) {
+    public @Nullable PDCSnapshot save0(@NotNull Long snapshotId, @NotNull Player player) {
         if (!config.isPdc()) {
-            return;
+            return null;
         }
 
         byte[] data;
@@ -40,15 +40,18 @@ public class PDCSnapshotHandler implements SnapshotHandler<PDCSnapshot> {
             throw new Error(e);
         }
 
-        repository.insert(new PDCSnapshot(
+        var snapshot = new PDCSnapshot(
                 snapshotId,
                 player.getUniqueId(),
                 data
-        ));
+        );
+
+        repository.insert(snapshot);
+        return snapshot;
     }
 
     @Override
-    public void remove(@NotNull List<Long> snapshotIds) {
+    public void remove0(@NotNull List<Long> snapshotIds) {
         repository.deleteByIds(snapshotIds);
     }
 

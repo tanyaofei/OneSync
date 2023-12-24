@@ -1,12 +1,11 @@
 package io.github.hello09x.onesync.repository.model;
 
 
+import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import io.github.hello09x.bedrock.database.Table;
 import io.github.hello09x.bedrock.database.TableField;
 import io.github.hello09x.bedrock.database.TableId;
 import io.github.hello09x.bedrock.util.Components;
-import io.github.hello09x.onesync.repository.constant.SnapshotCause;
-import org.bukkit.Material;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -54,7 +53,7 @@ public record Snapshot(
     public @NotNull ItemStack toMenuItem() {
         var item = new ItemStack(this.cause.getIcon());
         item.editMeta(meta -> {
-            meta.displayName(noItalic("快照"));
+            meta.displayName(Components.noItalic("快照"));
             meta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
             meta.lore(Stream.of(
                     textOfChildren(text("编号: ", GRAY), text("#" + this.id, WHITE)),

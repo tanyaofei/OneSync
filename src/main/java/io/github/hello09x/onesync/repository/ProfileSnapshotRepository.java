@@ -1,7 +1,7 @@
 package io.github.hello09x.onesync.repository;
 
-import io.github.hello09x.bedrock.database.Repository;
 import io.github.hello09x.onesync.Main;
+import io.github.hello09x.bedrock.database.Repository;
 import io.github.hello09x.onesync.repository.model.ProfileSnapshot;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;

@@ -1,10 +1,10 @@
 package io.github.hello09x.onesync.manager;
 
+import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.repository.LockingRepository;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
-import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.repository.LockingRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -24,7 +24,7 @@ public class LockingManager implements PluginMessageListener {
     private final LockingRepository repository = LockingRepository.instance;
 
     public final static String CHANNEL = "onesync:locking";
-    public final static String SUB_CHANNEL_RELOCK = "Relock";
+    public final static String COMMAND_RELOCK = "Relock";
 
     private final static String RELOCK_ALL = "ALL";
 
@@ -91,7 +91,7 @@ public class LockingManager implements PluginMessageListener {
         var r = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
         if (r != null) {
             var message = ByteStreams.newDataOutput();
-            message.writeUTF(SUB_CHANNEL_RELOCK);
+            message.writeUTF(COMMAND_RELOCK);
             message.writeUTF(player.getUniqueId().toString());
             r.sendPluginMessage(Main.getInstance(), CHANNEL, message.toByteArray());
         }
@@ -107,7 +107,7 @@ public class LockingManager implements PluginMessageListener {
         var r = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
         if (r != null) {
             var message = ByteStreams.newDataOutput();
-            message.writeUTF(SUB_CHANNEL_RELOCK);
+            message.writeUTF(COMMAND_RELOCK);
             message.writeUTF(RELOCK_ALL);
             r.sendPluginMessage(Main.getInstance(), CHANNEL, message.toByteArray());
         }
@@ -124,7 +124,7 @@ public class LockingManager implements PluginMessageListener {
         }
 
         var in = ByteStreams.newDataInput(message);
-        if (!in.readUTF().equals(SUB_CHANNEL_RELOCK)) {
+        if (!in.readUTF().equals(COMMAND_RELOCK)) {
             return;
         }
 

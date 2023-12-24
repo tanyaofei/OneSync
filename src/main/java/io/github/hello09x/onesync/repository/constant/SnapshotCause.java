@@ -39,6 +39,11 @@ public enum SnapshotCause {
      */
     PLAYER_GAME_MODE_CHANGE(text("🎮 模式切换", BLUE), Material.MUSIC_DISC_MALL),
 
+    /**
+     * 命令触发
+     */
+    COMMAND(text("🔠 命令触发", DARK_GRAY), Material.MUSIC_DISC_5)
+
     ;
 
     final Component displayName;

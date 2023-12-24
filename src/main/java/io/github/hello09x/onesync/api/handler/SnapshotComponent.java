@@ -12,6 +12,14 @@ import java.util.function.Consumer;
 public interface SnapshotComponent {
 
     /**
+     * 返回快照 ID
+     *
+     * @return 快照 ID
+     */
+    @NotNull
+    Long snapshotId();
+
+    /**
      * @return 快照所属玩家
      */
     @NotNull OfflinePlayer owner();

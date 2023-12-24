@@ -1,12 +1,10 @@
 package io.github.hello09x.onesync.repository.model;
 
+import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.bedrock.database.Table;
 import io.github.hello09x.bedrock.database.TableField;
 import io.github.hello09x.bedrock.database.TableId;
 import io.github.hello09x.bedrock.database.typehandler.JsonTypeHandler;
-import io.github.hello09x.onesync.api.handler.SnapshotComponent;
-import io.github.hello09x.onesync.api.handler.SnapshotHandler;
-import io.github.hello09x.onesync.handler.AdvancementSnapshotHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;

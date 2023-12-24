@@ -1,8 +1,8 @@
 package io.github.hello09x.onesync.util;
 
+import io.github.hello09x.onesync.Main;
 import com.google.gson.reflect.TypeToken;
 import io.github.hello09x.bedrock.database.typehandler.TypeHandler;
-import io.github.hello09x.onesync.Main;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;

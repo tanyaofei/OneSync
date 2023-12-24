@@ -1,7 +1,7 @@
 package io.github.hello09x.onesync.handler;
 
-import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
+import io.github.hello09x.onesync.api.handler.CachedSnapshotHandler;
 import io.github.hello09x.onesync.repository.PotionEffectSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.PotionEffectSnapshot;
 import org.bukkit.entity.Player;
@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PotionEffectSnapshotHandler implements SnapshotHandler<PotionEffectSnapshot> {
+public class PotionEffectSnapshotHandler extends CachedSnapshotHandler<PotionEffectSnapshot> {
 
     public final static PotionEffectSnapshotHandler instance = new PotionEffectSnapshotHandler();
 
@@ -24,14 +24,14 @@ public class PotionEffectSnapshotHandler implements SnapshotHandler<PotionEffect
     }
 
     @Override
-    public @Nullable PotionEffectSnapshot getOne(@NotNull Long snapshotId) {
+    public @Nullable PotionEffectSnapshot getOne0(@NotNull Long snapshotId) {
         return repository.selectById(snapshotId);
     }
 
     @Override
-    public void save(@NotNull Long snapshotId, @NotNull Player player) {
+    public @Nullable PotionEffectSnapshot save0(@NotNull Long snapshotId, @NotNull Player player) {
         if (!config.isPotionEffects()) {
-            return;
+            return null;
         }
 
         var effects = player.getActivePotionEffects();
@@ -41,10 +41,11 @@ public class PotionEffectSnapshotHandler implements SnapshotHandler<PotionEffect
                 new ArrayList<>(effects)
         );
         repository.insert(snapshot);
+        return snapshot;
     }
 
     @Override
-    public void remove(@NotNull List<Long> snapshotIds) {
+    public void remove0(@NotNull List<Long> snapshotIds) {
         repository.deleteByIds(snapshotIds);
     }
 

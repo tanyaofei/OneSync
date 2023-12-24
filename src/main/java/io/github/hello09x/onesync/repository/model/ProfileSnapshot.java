@@ -1,14 +1,13 @@
 package io.github.hello09x.onesync.repository.model;
 
+import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.api.handler.SnapshotComponent;
+import io.github.hello09x.onesync.handler.ProfileSnapshotHandler;
 import com.google.common.base.Throwables;
 import io.github.hello09x.bedrock.database.Table;
 import io.github.hello09x.bedrock.database.TableField;
 import io.github.hello09x.bedrock.database.TableId;
 import io.github.hello09x.bedrock.util.Components;
-import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.api.handler.SnapshotComponent;
-import io.github.hello09x.onesync.api.handler.SnapshotHandler;
-import io.github.hello09x.onesync.handler.ProfileSnapshotHandler;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -27,7 +26,6 @@ import java.util.function.Consumer;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-import static io.github.hello09x.bedrock.util.Components.noItalic;
 import static net.kyori.adventure.text.Component.*;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 
@@ -106,7 +104,7 @@ public record ProfileSnapshot(
     public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onCancel) {
         var item = new ItemStack(Material.PLAYER_HEAD);
         item.editMeta(meta -> {
-            meta.displayName(noItalic("档案", YELLOW));
+            meta.displayName(Components.noItalic("档案", YELLOW));
             meta.lore(Stream.of(
                     textOfChildren(text("游戏模式: ", GRAY), Optional.ofNullable(this.gameMode).map(v -> (Component) translatable(v, WHITE)).orElse(text("<无>", WHITE))),
                     textOfChildren(text("OP: ", GRAY), text(Optional.ofNullable(this.op).map(v -> v ? "是" : "否").orElse("<无>"), WHITE)),

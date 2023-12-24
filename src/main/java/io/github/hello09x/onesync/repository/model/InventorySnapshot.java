@@ -1,12 +1,11 @@
 package io.github.hello09x.onesync.repository.model;
 
-import io.github.hello09x.bedrock.database.Table;
-import io.github.hello09x.bedrock.database.TableField;
-import io.github.hello09x.bedrock.database.TableId;
-import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.onesync.util.ItemStackMapTypeHandler;
 import io.github.hello09x.onesync.util.MenuTemplate;
+import io.github.hello09x.bedrock.database.Table;
+import io.github.hello09x.bedrock.database.TableField;
+import io.github.hello09x.bedrock.database.TableId;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -19,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.logging.Logger;
 
 import static io.github.hello09x.bedrock.util.Components.noItalic;
 import static net.kyori.adventure.text.Component.*;

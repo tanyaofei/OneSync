@@ -1,12 +1,12 @@
 package io.github.hello09x.onesync.manager;
 
-import com.google.common.base.Throwables;
-import io.github.hello09x.bedrock.util.Lores;
 import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
+import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.onesync.repository.SnapshotRepository;
 import io.github.hello09x.onesync.repository.model.Snapshot;
+import com.google.common.base.Throwables;
+import io.github.hello09x.bedrock.util.Lores;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -54,13 +54,15 @@ public class MenuManager {
             var snapshot = itr.next();
             menu.setButton(i, snapshot.toMenuItem(), event -> {
                 switch (event.getClick()) {
-                    case LEFT -> this.openSnapshot(viewer, snapshot.id(), here);    // 左键打开详情
+                    // 左键打开详情
+                    case LEFT -> this.openSnapshot(viewer, snapshot.id(), here);
+                    // 右键打开确认恢复界面
                     case RIGHT -> this.openConfirm(
                             viewer,
                             text("确认恢复?"),
                             () -> this.applySnapshot(viewer, snapshot),
                             here
-                    );   // 右键打开确认恢复界面
+                    );
                 }
             });
 

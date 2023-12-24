@@ -1,5 +1,6 @@
 package io.github.hello09x.onesync;
 
+import com.comphenix.protocol.ProtocolLibrary;
 import com.google.gson.Gson;
 import io.github.hello09x.bedrock.menu.ChestMenuRegistry;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
@@ -18,12 +19,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class Main extends JavaPlugin {
 
     @Getter
+    private final static Gson gson = new Gson();
+    @Getter
     private static Main instance;
-
     @Getter
     private static ChestMenuRegistry chestMenuRegistry;
-    @Getter
-    private final static Gson gson = new Gson();
 
     @Override
     public void onLoad() {
@@ -55,6 +55,11 @@ public final class Main extends JavaPlugin {
             var messenger = getServer().getMessenger();
             messenger.registerIncomingPluginChannel(this, LockingManager.CHANNEL, LockingManager.instance);
             messenger.registerOutgoingPluginChannel(this, LockingManager.CHANNEL);
+        }
+
+        {
+            var mgr = ProtocolLibrary.getProtocolManager();
+            mgr.addPacketListener(SynchronizeListener.instance);
         }
 
         LockingManager.instance.lockAll();   // 热重载

@@ -1,14 +1,10 @@
 package io.github.hello09x.onesync.handler;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.api.handler.SnapshotHandler;
+import io.github.hello09x.onesync.api.handler.CachedSnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
-import io.github.hello09x.onesync.repository.AdvancementSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.AdvancementSnapshot;
-import lombok.SneakyThrows;
-import org.apache.commons.lang3.mutable.MutableObject;
+import io.github.hello09x.onesync.repository.AdvancementSnapshotRepository;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.advancement.Advancement;
@@ -18,26 +14,19 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class AdvancementSnapshotHandler implements SnapshotHandler<AdvancementSnapshot> {
+public class AdvancementSnapshotHandler extends CachedSnapshotHandler<AdvancementSnapshot> {
 
     public final static AdvancementSnapshotHandler instance = new AdvancementSnapshotHandler();
 
     private final static Logger log = Main.getInstance().getLogger();
+    private final static Map<String, Advancement> ADVANCEMENTS = StreamSupport.stream(((Iterable<Advancement>) Bukkit::advancementIterator).spliterator(), false).collect(Collectors.toMap(adv -> adv.getKey().asString(), Function.identity()));
     private final AdvancementSnapshotRepository repository = AdvancementSnapshotRepository.instance;
-
     private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
-
-    private final MutableObject<AdvancementSnapshot> theLast = new MutableObject<>();
-
-    private final static Map<String, Advancement> ADVANCEMENTS = StreamSupport
-            .stream(((Iterable<Advancement>) Bukkit::advancementIterator).spliterator(), false)
-            .collect(Collectors.toMap(adv -> adv.getKey().asString(), Function.identity()));
 
     @Override
     public @NotNull String snapshotType() {
@@ -45,38 +34,27 @@ public class AdvancementSnapshotHandler implements SnapshotHandler<AdvancementSn
     }
 
     @Override
-    @SneakyThrows
-    public @Nullable AdvancementSnapshot getOne(@NotNull Long snapshotId) {
-        return Optional.ofNullable(theLast.getValue())
-                .filter(snapshot -> snapshot.snapshotId().equals(snapshotId))
-                .orElseGet(() -> repository.selectById(snapshotId));
+    public @Nullable AdvancementSnapshot getOne0(@NotNull Long snapshotId) {
+        return repository.selectById(snapshotId);
     }
 
     @Override
-    public void save(@NotNull Long snapshotId, @NotNull Player player) {
+    public @Nullable AdvancementSnapshot save0(@NotNull Long snapshotId, @NotNull Player player) {
         if (!config.isAdvancements()) {
-            return;
+            return null;
         }
-        var advancements = StreamSupport.
-                stream(((Iterable<Advancement>) Bukkit::advancementIterator).spliterator(), false)
-                .map(advancement -> Pair.of(advancement.getKey().asString(), player.getAdvancementProgress(advancement).getAwardedCriteria()))
-                .filter(pair -> !pair.getValue().isEmpty())
-                .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
 
-        var snapshot = new AdvancementSnapshot(
-                snapshotId,
-                player.getUniqueId(),
-                advancements
-        );
+        var advancements = StreamSupport.stream(((Iterable<Advancement>) Bukkit::advancementIterator).spliterator(), false).map(advancement -> Pair.of(advancement.getKey().asString(), player.getAdvancementProgress(advancement).getAwardedCriteria())).filter(pair -> !pair.getValue().isEmpty()).collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+
+        var snapshot = new AdvancementSnapshot(snapshotId, player.getUniqueId(), advancements);
 
         repository.insert(snapshot);
-        theLast.setValue(snapshot);
+        return snapshot;
     }
 
     @Override
-    public void remove(@NotNull List<Long> snapshotIds) {
+    public void remove0(@NotNull List<Long> snapshotIds) {
         repository.deleteByIds(snapshotIds);
-        theLast.setValue(null);
     }
 
     @Override

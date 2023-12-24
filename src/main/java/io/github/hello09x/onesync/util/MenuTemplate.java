@@ -1,9 +1,7 @@
 package io.github.hello09x.onesync.util;
 
-import io.github.hello09x.bedrock.menu.ChestMenu;
 import io.github.hello09x.onesync.Main;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;

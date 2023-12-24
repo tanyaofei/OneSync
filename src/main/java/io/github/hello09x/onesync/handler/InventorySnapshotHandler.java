@@ -1,32 +1,26 @@
 package io.github.hello09x.onesync.handler;
 
 import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.api.handler.SnapshotHandler;
+import io.github.hello09x.onesync.api.handler.CachedSnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
-import io.github.hello09x.onesync.repository.InventorySnapshotRepository;
-import io.github.hello09x.onesync.repository.model.EnderChestSnapshot;
 import io.github.hello09x.onesync.repository.model.InventorySnapshot;
 import io.github.hello09x.onesync.util.InventoryHelper;
+import io.github.hello09x.onesync.repository.InventorySnapshotRepository;
 import lombok.SneakyThrows;
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Logger;
 
-public class InventorySnapshotHandler implements SnapshotHandler<InventorySnapshot> {
+public class InventorySnapshotHandler extends CachedSnapshotHandler<InventorySnapshot> {
 
     public final static InventorySnapshotHandler instance = new InventorySnapshotHandler();
     private final static Logger log = Main.getInstance().getLogger();
 
     private final InventorySnapshotRepository repository = InventorySnapshotRepository.instance;
     private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
-
-    private final Mutable<InventorySnapshot> theLast = new MutableObject<>();
 
     @Override
     public @NotNull String snapshotType() {
@@ -35,17 +29,14 @@ public class InventorySnapshotHandler implements SnapshotHandler<InventorySnapsh
 
     @Override
     @SneakyThrows
-    public @Nullable InventorySnapshot getOne(@NotNull Long snapshotId) {
-        return Optional
-                .ofNullable(theLast.getValue())
-                .filter(snapshot -> snapshot.snapshotId().equals(snapshotId))
-                .orElseGet(() -> repository.selectById(snapshotId));
+    public @Nullable InventorySnapshot getOne0(@NotNull Long snapshotId) {
+        return repository.selectById(snapshotId);
     }
 
     @Override
-    public void save(@NotNull Long snapshotId, @NotNull Player player) {
+    public @Nullable InventorySnapshot save0(@NotNull Long snapshotId, @NotNull Player player) {
         if (!config.isInventory()) {
-            return;
+            return null;
         }
 
         var snapshot = new InventorySnapshot(
@@ -56,13 +47,12 @@ public class InventorySnapshotHandler implements SnapshotHandler<InventorySnapsh
         );
 
         repository.insert(snapshot);
-        theLast.setValue(snapshot);
+        return snapshot;
     }
 
     @Override
-    public void remove(@NotNull List<Long> snapshotIds) {
+    public void remove0(@NotNull List<Long> snapshotIds) {
         repository.deleteByIds(snapshotIds);
-        theLast.setValue(null);
     }
 
     @Override

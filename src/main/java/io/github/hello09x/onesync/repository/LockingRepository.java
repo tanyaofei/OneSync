@@ -1,21 +1,16 @@
 package io.github.hello09x.onesync.repository;
 
-import io.github.hello09x.bedrock.database.Repository;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.Locking;
+import io.github.hello09x.bedrock.database.Repository;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.naming.ServiceUnavailableException;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class LockingRepository extends Repository<Locking> {
 
@@ -28,7 +23,7 @@ public class LockingRepository extends Repository<Locking> {
     }
 
     public @Nullable Locking selectById(@NotNull UUID id) {
-        return super.selectById(id);
+        return super.selectById(id.toString());
     }
 
     public @Nullable Locking selectById(@NotNull Serializable id) {

@@ -1,6 +1,6 @@
 package io.github.hello09x.onesync.handler;
 
-import io.github.hello09x.onesync.api.handler.SnapshotHandler;
+import io.github.hello09x.onesync.api.handler.CachedSnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.ProfileSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.ProfileSnapshot;
@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Optional;
 
-public class ProfileSnapshotHandler implements SnapshotHandler<ProfileSnapshot> {
+public class ProfileSnapshotHandler extends CachedSnapshotHandler<ProfileSnapshot> {
 
     public final static ProfileSnapshotHandler instance = new ProfileSnapshotHandler();
 
@@ -26,12 +26,12 @@ public class ProfileSnapshotHandler implements SnapshotHandler<ProfileSnapshot> 
     }
 
     @Override
-    public @Nullable ProfileSnapshot getOne(@NotNull Long snapshotId) {
+    public @Nullable ProfileSnapshot getOne0(@NotNull Long snapshotId) {
         return repository.selectById(snapshotId);
     }
 
     @Override
-    public void save(@NotNull Long snapshotId, @NotNull Player player) {
+    public @Nullable ProfileSnapshot save0(@NotNull Long snapshotId, @NotNull Player player) {
         var gameMode = config.isGameMode() ? player.getGameMode() : null;
         var op = config.isOp() ? player.isOp() : null;
 
@@ -61,7 +61,7 @@ public class ProfileSnapshotHandler implements SnapshotHandler<ProfileSnapshot> 
             remainingAir = player.getRemainingAir();
         }
 
-        var profile = new ProfileSnapshot(
+        var snapshot = new ProfileSnapshot(
                 snapshotId,
                 player.getUniqueId(),
                 gameMode,
@@ -76,11 +76,12 @@ public class ProfileSnapshotHandler implements SnapshotHandler<ProfileSnapshot> 
                 remainingAir
         );
 
-        repository.insert(profile);
+        repository.insert(snapshot);
+        return snapshot;
     }
 
     @Override
-    public void remove(@NotNull List<Long> snapshotIds) {
+    public void remove0(@NotNull List<Long> snapshotIds) {
         repository.deleteByIds(snapshotIds);
     }
 
