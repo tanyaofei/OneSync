@@ -1,10 +1,10 @@
 package io.github.hello09x.onesync.manager;
 
-import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.repository.LockingRepository;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
+import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.repository.LockingRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -19,14 +19,11 @@ import java.util.logging.Logger;
 public class LockingManager implements PluginMessageListener {
 
     public final static LockingManager instance = new LockingManager();
-    private final static Logger log = Main.getInstance().getLogger();
-
-    private final LockingRepository repository = LockingRepository.instance;
-
     public final static String CHANNEL = "onesync:locking";
     public final static String COMMAND_RELOCK = "Relock";
-
+    private final static Logger log = Main.getInstance().getLogger();
     private final static String RELOCK_ALL = "ALL";
+    private final LockingRepository repository = LockingRepository.instance;
 
     /**
      * 判断玩家是否已上锁
@@ -128,7 +125,9 @@ public class LockingManager implements PluginMessageListener {
             return;
         }
 
-        log.info("接收到「relock」消息");
+        if (Main.isDebugging()) {
+            log.info("接收到「relock」消息");
+        }
         var arg = in.readUTF();
         if (arg.equals(RELOCK_ALL)) {
             this.lockAll();

@@ -23,6 +23,7 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
 
     private final Synchronize synchronize = new Synchronize();
     private final Snapshot snapshot = new Snapshot();
+    private boolean debug;
 
     public OneSyncConfig(@NotNull Plugin plugin, @Nullable String version) {
         super(plugin, version);
@@ -31,6 +32,7 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
 
     @Override
     protected void reload(@NotNull FileConfiguration file) {
+        this.debug = file.getBoolean("debug", false);
         this.synchronize.reload(file);
         this.snapshot.reload(file);
     }

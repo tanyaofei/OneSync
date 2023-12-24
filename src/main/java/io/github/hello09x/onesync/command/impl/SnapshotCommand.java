@@ -1,9 +1,9 @@
 package io.github.hello09x.onesync.command.impl;
 
-import io.github.hello09x.onesync.manager.MenuManager;
-import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import dev.jorel.commandapi.executors.CommandArguments;
+import io.github.hello09x.onesync.manager.MenuManager;
 import io.github.hello09x.onesync.manager.SnapshotManager;
+import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.apache.commons.lang3.time.StopWatch;
@@ -18,6 +18,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 import static net.kyori.adventure.text.format.NamedTextColor.WHITE;
 
 public class SnapshotCommand {
@@ -42,6 +43,11 @@ public class SnapshotCommand {
     public void save(@NotNull CommandSender sender, @NotNull CommandArguments args) {
         @SuppressWarnings("unchecked")
         var players = (List<? extends Player>) args.getOptional("players").orElse(Collections.emptyList());
+        int total = players.size();
+        if (total > 10) {
+            sender.sendMessage(text("开始保存 %d 名玩家数据, 这可能需要一点时间".formatted(total), GRAY));
+        }
+
         var stopwatch = new StopWatch();
         stopwatch.start();
         int success = manager.create(players, SnapshotCause.COMMAND);
@@ -51,6 +57,10 @@ public class SnapshotCommand {
                 Placeholder.component("success", text(success, WHITE)),
                 Placeholder.component("time", text(stopwatch.getTime(TimeUnit.MILLISECONDS), WHITE))
         ));
+
+        if (success != total) {
+            sender.sendMessage(text("部分玩家正在恢复数据中, 不会进行保存", GRAY));
+        }
     }
 
 }

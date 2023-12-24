@@ -177,7 +177,9 @@ public class SynchronizeManager {
             }
         }
         stopwatch.stop();
-        log.info("[%s] 保存 %d 名玩家数据完毕, 耗时 %d ms".formatted(cause, players.size(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
+        if (Main.isDebugging()) {
+            log.info("[%s] 保存 %d 名玩家数据完毕, 耗时 %d ms".formatted(cause, players.size(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
+        }
     }
 
     public record PreparedSnapshot(

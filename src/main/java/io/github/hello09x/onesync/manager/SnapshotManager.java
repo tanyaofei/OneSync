@@ -35,7 +35,7 @@ public class SnapshotManager {
      */
     public @NotNull Long create(@NotNull Player player, @NotNull SnapshotCause cause) {
         if (SynchronizeManager.instance.shouldNotSaveSnapshot(player.getUniqueId())) {
-            throw new IllegalStateException("%s has prepared snapshot that hasn't be used to restore, could not create snapshot for him".formatted(player.getName()));
+            throw new IllegalStateException("%s has a prepared snapshot that hasn't be used to restore, cannot create snapshot for him".formatted(player.getName()));
         }
 
         var snapshotId = repository.insert(new Snapshot(

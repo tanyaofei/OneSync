@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import io.github.hello09x.bedrock.menu.ChestMenuRegistry;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.command.CommandRegistry;
+import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.handler.*;
 import io.github.hello09x.onesync.listener.SnapshotListener;
 import io.github.hello09x.onesync.listener.SynchronizeListener;
@@ -28,6 +29,10 @@ public final class Main extends JavaPlugin {
     @Override
     public void onLoad() {
         instance = this;
+    }
+
+    public static boolean isDebugging() {
+        return OneSyncConfig.instance.isDebug();
     }
 
     @Override

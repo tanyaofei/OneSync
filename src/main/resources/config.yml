@@ -7,6 +7,9 @@ datasource:
   password: 123456
   size: 2
 
+# 是否打印调试日志
+debug: true
+
 synchronize:
 
   # 玩家背包

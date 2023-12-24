@@ -48,7 +48,9 @@ public class SnapshotListener implements Listener {
         var player = event.getPlayer();
         if (synchronizeManager.shouldNotSaveSnapshot(player.getUniqueId())) {
             // 如果该玩家正在恢复数据中, 则跳过
-            log.warning("玩家 %s 正在恢复数据, 此时「死亡」不会创建快照".formatted(player.getName()));
+            if (Main.isDebugging()) {
+                log.warning("玩家 %s 恢复数据中, 此此「死亡」不会创建快照".formatted(player.getName()));
+            }
             return;
         }
 
@@ -64,7 +66,9 @@ public class SnapshotListener implements Listener {
         var player = event.getPlayer();
         if (synchronizeManager.shouldNotSaveSnapshot(player.getUniqueId())) {
             // 如果该玩家正在恢复数据, 则跳过
-            log.warning("玩家 %s 正在恢复数据, 此次「切换游戏模式」不会创建快照".formatted(player.getName()));
+            if (Main.isDebugging()) {
+                log.warning("玩家 %s 恢复数据中, 此次「切换游戏模式」不会创建快照".formatted(player.getName()));
+            }
             return;
         }
 

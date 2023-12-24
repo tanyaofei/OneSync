@@ -50,7 +50,9 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
         stopwatch.start();
         synchronizeManager.prepare(player.getUniqueId(), player.getName(), 2000);
         stopwatch.stop();
-        log.info("加载 %s(%s) 数据完毕, 耗时 %d ms".formatted(player.getName(), player.getUniqueId(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
+        if (Main.isDebugging()) {
+            log.info("加载 %s(%s) 数据完毕, 耗时 %d ms".formatted(player.getName(), player.getUniqueId(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
+        }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -72,7 +74,9 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
     public void onQuit(@NotNull PlayerQuitEvent event) {
         var player = event.getPlayer();
         if (synchronizeManager.shouldNotSaveSnapshot(player.getUniqueId())) {
-            log.info("[退出游戏] %s 存在未恢复数据, 本次操作不会保存数据。这可能是由于恢复数据时发生错误导致的".formatted(player.getName()));
+            if (Main.isDebugging()) {
+                log.warning("[退出游戏] %s 存在未恢复数据, 本次操作不会保存数据。这可能是由于恢复数据时发生错误导致的".formatted(player.getName()));
+            }
             return;
         }
 
@@ -80,7 +84,9 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
         stopwatch.start();
         synchronizeManager.save(player, SnapshotCause.PLAYER_QUIT);
         stopwatch.stop();
-        log.info("[退出游戏] - 保存玩家 %s(%s) 数据完毕, 耗时: %dms".formatted(player.getName(), player.getUniqueId(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
+        if (Main.isDebugging()) {
+            log.info("玩家 %s 正在恢复数据, 此此「死亡」不会创建快照".formatted(player.getName()));
+        }
     }
 
 }
