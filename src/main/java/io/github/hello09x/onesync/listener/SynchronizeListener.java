@@ -81,7 +81,7 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
         var player = event.getPlayer();
         if (synchronizeManager.shouldNotSaveSnapshot(player.getUniqueId())) {
             if (Main.isDebugging()) {
-                log.warning("[退出游戏] %s 存在未恢复数据, 本次操作不会保存数据。这可能是由于恢复数据时发生错误导致的".formatted(player.getName()));
+                log.warning("[退出游戏] - %s 存在未恢复数据, 本次操作不会保存数据。这可能是由于恢复数据时发生错误导致的".formatted(player.getName()));
             }
             return;
         }
