@@ -52,7 +52,7 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
         synchronizeManager.prepare(player.getUniqueId(), player.getName(), 1000);
         stopwatch.stop();
         if (Main.isDebugging()) {
-            log.info("加载 %s(%s) 数据完毕, 耗时 %d ms".formatted(player.getName(), player.getUniqueId(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
+            log.info("加载 %s 数据完毕, 耗时 %d ms".formatted(player.getName(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
         }
     }
 
@@ -91,7 +91,7 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
         synchronizeManager.save(player, SnapshotCause.PLAYER_QUIT);
         stopwatch.stop();
         if (Main.isDebugging()) {
-            log.info("玩家 %s 正在恢复数据, 此此「死亡」不会创建快照".formatted(player.getName()));
+            log.info("玩家 %s 数据保存完毕, 耗时 %d ms".formatted(player.getName(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
         }
     }
 

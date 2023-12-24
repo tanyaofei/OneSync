@@ -53,6 +53,11 @@
                                         <include name="${project.artifactId}-${project.version}.jar"/>
                                     </fileset>
                                 </copy>
+                                <copy todir="./server2/plugins">
+                                    <fileset dir="${project.build.directory}">
+                                        <include name="${project.artifactId}-${project.version}.jar"/>
+                                    </fileset>
+                                </copy>
                             </tasks>
                         </configuration>
                         <goals>
