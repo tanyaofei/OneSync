@@ -17,7 +17,7 @@ public interface SnapshotHandler<T extends SnapshotComponent> {
         return Bukkit.getServicesManager().getRegistrations(SnapshotHandler.class);
     }
 
-    @SuppressWarnings("uncheck")
+    @SuppressWarnings("unchecked")
     static <T extends SnapshotComponent> Collection<SnapshotHandler<T>> getImpl() {
         return Bukkit.getServicesManager().getRegistrations(SnapshotHandler.class)
                 .stream()
