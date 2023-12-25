@@ -1,13 +1,14 @@
 package io.github.hello09x.onesync.manager;
 
-import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.api.handler.SnapshotHandler;
-import io.github.hello09x.onesync.api.handler.SnapshotComponent;
-import io.github.hello09x.onesync.repository.SnapshotRepository;
-import io.github.hello09x.onesync.repository.model.Snapshot;
 import com.google.common.base.Throwables;
 import io.github.hello09x.bedrock.util.Lores;
+import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.api.handler.SnapshotComponent;
+import io.github.hello09x.onesync.api.handler.SnapshotHandler;
+import io.github.hello09x.onesync.repository.SnapshotRepository;
+import io.github.hello09x.onesync.repository.model.Snapshot;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -17,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -55,12 +57,23 @@ public class MenuManager {
             menu.setButton(i, snapshot.toMenuItem(), event -> {
                 switch (event.getClick()) {
                     // 左键打开详情
-                    case LEFT -> this.openSnapshot(viewer, snapshot.id(), here);
+                    case LEFT -> this.openSnapshot(
+                            viewer,
+                            snapshot.id(),
+                            here
+                    );
                     // 右键打开确认恢复界面
                     case RIGHT -> this.openConfirm(
                             viewer,
                             text("确认恢复?"),
                             () -> this.applySnapshot(viewer, snapshot),
+                            here
+                    );
+                    // Q 删除快照
+                    case DROP -> this.openConfirm(
+                            viewer,
+                            text("确认删除?"),
+                            () -> this.removeSnapshot(viewer, snapshot),
                             here
                     );
                 }
@@ -238,12 +251,49 @@ public class MenuManager {
                 }
 
                 try {
-                    handler.applyUnsafe(owner, s);
+                    handler.apply(owner, s);
                     viewer.sendMessage(text("恢复 %s 的「%s」数据成功".formatted(owner.getName(), handler.snapshotType())));
                 } catch (Throwable e) {
                     log.severe(Throwables.getStackTraceAsString(e));
                     viewer.sendMessage(text("恢复 %s 的「%s」数据失败: %s".formatted(owner.getName(), handler.snapshotType(), e.getMessage()), RED));
                 }
+            }
+        } finally {
+            viewer.closeInventory();
+        }
+    }
+
+    /**
+     * 删除快照
+     *
+     * @param viewer   操作者
+     * @param snapshot 快照
+     */
+    public void removeSnapshot(@NotNull Player viewer, @NotNull Snapshot snapshot) {
+        var snapshotId = snapshot.id();
+        var owner = Bukkit.getOfflinePlayer(snapshot.playerId());
+        try {
+            var snapshotIds = Collections.singletonList(snapshotId);
+            repository.deleteById(snapshotId);
+            for (var handler : SnapshotHandler.getImpl()) {
+                try {
+                    handler.remove(snapshotIds);
+                    viewer.sendMessage(text("删除 %s 的「%s」数据成功".formatted(owner.getName(), handler.snapshotType())));
+                } catch (Throwable e) {
+                    log.severe(Throwables.getStackTraceAsString(e));
+                    viewer.sendMessage(text("删除 %s 的「%s」数据失败".formatted(owner.getName(), handler.snapshotType())));
+                }
+            }
+
+            if (owner.isOnline()) {
+                viewer.sendMessage(textOfChildren(
+                        textOfChildren(
+                                text(Optional.ofNullable(owner.getName()).orElse("玩家"), WHITE),
+                                text(" 当前在线, 删除快照并不会影响他目前的数据", GRAY)
+                        ),
+                        text(" [详细说明]", AQUA)
+                                .hoverEvent(HoverEvent.showText(text("玩家会在退出游戏时保存当前数据, 如果你想影响到玩家的数据, 应当先把玩家踢出游戏后再操作")))
+                ));
             }
         } finally {
             viewer.closeInventory();

@@ -11,6 +11,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,7 +50,7 @@ public class SnapshotRepository extends Repository<Snapshot> {
     }
 
     public @Nullable Snapshot selectLatestByPlayerId(@NotNull UUID playerId) {
-        var sql = "select * from `snapshot` where player_id = ? order by id desc limit 1";
+        var sql = "select * from `snapshot` where player_id = ? order by created_at desc, id desc limit 1";
         return execute(connection -> {
             try (PreparedStatement stm = connection.prepareStatement(sql)) {
                 stm.setString(1, playerId.toString());
@@ -59,7 +61,7 @@ public class SnapshotRepository extends Repository<Snapshot> {
 
     public @NotNull Page<Snapshot> selectPageByPlayerId(int page, int size, @NotNull UUID playerId) {
         @Language("SQL")
-        var sql = "select * from `snapshot` where player_id = ? order by created_at desc";
+        var sql = "select * from `snapshot` where player_id = ? order by created_at desc, id desc";
         return super.selectPage(page, size, sql, playerId.toString());
     }
 

@@ -47,6 +47,7 @@ public interface SnapshotHandler<T extends SnapshotComponent> {
 
     /**
      * 删除
+     * <p>如果对应的快照不存在, 应当当作成功直接返回</p>
      *
      * @param snapshotIds 快照 ID
      */

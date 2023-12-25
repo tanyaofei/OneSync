@@ -61,7 +61,8 @@ public record Snapshot(
                     textOfChildren(text("时间: ", GRAY), text(stringifyTime(this.createdAt), WHITE)),
                     empty(),
                     text("「左键」查看详情", GRAY),
-                    text("「右键」恢复数据", GRAY)
+                    text("「右键」恢复数据", GRAY),
+                    textOfChildren(text("「"), keybind("key.drop"), text(" 键」删除")).color(GRAY)
             ).map(Components::noItalic).toList());
         });
 

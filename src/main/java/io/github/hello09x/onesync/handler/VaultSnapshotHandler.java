@@ -74,12 +74,12 @@ public class VaultSnapshotHandler extends CacheableSnapshotHandler<VaultSnapshot
 
     @Override
     public void apply(@NotNull Player player, @NotNull VaultSnapshot snapshot, boolean force) {
-        if (!config.isVault()) {
+        if (!config.isVault() || force) {
             return;
         }
 
         if (this.holder == null) {
-            throw new IllegalStateException("服务器没有启用经济插件, 无法保存 %s 的经济快照".formatted(player.getName()));
+            throw new IllegalStateException("服务器没有启用经济插件, 无法恢复 %s 的经济快照".formatted(player.getName()));
         }
 
         var current = this.holder.economy.getBalance(player);
