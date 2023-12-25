@@ -62,6 +62,6 @@ public record InventorySnapshot(
                     noItalic("「左键」查看详情", GRAY)
             ));
         });
-        return new MenuItem(item, ignored -> MenuTemplate.openInventoryMenu(viewer, text("末影箱"), this.items, onCancel));
+        return new MenuItem(item, ignored -> MenuTemplate.openInventoryMenu(viewer, text("背包"), this.items, onCancel));
     }
 }
