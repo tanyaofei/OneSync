@@ -29,20 +29,21 @@ public class SynchronizeManager {
     private final Map<UUID, List<PreparedSnapshot>> prepared = new ConcurrentHashMap<>();
 
     /**
-     * 判断玩家是否已经恢复了数据
+     * 判断玩家是否正在恢复数据
      *
      * @param player 玩家
-     * @return 是否已经恢复了数据
+     * @return 是否正在恢复数据
      */
-    public boolean isRestored(@NotNull Player player) {
-        return player.hasMetadata("onesync:restored");
+    public boolean isRestoring(@NotNull Player player) {
+        return !player.hasMetadata("onesync:restored");
     }
 
-    public void setRestored(@NotNull Player player, boolean restored) {
-        if (restored) {
-            player.setMetadata("onesync:restored", new FixedMetadataValue(Main.getInstance(), true));
-        } else {
+    public void setRestoring(@NotNull Player player, boolean restoring) {
+        // 反着来设置值会更可靠
+        if (restoring) {
             player.removeMetadata("onesync:restored", Main.getInstance());
+        } else {
+            player.setMetadata("onesync:restored", new FixedMetadataValue(Main.getInstance(), true));
         }
     }
 
@@ -113,7 +114,7 @@ public class SynchronizeManager {
      */
     public boolean applyPreparedOrKick(@NotNull Player player) {
         try {
-            this.setRestored(player, false);
+            this.setRestoring(player, true);
             var prepared = this.prepared.remove(player.getUniqueId());
             if (prepared == null) {
                 // 兼容 fakeplayer, 同步加载数据
@@ -157,7 +158,7 @@ public class SynchronizeManager {
                 }
             }
 
-            this.setRestored(player, true);     // 设置玩家已经恢复完毕, 其他创建快照事件才会处理他
+            this.setRestoring(player, true);     // 设置玩家已经恢复完毕, 其他创建快照事件才会处理他
             lockingManager.lock(player.getUniqueId());  // 锁定玩家, 当玩家退出游戏时才解锁
             return true;
         } catch (Throwable e) {
@@ -196,7 +197,7 @@ public class SynchronizeManager {
         var stopwatch = new StopWatch();
         stopwatch.start();
         for (var player : players) {
-            if (!this.isRestored(player)) {
+            if (this.isRestoring(player)) {
                 continue;
             }
             try {

@@ -92,7 +92,7 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(@NotNull PlayerQuitEvent event) {
         var player = event.getPlayer();
-        if (!synchronizeManager.isRestored(player)) {
+        if (synchronizeManager.isRestoring(player)) {
             if (Main.isDebugging()) {
                 log.warning("[退出游戏] - %s 存在未恢复数据, 本次操作不会保存数据。这可能是由于恢复数据时发生错误导致的".formatted(player.getName()));
             }

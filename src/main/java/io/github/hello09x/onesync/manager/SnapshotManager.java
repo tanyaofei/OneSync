@@ -34,7 +34,7 @@ public class SnapshotManager {
      * @return 快照 ID
      */
     public @NotNull Long create(@NotNull Player player, @NotNull SnapshotCause cause) {
-        if (!SynchronizeManager.instance.isRestored(player)) {
+        if (SynchronizeManager.instance.isRestoring(player)) {
             throw new IllegalStateException("%s has a prepared snapshot that hasn't be used to restore, cannot create snapshot for him".formatted(player.getName()));
         }
 
@@ -59,7 +59,11 @@ public class SnapshotManager {
             }
         }
 
-        this.wipeAsync(player.getUniqueId());
+        this.wipeAsync(player.getUniqueId()).thenRun(() -> {
+            if (Main.isDebugging()) {
+                log.info("已清理 %s 的多余快照".formatted(player.getName()));
+            }
+        });
         return snapshotId;
     }
 
@@ -74,7 +78,7 @@ public class SnapshotManager {
         stopwatch.start();
         int success = 0;
         for (var player : players) {
-            if (!SynchronizeManager.instance.isRestored(player)) {
+            if (SynchronizeManager.instance.isRestoring(player)) {
                 continue;
             }
 
