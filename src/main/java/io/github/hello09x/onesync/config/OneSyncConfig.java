@@ -3,16 +3,16 @@ package io.github.hello09x.onesync.config;
 import io.github.hello09x.bedrock.config.Config;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Getter
@@ -25,6 +25,9 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
     private final Snapshot snapshot = new Snapshot();
     private boolean debug;
 
+    @Setter(AccessLevel.PRIVATE)
+    private String serverId = UUID.randomUUID().toString();
+
     public OneSyncConfig(@NotNull Plugin plugin, @Nullable String version) {
         super(plugin, version);
         this.reload(false);
@@ -35,6 +38,7 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
         this.debug = file.getBoolean("debug", true);
         this.synchronize.reload(file);
         this.snapshot.reload(file);
+        Optional.ofNullable(file.getString("server-id")).ifPresent(this::setServerId);
     }
 
     @Getter

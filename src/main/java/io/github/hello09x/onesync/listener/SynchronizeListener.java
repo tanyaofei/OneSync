@@ -1,8 +1,6 @@
 package io.github.hello09x.onesync.listener;
 
 import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.*;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import io.github.hello09x.onesync.Main;

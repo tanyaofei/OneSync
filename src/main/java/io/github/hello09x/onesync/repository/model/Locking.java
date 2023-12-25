@@ -14,7 +14,7 @@ public record Locking(
         UUID playerId,
 
         @TableId("server_id")
-        UUID serverId,
+        String serverId,
 
         @TableField("created_at")
         LocalDateTime createdAt

@@ -27,13 +27,13 @@ public final class Main extends JavaPlugin {
     @Getter
     private static ChestMenuRegistry chestMenuRegistry;
 
+    public static boolean isDebugging() {
+        return OneSyncConfig.instance.isDebug();
+    }
+
     @Override
     public void onLoad() {
         instance = this;
-    }
-
-    public static boolean isDebugging() {
-        return OneSyncConfig.instance.isDebug();
     }
 
     @Override
@@ -70,7 +70,8 @@ public final class Main extends JavaPlugin {
                 mgr.addPacketListener(SynchronizeListener.instance);
             }
 
-            LockingManager.instance.lockAll();   // 热重载
+            LockingManager.instance.releaseCurrentServer(); // 崩服重启, 释放上一次会话的锁
+            LockingManager.instance.acquireAll();           // 热重载
         } catch (Throwable e) {
             getLogger().severe("加载插件失败, 为了数据安全, 关闭当前服务器: %s".formatted(Throwables.getStackTraceAsString(e)));
             Bukkit.shutdown();

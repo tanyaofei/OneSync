@@ -1,8 +1,8 @@
 package io.github.hello09x.onesync.repository;
 
+import io.github.hello09x.bedrock.database.Repository;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.Locking;
-import io.github.hello09x.bedrock.database.Repository;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,7 +14,6 @@ import java.util.UUID;
 
 public class LockingRepository extends Repository<Locking> {
 
-    private final static UUID SERVER_ID = UUID.randomUUID();
 
     public final static LockingRepository instance = new LockingRepository(Main.getInstance());
 
@@ -30,7 +29,7 @@ public class LockingRepository extends Repository<Locking> {
         throw new UnsupportedOperationException();
     }
 
-    public boolean setLock(@NotNull UUID playerId, boolean lock) {
+    public boolean setLock(@NotNull UUID playerId, @NotNull String serverId, boolean lock) {
         var modification = lock
                 ? "replace into `locking` (player_id, server_id) values (?, ?)"
                 : "delete from `locking` where player_id = ? and server_id = ?";
@@ -38,8 +37,19 @@ public class LockingRepository extends Repository<Locking> {
         return execute(connection -> {
             try (PreparedStatement stm = connection.prepareStatement(modification)) {
                 stm.setString(1, playerId.toString());
-                stm.setString(2, SERVER_ID.toString());
+                stm.setString(2, serverId);
                 return stm.executeUpdate() > 0;
+            }
+        });
+    }
+
+    public int updateServerId(@NotNull String from, @NotNull String to) {
+        var sql = "update `locking` set server_id = ? where server_id = ?";
+        return execute(connection -> {
+            try (PreparedStatement stm = connection.prepareStatement(sql)) {
+                stm.setString(1, from);
+                stm.setString(2, to);
+                return stm.executeUpdate();
             }
         });
     }
@@ -49,6 +59,16 @@ public class LockingRepository extends Repository<Locking> {
         return execute(connection -> {
             try (PreparedStatement stm = connection.prepareStatement(sql)) {
                 stm.setString(1, playerId.toString());
+                return stm.executeUpdate();
+            }
+        });
+    }
+
+    public int deleteByServerId(@NotNull String serverId) {
+        var sql = "delete from locking where server_id = ?";
+        return execute(connection -> {
+            try (PreparedStatement stm = connection.prepareStatement(sql)) {
+                stm.setString(1, serverId);
                 return stm.executeUpdate();
             }
         });

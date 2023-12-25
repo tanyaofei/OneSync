@@ -3,7 +3,9 @@ package io.github.hello09x.onesync.manager;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
+import io.github.hello09x.bedrock.util.MCUtils;
 import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.LockingRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -20,10 +22,24 @@ public class LockingManager implements PluginMessageListener {
 
     public final static LockingManager instance = new LockingManager();
     public final static String CHANNEL = "onesync:locking";
-    public final static String COMMAND_RELOCK = "Relock";
+    public final static String COMMAND_ACQUIRE = "Acquire";
     private final static Logger log = Main.getInstance().getLogger();
-    private final static String RELOCK_ALL = "ALL";
+    private final static String ACQUIRE_ALL = "ALL";
     private final LockingRepository repository = LockingRepository.instance;
+
+    private String serverId = OneSyncConfig.instance.getServerId();
+
+    public LockingManager() {
+        OneSyncConfig.instance.addListener(config -> {
+            if (!config.getServerId().equals(this.serverId)) {
+                repository.updateServerId(this.serverId, config.getServerId());
+                this.serverId = config.getServerId();
+                if (Main.isDebugging()) {
+                    log.info("服务器 ID 已发生变化");
+                }
+            }
+        });
+    }
 
     /**
      * 判断玩家是否已上锁
@@ -40,9 +56,9 @@ public class LockingManager implements PluginMessageListener {
      *
      * @param playerId 玩家 ID
      */
-    public void lock(@NotNull UUID playerId) {
+    public void acquire(@NotNull UUID playerId) {
         Optional.ofNullable(Bukkit.getPlayer(playerId))
-                .ifPresent(p -> repository.setLock(p.getUniqueId(), true));
+                .ifPresent(p -> repository.setLock(p.getUniqueId(), this.serverId, true));
     }
 
     /**
@@ -50,8 +66,9 @@ public class LockingManager implements PluginMessageListener {
      *
      * @param player 玩家
      */
-    public void lock(@NotNull Player player) {
-        repository.setLock(player.getUniqueId(), true);
+    public void acquire(@NotNull Player player) {
+        MCUtils.ensureMain();
+        repository.setLock(player.getUniqueId(), this.serverId, true);
     }
 
     /**
@@ -59,17 +76,28 @@ public class LockingManager implements PluginMessageListener {
      *
      * @param player 玩家
      */
-    public void unlock(@NotNull Player player) {
-        repository.setLock(player.getUniqueId(), false);
+    public void release(@NotNull Player player) {
+        MCUtils.ensureMain();
+        repository.setLock(player.getUniqueId(), this.serverId, false);
+    }
+
+    /**
+     * 解锁当前服务器的
+     */
+    public void releaseCurrentServer() {
+        if (repository.deleteByServerId(this.serverId) > 0) {
+            this.broadcastRequireAll();
+        }
     }
 
     /**
      * 对所有当前服务器在线的玩家上锁
      */
-    public void lockAll() {
+    public void acquireAll() {
+        MCUtils.ensureMain();
         for (var p : Bukkit.getOnlinePlayers()) {
             try {
-                repository.setLock(p.getUniqueId(), true);
+                repository.setLock(p.getUniqueId(), this.serverId, true);
             } catch (Throwable e) {
                 log.severe(Throwables.getStackTraceAsString(e));
             }
@@ -81,31 +109,47 @@ public class LockingManager implements PluginMessageListener {
      *
      * @param player 玩家
      */
-    public void relock(@NotNull OfflinePlayer player) {
-        repository.deleteByPlayerId(player.getUniqueId());
-        this.lock(player.getUniqueId());
-
-        var r = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
-        if (r != null) {
-            var message = ByteStreams.newDataOutput();
-            message.writeUTF(COMMAND_RELOCK);
-            message.writeUTF(player.getUniqueId().toString());
-            r.sendPluginMessage(Main.getInstance(), CHANNEL, message.toByteArray());
+    public void reacquire(@NotNull OfflinePlayer player) {
+        if (repository.deleteByPlayerId(player.getUniqueId()) > 0) {
+            this.acquire(player.getUniqueId());
+            this.broadcastRequire(player);
         }
     }
 
     /**
      * 移除所有锁, 无论这个锁是哪台服务器上的, 之后再让所有服务器对在线的玩家上锁
      */
-    public void relockAll() {
-        repository.deleteAll();
-        this.lockAll();
+    public void requireAll() {
+        if (repository.deleteAll() > 0) {
+            this.acquireAll();
+            this.broadcastRequireAll();
+        }
+    }
 
+    /**
+     * 发送插件消息, 对特定玩家重新上锁
+     *
+     * @param player 玩家
+     */
+    public void broadcastRequire(@NotNull OfflinePlayer player) {
         var r = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
         if (r != null) {
             var message = ByteStreams.newDataOutput();
-            message.writeUTF(COMMAND_RELOCK);
-            message.writeUTF(RELOCK_ALL);
+            message.writeUTF(COMMAND_ACQUIRE);
+            message.writeUTF(player.getUniqueId().toString());
+            r.sendPluginMessage(Main.getInstance(), CHANNEL, message.toByteArray());
+        }
+    }
+
+    /**
+     * 发送插件消息, 让其他服务器重新上锁
+     */
+    private void broadcastRequireAll() {
+        var r = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
+        if (r != null) {
+            var message = ByteStreams.newDataOutput();
+            message.writeUTF(COMMAND_ACQUIRE);
+            message.writeUTF(ACQUIRE_ALL);
             r.sendPluginMessage(Main.getInstance(), CHANNEL, message.toByteArray());
         }
     }
@@ -121,7 +165,7 @@ public class LockingManager implements PluginMessageListener {
         }
 
         var in = ByteStreams.newDataInput(message);
-        if (!in.readUTF().equals(COMMAND_RELOCK)) {
+        if (!in.readUTF().equals(COMMAND_ACQUIRE)) {
             return;
         }
 
@@ -129,10 +173,10 @@ public class LockingManager implements PluginMessageListener {
             log.info("接收到「relock」消息");
         }
         var arg = in.readUTF();
-        if (arg.equals(RELOCK_ALL)) {
-            this.lockAll();
+        if (arg.equals(ACQUIRE_ALL)) {
+            this.acquireAll();
         } else {
-            this.lock(UUID.fromString(arg));
+            this.acquire(UUID.fromString(arg));
         }
     }
 }

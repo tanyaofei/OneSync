@@ -6,7 +6,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -39,8 +38,6 @@ public class UnlockCommand {
 
     /**
      * 解锁指定玩家
-     * @param sender
-     * @param args
      */
     public void unlock(@NotNull CommandSender sender, @NotNull CommandArguments args) {
         var player = (OfflinePlayer) Objects.requireNonNull(args.get("player"));
@@ -48,12 +45,12 @@ public class UnlockCommand {
             sender.sendMessage(text("该玩家在线, 无须解锁", GRAY));
             return;
         }
-        manager.relock(player);
+        manager.reacquire(player);
         MESSAGES.forEach(sender::sendMessage);
     }
 
     public void unlockAll(@NotNull CommandSender sender, @NotNull CommandArguments args) {
-        manager.relockAll();
+        manager.requireAll();
         MESSAGES.forEach(sender::sendMessage);
     }
 

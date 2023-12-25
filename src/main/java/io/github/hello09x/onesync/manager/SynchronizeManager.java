@@ -66,6 +66,7 @@ public class SynchronizeManager {
                 try {
                     Thread.sleep(50L);
                 } catch (InterruptedException ignored) {
+                    // 服务器关闭... 之类的
                     return "[OneSync] 加载数据中断, 请联系管理员";
                 }
             }
@@ -120,33 +121,33 @@ public class SynchronizeManager {
                 // 兼容 fakeplayer, 同步加载数据
                 var reason = this.tryPrepare(player.getUniqueId(), player.getName(), 0);
                 if (reason != null) {
-                    Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(text(reason)));
+                    Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(text(reason))); // 在当前 tick 踢会报错
                     return false;
                 }
                 prepared = this.prepared.remove(player.getUniqueId());
             }
 
             if (prepared == null) {
-                Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(text("[OneSync] 服务器尚未为你加载数据, 请重新登录")));
+                Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(text("[OneSync] 服务器尚未为你加载数据, 请重新登录"))); // 在当前 tick 踢会报错
                 return false;
             }
 
             for (var pair : prepared) {
                 var registration = pair.registration;
-                var snapshot = pair.snapshot;
+                var component = pair.snapshot;
                 var handler = registration.getProvider();
 
-                if (snapshot == null) {
+                if (component == null) {
                     continue;
                 }
                 if (!registration.getPlugin().isEnabled()) {
                     log.severe("插件 [%s] 已卸载, 无法为 %s 恢复「%s」数据".formatted(player.getName(), registration.getPlugin().getName(), handler.snapshotType()));
-                    Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(text("[OneSync] 玩家数据发生变化, 请重新登陆")));
+                    Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(text("[OneSync] 玩家数据发生变化, 请重新登陆")));    // 在当前 tick 踢会报错
                     return false;
                 }
 
                 try {
-                    handler.applyUnsafe(player, snapshot);
+                    handler.applyUnsafe(player, component);
                 } catch (Throwable e) {
                     log.severe("恢复 %s 由 [%s] 提供的「%s」数据失败: %s".formatted(
                             player.getName(),
@@ -154,15 +155,15 @@ public class SynchronizeManager {
                             player.getUniqueId(),
                             e.getMessage()
                     ));
-                    throw e;
+                    throw e;    // 外层会 catch 住
                 }
             }
 
-            this.setRestoring(player, true);     // 设置玩家已经恢复完毕, 其他创建快照事件才会处理他
-            lockingManager.lock(player.getUniqueId());  // 锁定玩家, 当玩家退出游戏时才解锁
+            this.setRestoring(player, false);    // 设置玩家已经恢复完毕, 其他创建快照事件才会处理他
+            lockingManager.acquire(player.getUniqueId());  // 锁定玩家, 当玩家退出游戏时才解锁
             return true;
         } catch (Throwable e) {
-            Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(text("[OneSync] 无法为你恢复玩家数据, 请联系管理员")));
+            Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(text("[OneSync] 恢复玩家数据失败, 请联系管理员")));
             log.severe(Throwables.getStackTraceAsString(e));
             return false;
         }
@@ -179,7 +180,7 @@ public class SynchronizeManager {
         try {
             snapshotManager.create(player, cause);
         } finally {
-            lockingManager.unlock(player);
+            lockingManager.release(player);
         }
     }
 
