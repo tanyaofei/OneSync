@@ -123,7 +123,7 @@ public class SnapshotManager {
      * @param playerId 玩家 ID
      * @return 任务
      */
-    public CompletableFuture<Void> wipeAsync(@NotNull UUID playerId) {
+    public @NotNull CompletableFuture<Void> wipeAsync(@NotNull UUID playerId) {
         return CompletableFuture.runAsync(() -> {
             try {
                 var snapshots = repository.selectByPlayerId(playerId);
