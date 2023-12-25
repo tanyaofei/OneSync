@@ -8,3 +8,6 @@ depend:
 
 softdepend:
   - Vault
+
+libraries:
+  - com.mysql:mysql-connector-j:8.0.33
