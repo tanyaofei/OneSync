@@ -25,7 +25,7 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
     private final Snapshot snapshot = new Snapshot();
     private boolean debug;
 
-    @Setter(AccessLevel.PRIVATE)
+    @Setter
     private String serverId = UUID.randomUUID().toString();
 
     public OneSyncConfig(@NotNull Plugin plugin, @Nullable String version) {

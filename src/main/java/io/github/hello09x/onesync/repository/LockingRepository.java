@@ -47,8 +47,8 @@ public class LockingRepository extends Repository<Locking> {
         var sql = "update `locking` set server_id = ? where server_id = ?";
         return execute(connection -> {
             try (PreparedStatement stm = connection.prepareStatement(sql)) {
-                stm.setString(1, from);
-                stm.setString(2, to);
+                stm.setString(1, to);
+                stm.setString(2, from);
                 return stm.executeUpdate();
             }
         });

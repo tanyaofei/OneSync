@@ -32,10 +32,16 @@ public class LockingManager implements PluginMessageListener {
     public LockingManager() {
         OneSyncConfig.instance.addListener(config -> {
             if (!config.getServerId().equals(this.serverId)) {
-                repository.updateServerId(this.serverId, config.getServerId());
+                var old = this.serverId;
+                try {
+                    repository.updateServerId(old, config.getServerId());
+                } catch (Throwable e) {
+                    config.setServerId(old); // rollback
+                    throw e;
+                }
                 this.serverId = config.getServerId();
                 if (Main.isDebugging()) {
-                    log.info("服务器 ID 已发生变化");
+                    log.info("服务器 ID 已发生变化, %s -> %s".formatted(old, config.getServerId()));
                 }
             }
         });
