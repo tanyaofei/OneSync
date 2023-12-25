@@ -27,6 +27,9 @@ synchronize:
   # 效果, 如药水效果、Buff
   potion-effects: false
 
+  # 经济, 对 Vault 插件的支持
+  vault: false
+
   # 玩家档案
   profile:
 

@@ -1,10 +1,10 @@
 package io.github.hello09x.onesync.listener;
 
 import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.events.ListenerOptions;
-import com.comphenix.protocol.events.ListenerPriority;
-import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketEvent;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.ProtocolManager;
+import com.comphenix.protocol.events.*;
+import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.manager.SynchronizeManager;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
@@ -37,7 +37,13 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
 
     @Override
     public void onPacketSending(@NotNull PacketEvent event) {
-        this.onPreJoin(event);
+        if (event.isCancelled()) {
+            return;
+        }
+
+        if (event.getPacketType().equals(PacketType.Configuration.Server.FINISH_CONFIGURATION)) {
+            this.onPreJoin(event);
+        }
     }
 
     /**
@@ -49,10 +55,17 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
         var stopwatch = new StopWatch();
         var player = event.getPlayer();
         stopwatch.start();
-        synchronizeManager.prepare(player.getUniqueId(), player.getName(), 1000);
+        var reason = synchronizeManager.tryPrepare(player.getUniqueId(), player.getName(), 3000);
         stopwatch.stop();
-        if (Main.isDebugging()) {
-            log.info("加载 %s 数据完毕, 耗时 %d ms".formatted(player.getName(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
+        if (reason != null) {
+            // 由于 ProtocolLib 的限制, 还没加入游戏的玩家无法发送数据包
+            // 因此只能在这里替换了数据包
+            // 这种操作有风险
+            var packet = new PacketContainer(PacketType.Configuration.Server.DISCONNECT);
+            packet.getChatComponents().write(0, WrappedChatComponent.fromText(reason));
+            event.setPacket(packet);
+        } else if (Main.isDebugging()) {
+            log.info("[异步] 加载 %s 数据完毕, 耗时 %d ms".formatted(player.getName(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
         }
     }
 
@@ -64,9 +77,9 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
         var player = event.getPlayer();
         var stopwatch = new StopWatch();
         stopwatch.start();
-        synchronizeManager.applyPrepared(player);
+        var success = synchronizeManager.applyPreparedOrKick(player);
         stopwatch.stop();
-        if (Main.isDebugging()) {
+        if (success && Main.isDebugging()) {
             log.info("恢复 %s 数据完毕, 耗时 %d ms".formatted(player.getName(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
         }
     }
@@ -79,7 +92,7 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(@NotNull PlayerQuitEvent event) {
         var player = event.getPlayer();
-        if (synchronizeManager.shouldNotSaveSnapshot(player.getUniqueId())) {
+        if (!synchronizeManager.isRestored(player)) {
             if (Main.isDebugging()) {
                 log.warning("[退出游戏] - %s 存在未恢复数据, 本次操作不会保存数据。这可能是由于恢复数据时发生错误导致的".formatted(player.getName()));
             }
@@ -88,7 +101,7 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
 
         var stopwatch = new StopWatch();
         stopwatch.start();
-        synchronizeManager.save(player, SnapshotCause.PLAYER_QUIT);
+        synchronizeManager.saveAndUnlock(player, SnapshotCause.PLAYER_QUIT);
         stopwatch.stop();
         if (Main.isDebugging()) {
             log.info("玩家 %s 数据保存完毕, 耗时 %d ms".formatted(player.getName(), stopwatch.getTime(TimeUnit.MILLISECONDS)));

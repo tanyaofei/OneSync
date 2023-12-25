@@ -1,7 +1,7 @@
 package io.github.hello09x.onesync.handler;
 
 import io.github.hello09x.onesync.config.OneSyncConfig;
-import io.github.hello09x.onesync.api.handler.CachedSnapshotHandler;
+import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.repository.PotionEffectSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.PotionEffectSnapshot;
 import org.bukkit.entity.Player;
@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PotionEffectSnapshotHandler extends CachedSnapshotHandler<PotionEffectSnapshot> {
+public class PotionEffectSnapshotHandler extends CacheableSnapshotHandler<PotionEffectSnapshot> {
 
     public final static PotionEffectSnapshotHandler instance = new PotionEffectSnapshotHandler();
 

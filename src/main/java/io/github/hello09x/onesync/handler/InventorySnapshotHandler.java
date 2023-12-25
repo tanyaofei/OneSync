@@ -1,10 +1,10 @@
 package io.github.hello09x.onesync.handler;
 
+import io.github.hello09x.bedrock.util.InventoryUtils;
 import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.api.handler.CachedSnapshotHandler;
+import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.model.InventorySnapshot;
-import io.github.hello09x.onesync.util.InventoryHelper;
 import io.github.hello09x.onesync.repository.InventorySnapshotRepository;
 import lombok.SneakyThrows;
 import org.bukkit.entity.Player;
@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class InventorySnapshotHandler extends CachedSnapshotHandler<InventorySnapshot> {
+public class InventorySnapshotHandler extends CacheableSnapshotHandler<InventorySnapshot> {
 
     public final static InventorySnapshotHandler instance = new InventorySnapshotHandler();
     private final static Logger log = Main.getInstance().getLogger();
@@ -42,7 +42,7 @@ public class InventorySnapshotHandler extends CachedSnapshotHandler<InventorySna
         var snapshot = new InventorySnapshot(
                 snapshotId,
                 player.getUniqueId(),
-                InventoryHelper.toMap(player.getInventory()),
+                InventoryUtils.toMap(player.getInventory()),
                 player.getInventory().getHeldItemSlot()
         );
 
@@ -61,7 +61,7 @@ public class InventorySnapshotHandler extends CachedSnapshotHandler<InventorySna
             return;
         }
 
-        InventoryHelper.replace(player.getInventory(), snapshot.items());
+        InventoryUtils.replace(player.getEnderChest(), snapshot.items(), true);
         player.getInventory().setHeldItemSlot(snapshot.heldItemSlot());
     }
 

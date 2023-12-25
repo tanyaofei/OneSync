@@ -1,6 +1,6 @@
 package io.github.hello09x.onesync.handler;
 
-import io.github.hello09x.onesync.api.handler.CachedSnapshotHandler;
+import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.PDCSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.PDCSnapshot;
@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.util.List;
 
-public class PDCSnapshotHandler extends CachedSnapshotHandler<PDCSnapshot> {
+public class PDCSnapshotHandler extends CacheableSnapshotHandler<PDCSnapshot> {
 
     public final static PDCSnapshotHandler instance = new PDCSnapshotHandler();
     private final PDCSnapshotRepository repository = PDCSnapshotRepository.instance;

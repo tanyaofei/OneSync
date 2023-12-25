@@ -51,6 +51,7 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
         private boolean air;
         private boolean advancements;
         private boolean potionEffects;
+        private boolean vault;
 
         public void reload(@NotNull FileConfiguration file) {
             this.inventory = file.getBoolean("synchronize.inventory", true);
@@ -64,6 +65,7 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
             this.air = file.getBoolean("synchronize.profile.air", false);
             this.advancements = file.getBoolean("synchronize.advancements", false);
             this.potionEffects = file.getBoolean("synchronize.potion-effects", false);
+            this.vault = file.getBoolean("synchronize.vault", false);
         }
     }
 

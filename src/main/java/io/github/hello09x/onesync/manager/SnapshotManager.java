@@ -34,7 +34,7 @@ public class SnapshotManager {
      * @return 快照 ID
      */
     public @NotNull Long create(@NotNull Player player, @NotNull SnapshotCause cause) {
-        if (SynchronizeManager.instance.shouldNotSaveSnapshot(player.getUniqueId())) {
+        if (!SynchronizeManager.instance.isRestored(player)) {
             throw new IllegalStateException("%s has a prepared snapshot that hasn't be used to restore, cannot create snapshot for him".formatted(player.getName()));
         }
 
@@ -74,7 +74,7 @@ public class SnapshotManager {
         stopwatch.start();
         int success = 0;
         for (var player : players) {
-            if (SynchronizeManager.instance.shouldNotSaveSnapshot(player.getUniqueId())) {
+            if (!SynchronizeManager.instance.isRestored(player)) {
                 continue;
             }
 

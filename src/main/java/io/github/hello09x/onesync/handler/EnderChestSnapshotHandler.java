@@ -1,9 +1,9 @@
 package io.github.hello09x.onesync.handler;
 
-import io.github.hello09x.onesync.api.handler.CachedSnapshotHandler;
+import io.github.hello09x.bedrock.util.InventoryUtils;
+import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.EnderChestSnapshotRepository;
-import io.github.hello09x.onesync.util.InventoryHelper;
 import io.github.hello09x.onesync.repository.model.EnderChestSnapshot;
 import lombok.SneakyThrows;
 import org.bukkit.entity.Player;
@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class EnderChestSnapshotHandler extends CachedSnapshotHandler<EnderChestSnapshot> {
+public class EnderChestSnapshotHandler extends CacheableSnapshotHandler<EnderChestSnapshot> {
 
     public final static EnderChestSnapshotHandler instance = new EnderChestSnapshotHandler();
     private final EnderChestSnapshotRepository repository = EnderChestSnapshotRepository.instance;
@@ -38,7 +38,7 @@ public class EnderChestSnapshotHandler extends CachedSnapshotHandler<EnderChestS
         var snapshot = new EnderChestSnapshot(
                 snapshotId,
                 player.getUniqueId(),
-                InventoryHelper.toMap(player.getEnderChest())
+                InventoryUtils.toMap(player.getEnderChest())
         );
 
         repository.insert(snapshot);
@@ -56,6 +56,6 @@ public class EnderChestSnapshotHandler extends CachedSnapshotHandler<EnderChestS
             return;
         }
 
-        InventoryHelper.replace(player.getEnderChest(), snapshot.items());
+        InventoryUtils.replace(player.getEnderChest(), snapshot.items(), true);
     }
 }

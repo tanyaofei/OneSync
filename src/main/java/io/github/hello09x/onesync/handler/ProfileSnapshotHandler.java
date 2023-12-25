@@ -1,6 +1,6 @@
 package io.github.hello09x.onesync.handler;
 
-import io.github.hello09x.onesync.api.handler.CachedSnapshotHandler;
+import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.ProfileSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.ProfileSnapshot;
@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Optional;
 
-public class ProfileSnapshotHandler extends CachedSnapshotHandler<ProfileSnapshot> {
+public class ProfileSnapshotHandler extends CacheableSnapshotHandler<ProfileSnapshot> {
 
     public final static ProfileSnapshotHandler instance = new ProfileSnapshotHandler();
 

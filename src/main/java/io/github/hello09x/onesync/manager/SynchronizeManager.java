@@ -5,10 +5,10 @@ import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
-import net.kyori.adventure.text.Component;
 import org.apache.commons.lang3.time.StopWatch;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,16 +27,23 @@ public class SynchronizeManager {
     private final LockingManager lockingManager = LockingManager.instance;
     private final SnapshotManager snapshotManager = SnapshotManager.instance;
     private final Map<UUID, List<PreparedSnapshot>> prepared = new ConcurrentHashMap<>();
-    private final Map<UUID, Component> prepareFailed = new ConcurrentHashMap<>();
 
     /**
-     * 判断玩家是否应当在退出时保存数据
+     * 判断玩家是否已经恢复了数据
      *
-     * @param playerId 玩家 ID
-     * @return 是否应当退出时保存数据
+     * @param player 玩家
+     * @return 是否已经恢复了数据
      */
-    public boolean shouldNotSaveSnapshot(@NotNull UUID playerId) {
-        return this.prepared.containsKey(playerId) || this.prepareFailed.containsKey(playerId);
+    public boolean isRestored(@NotNull Player player) {
+        return player.hasMetadata("onesync:restored");
+    }
+
+    public void setRestored(@NotNull Player player, boolean restored) {
+        if (restored) {
+            player.setMetadata("onesync:restored", new FixedMetadataValue(Main.getInstance(), true));
+        } else {
+            player.removeMetadata("onesync:restored", Main.getInstance());
+        }
     }
 
     /**
@@ -45,29 +52,27 @@ public class SynchronizeManager {
      * @param playerId   玩家 ID
      * @param playerName 玩家名称
      * @param timeout    超时时间
+     * @return 加载数据成功则返回 {@code true}, 否则在玩家 {@link #applyPreparedOrKick(Player)} 时踢掉玩家并返回 {@code false}
      */
-    public void prepare(@NotNull UUID playerId, @Nullable String playerName, long timeout) {
+    public @Nullable String tryPrepare(@NotNull UUID playerId, @Nullable String playerName, long timeout) {
         try {
             this.prepared.remove(playerId);
             long startedAt = System.currentTimeMillis();
-            int retires = 0;
             while (lockingManager.isLocked(playerId)) {
                 if (System.currentTimeMillis() - startedAt >= timeout) {
-                    this.prepareFailed.put(playerId, text("[OneSync] 加载数据超时, 请联系管理员"));
-                    return;
+                    return "[OneSync] 加载数据超时, 请联系管理员";
                 }
                 try {
-                    Thread.sleep(50L * (retires++));
+                    Thread.sleep(50L);
                 } catch (InterruptedException ignored) {
-
+                    return "[OneSync] 加载数据中断, 请联系管理员";
                 }
             }
 
             var snapshot = snapshotManager.getLatest(playerId);
             if (snapshot == null) {
                 this.prepared.put(playerId, Collections.emptyList());
-                this.prepareFailed.remove(playerId);
-                return;
+                return null;
             }
 
             var snapshots = new ArrayList<PreparedSnapshot>();
@@ -94,9 +99,9 @@ public class SynchronizeManager {
                 }
             }
             this.prepared.put(playerId, snapshots);
-            this.prepareFailed.remove(playerId);
+            return null;
         } catch (Throwable e) {
-            this.prepareFailed.put(playerId, text("[OneSync] 加载数据失败, 请联系管理员"));
+            return "[OneSync] 加载数据失败, 请联系管理员";
         }
     }
 
@@ -104,22 +109,28 @@ public class SynchronizeManager {
      * 应用已经加载好的快照数据
      *
      * @param player 玩家
+     * @return 玩家数据加载成功则为 {@code true}, 否则踢掉玩家并返回 {@code false}
      */
-    public void applyPrepared(@NotNull Player player) {
+    public boolean applyPreparedOrKick(@NotNull Player player) {
         try {
-            var reason = this.prepareFailed.get(player.getUniqueId());
-            if (reason != null) {
-                player.kick(reason);
-                return;
+            this.setRestored(player, false);
+            var prepared = this.prepared.remove(player.getUniqueId());
+            if (prepared == null) {
+                // 兼容 fakeplayer, 同步加载数据
+                var reason = this.tryPrepare(player.getUniqueId(), player.getName(), 0);
+                if (reason != null) {
+                    Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(text(reason)));
+                    return false;
+                }
+                prepared = this.prepared.remove(player.getUniqueId());
             }
 
-            var pairs = this.prepared.get(player.getUniqueId());
-            if (pairs == null) {
-                player.kick(text("[OneSync] 服务器尚未为你加载数据, 请重新登录"));
-                return;
+            if (prepared == null) {
+                Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(text("[OneSync] 服务器尚未为你加载数据, 请重新登录")));
+                return false;
             }
 
-            for (var pair : pairs) {
+            for (var pair : prepared) {
                 var registration = pair.registration;
                 var snapshot = pair.snapshot;
                 var handler = registration.getProvider();
@@ -128,8 +139,9 @@ public class SynchronizeManager {
                     continue;
                 }
                 if (!registration.getPlugin().isEnabled()) {
-                    log.warning("插件 [%s] 已卸载, 无法为 %s 恢复它提供的「%s」数据".formatted(player.getName(), registration.getPlugin().getName(), handler.snapshotType()));
-                    continue;
+                    log.severe("插件 [%s] 已卸载, 无法为 %s 恢复「%s」数据".formatted(player.getName(), registration.getPlugin().getName(), handler.snapshotType()));
+                    Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(text("[OneSync] 玩家数据发生变化, 请重新登陆")));
+                    return false;
                 }
 
                 try {
@@ -144,18 +156,25 @@ public class SynchronizeManager {
                     throw e;
                 }
             }
-        } catch (Throwable e) {
-            player.kick(text("无法为你恢复玩家数据, 请联系管理员"));
-            log.severe(Throwables.getStackTraceAsString(e));
-            return;
-        }
 
-        lockingManager.lock(player.getUniqueId());  // 锁定玩家, 当玩家退出游戏时才解锁
-        this.prepared.remove(player.getUniqueId()); // 如果发生异常了, 则不移除玩家, 玩家下线时如果还存在加载好的数据, 则不会触发保存
+            this.setRestored(player, true);     // 设置玩家已经恢复完毕, 其他创建快照事件才会处理他
+            lockingManager.lock(player.getUniqueId());  // 锁定玩家, 当玩家退出游戏时才解锁
+            return true;
+        } catch (Throwable e) {
+            Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(text("[OneSync] 无法为你恢复玩家数据, 请联系管理员")));
+            log.severe(Throwables.getStackTraceAsString(e));
+            return false;
+        }
     }
 
 
-    public void save(@NotNull Player player, @NotNull SnapshotCause cause) {
+    /**
+     * 保存玩家并解锁
+     *
+     * @param player 玩家
+     * @param cause  保存原因
+     */
+    public void saveAndUnlock(@NotNull Player player, @NotNull SnapshotCause cause) {
         try {
             snapshotManager.create(player, cause);
         } finally {
@@ -163,7 +182,12 @@ public class SynchronizeManager {
         }
     }
 
-    public void saveAll(@NotNull SnapshotCause cause) {
+    /**
+     * 保存所有玩家并解锁
+     *
+     * @param cause 保存原因
+     */
+    public void saveAndUnlockAll(@NotNull SnapshotCause cause) {
         var players = Bukkit.getOnlinePlayers();
         if (players.isEmpty()) {
             return;
@@ -172,11 +196,11 @@ public class SynchronizeManager {
         var stopwatch = new StopWatch();
         stopwatch.start();
         for (var player : players) {
-            if (this.shouldNotSaveSnapshot(player.getUniqueId())) {
+            if (!this.isRestored(player)) {
                 continue;
             }
             try {
-                this.save(player, cause);
+                this.saveAndUnlock(player, cause);
             } catch (Throwable e) {
                 // 因为玩家退出时调用此方法并不能取消操作, 因此只能继续执行
                 log.severe("保存玩家 %s(%s) 数据失败: %s".formatted(player.getName(), player.getUniqueId(), Throwables.getStackTraceAsString(e)));

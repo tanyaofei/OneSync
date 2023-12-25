@@ -48,6 +48,7 @@ public final class Main extends JavaPlugin {
             sm.register(SnapshotHandler.class, AdvancementSnapshotHandler.instance, this, ServicePriority.Normal);
             sm.register(SnapshotHandler.class, PDCSnapshotHandler.instance, this, ServicePriority.Normal);
             sm.register(SnapshotHandler.class, PotionEffectSnapshotHandler.instance, this, ServicePriority.Normal);
+            sm.register(SnapshotHandler.class, VaultSnapshotHandler.instance, this, ServicePriority.Normal);
         }
 
         {
@@ -74,7 +75,7 @@ public final class Main extends JavaPlugin {
     public void onDisable() {
         // Plugin shutdown logic
         super.onDisable();
-        SynchronizeManager.instance.saveAll(SnapshotCause.PLUGIN_DISABLE);  // 关闭服务器不会调用 PlayerQuitEvent 事件, 因此需要全量保存一次
+        SynchronizeManager.instance.saveAndUnlockAll(SnapshotCause.PLUGIN_DISABLE);  // 关闭服务器不会调用 PlayerQuitEvent 事件, 因此需要全量保存一次
 
         {
             var messenger = getServer().getMessenger();
@@ -85,6 +86,5 @@ public final class Main extends JavaPlugin {
         {
             Bukkit.getServicesManager().unregisterAll(this);
         }
-
     }
 }

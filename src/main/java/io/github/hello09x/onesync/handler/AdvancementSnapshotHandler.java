@@ -1,10 +1,10 @@
 package io.github.hello09x.onesync.handler;
 
 import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.api.handler.CachedSnapshotHandler;
+import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
-import io.github.hello09x.onesync.repository.model.AdvancementSnapshot;
 import io.github.hello09x.onesync.repository.AdvancementSnapshotRepository;
+import io.github.hello09x.onesync.repository.model.AdvancementSnapshot;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.advancement.Advancement;
@@ -19,12 +19,15 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class AdvancementSnapshotHandler extends CachedSnapshotHandler<AdvancementSnapshot> {
+public class AdvancementSnapshotHandler extends CacheableSnapshotHandler<AdvancementSnapshot> {
 
     public final static AdvancementSnapshotHandler instance = new AdvancementSnapshotHandler();
 
     private final static Logger log = Main.getInstance().getLogger();
-    private final static Map<String, Advancement> ADVANCEMENTS = StreamSupport.stream(((Iterable<Advancement>) Bukkit::advancementIterator).spliterator(), false).collect(Collectors.toMap(adv -> adv.getKey().asString(), Function.identity()));
+    private final static Map<String, Advancement> ADVANCEMENTS = StreamSupport
+            .stream(((Iterable<Advancement>) Bukkit::advancementIterator).spliterator(), false)
+            .collect(Collectors.toMap(adv -> adv.getKey().asString(), Function.identity()));
+
     private final AdvancementSnapshotRepository repository = AdvancementSnapshotRepository.instance;
     private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
 
@@ -44,7 +47,11 @@ public class AdvancementSnapshotHandler extends CachedSnapshotHandler<Advancemen
             return null;
         }
 
-        var advancements = StreamSupport.stream(((Iterable<Advancement>) Bukkit::advancementIterator).spliterator(), false).map(advancement -> Pair.of(advancement.getKey().asString(), player.getAdvancementProgress(advancement).getAwardedCriteria())).filter(pair -> !pair.getValue().isEmpty()).collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+        var advancements = StreamSupport
+                .stream(((Iterable<Advancement>) Bukkit::advancementIterator).spliterator(), false)
+                .map(advancement -> Pair.of(advancement.getKey().asString(), player.getAdvancementProgress(advancement).getAwardedCriteria()))
+                .filter(pair -> !pair.getValue().isEmpty())
+                .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
 
         var snapshot = new AdvancementSnapshot(snapshotId, player.getUniqueId(), advancements);
 
@@ -72,7 +79,11 @@ public class AdvancementSnapshotHandler extends CachedSnapshotHandler<Advancemen
                     var progress = player.getAdvancementProgress(advancement);
                     criteria.forEach(progress::awardCriteria);
                 } catch (Throwable e) {
-                    log.warning("Failed to apply advancement: " + e.getMessage());
+                    log.warning("无法为 %s 恢复「%s」的成就数据: %s".formatted(
+                            player.getName(),
+                            advancement.getKey().asString(),
+                            e.getMessage())
+                    );
                 }
             }
         }
