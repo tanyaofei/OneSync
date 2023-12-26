@@ -13,6 +13,7 @@ import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -71,7 +72,7 @@ public record InventorySnapshot(
                 ignored -> MenuTemplate.openInventoryMenu(
                         viewer,
                         text("背包"),
-                        41,
+                        InventoryType.PLAYER.getDefaultSize(),
                         this.items,
                         newItems -> InventorySnapshotHandler.instance.updateItems(this.snapshotId, newItems),
                         event -> {

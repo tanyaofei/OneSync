@@ -13,6 +13,7 @@ import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -63,7 +64,7 @@ public record EnderChestSnapshot(
                 ignored -> MenuTemplate.openInventoryMenu(
                         viewer,
                         text("末影箱"),
-                        27,
+                        InventoryType.ENDER_CHEST.getDefaultSize(),
                         this.items,
                         newItems -> EnderChestSnapshotHandler.instance.updateItems(this.snapshotId, newItems),
                         event -> {
