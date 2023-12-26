@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +39,7 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
         this.debug = file.getBoolean("debug", true);
         this.synchronize.reload(file);
         this.snapshot.reload(file);
-        Optional.ofNullable(file.getString("server-id")).ifPresent(this::setServerId);
+        Optional.ofNullable(file.getString("server-id")).filter(StringUtils::isNotBlank).ifPresent(this::setServerId);
     }
 
     @Getter

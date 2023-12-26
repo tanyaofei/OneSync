@@ -1,13 +1,15 @@
 package io.github.hello09x.onesync.manager;
 
 import com.google.common.base.Throwables;
+import io.github.hello09x.bedrock.util.MCUtils;
 import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.api.event.PlayerPrepareRestoreEvent;
 import io.github.hello09x.onesync.api.event.PlayerAttemptRestoreEvent;
 import io.github.hello09x.onesync.api.event.PlayerFinishRestoreEvent;
+import io.github.hello09x.onesync.api.event.PlayerPrepareRestoreEvent;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.manager.entity.PreparedSnapshotComponent;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
+import net.kyori.adventure.text.Component;
 import org.apache.commons.lang3.time.StopWatch;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -129,14 +131,14 @@ public class SynchronizeManager {
                 // 兼容 fakeplayer, 同步加载数据
                 var reason = this.tryPrepare(player.getUniqueId(), player.getName(), 0);
                 if (reason != null) {
-                    Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(text(reason))); // 在当前 tick 踢会报错
+                    this.kickOnNextTick(player, text(reason));
                     return false;
                 }
                 prepared = this.prepared.remove(player.getUniqueId());
             }
 
             if (prepared == null) {
-                Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(text("[OneSync] 服务器尚未为你加载数据, 请重新登录"))); // 在当前 tick 踢会报错
+                this.kickOnNextTick(player, text("[OneSync] 服务器尚未为你加载数据, 请重新登录"));
                 return false;
             }
 
@@ -153,7 +155,7 @@ public class SynchronizeManager {
                     continue;
                 }
                 if (!registration.getPlugin().isEnabled()) {
-                    Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(text("[OneSync] 玩家数据发生变化, 请重新登陆")));    // 在当前 tick 踢会报错
+                    this.kickOnNextTick(player, text("[OneSync] 玩家数据发生变化, 请重新登陆"));
                     new PlayerFinishRestoreEvent(player, PlayerFinishRestoreEvent.Result.FAILED).callEvent();
                     log.severe("插件 [%s] 已卸载, 无法为 %s 恢复「%s」数据".formatted(player.getName(), registration.getPlugin().getName(), handler.snapshotType()));
                     return false;
@@ -174,11 +176,10 @@ public class SynchronizeManager {
 
             this.setRestoring(player, false);      // 设置玩家已经恢复完毕, 其他创建快照事件才会处理他
             lockingManager.acquire(player.getUniqueId());  // 锁定玩家, 当玩家退出游戏时才解锁
-
             new PlayerFinishRestoreEvent(player, PlayerFinishRestoreEvent.Result.SUCCESS).callEvent();
             return true;
         } catch (Throwable e) {
-            Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(text("[OneSync] 恢复玩家数据失败, 请联系管理员")));
+            this.kickOnNextTick(player, text("[OneSync] 恢复玩家数据失败, 请联系管理员"));
             new PlayerFinishRestoreEvent(player, PlayerFinishRestoreEvent.Result.FAILED).callEvent();
             log.severe(Throwables.getStackTraceAsString(e));
             return false;
@@ -227,6 +228,14 @@ public class SynchronizeManager {
         stopwatch.stop();
         if (Main.isDebugging()) {
             log.info("[%s] 保存 %d 名玩家数据完毕, 耗时 %d ms".formatted(cause, players.size(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
+        }
+    }
+
+    private void kickOnNextTick(@NotNull Player player, @NotNull Component reason) {
+        if (MCUtils.isFolia()) {
+            player.getScheduler().run(Main.getInstance(), x -> player.kick(reason), null);
+        } else {
+            Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(reason));
         }
     }
 
