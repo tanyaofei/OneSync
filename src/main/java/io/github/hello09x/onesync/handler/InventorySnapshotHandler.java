@@ -61,7 +61,7 @@ public class InventorySnapshotHandler extends CacheableSnapshotHandler<Inventory
             return;
         }
 
-        InventoryUtils.replace(player.getEnderChest(), snapshot.items(), true);
+        InventoryUtils.replace(player.getInventory(), snapshot.items(), true);
         player.getInventory().setHeldItemSlot(snapshot.heldItemSlot());
     }
 
