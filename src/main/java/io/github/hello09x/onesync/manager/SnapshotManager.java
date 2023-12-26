@@ -1,12 +1,12 @@
 package io.github.hello09x.onesync.manager;
 
+import com.google.common.base.Throwables;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.SnapshotRepository;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import io.github.hello09x.onesync.repository.model.Snapshot;
-import com.google.common.base.Throwables;
 import org.apache.commons.lang3.time.StopWatch;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -59,9 +59,9 @@ public class SnapshotManager {
             }
         }
 
-        this.wipeAsync(player.getUniqueId()).thenRun(() -> {
-            if (Main.isDebugging()) {
-                log.info("已清理 %s 的多余快照".formatted(player.getName()));
+        this.wipeAsync(player.getUniqueId()).thenAccept(removed -> {
+            if (removed > 0 && Main.isDebugging()) {
+                log.info("已清理 %s %d 份的多余快照".formatted(player.getName(), removed));
             }
         });
         return snapshotId;
@@ -125,15 +125,15 @@ public class SnapshotManager {
      * 根据配置文件配置的快照数据, 清除多余或者过期的快照
      *
      * @param playerId 玩家 ID
-     * @return 任务
+     * @return 清理的份数
      */
-    public @NotNull CompletableFuture<Void> wipeAsync(@NotNull UUID playerId) {
-        return CompletableFuture.runAsync(() -> {
+    public @NotNull CompletableFuture<Integer> wipeAsync(@NotNull UUID playerId) {
+        return CompletableFuture.supplyAsync(() -> {
             try {
                 var snapshots = repository.selectByPlayerId(playerId);
                 var exceeded = snapshots.size() - config.getCapacity();
-                if (exceeded <= 0) {
-                    return;
+                if (exceeded <= 0 || snapshots.size() <= 1) {   // 至少保留一份
+                    return 0;
                 }
 
                 var ordered = new LinkedHashMap<LocalDate, List<Snapshot>>(snapshots.size(), 1.0F);
@@ -170,9 +170,13 @@ public class SnapshotManager {
                     }
                 }
 
-                this.remove(removing.toArray(Long[]::new));
+                if (!removing.isEmpty()) {
+                    this.remove(removing.toArray(Long[]::new));
+                }
+                return removing.size();
             } catch (Throwable e) {
                 log.severe("清理快照失败: " + Throwables.getStackTraceAsString(e));
+                throw e;
             }
         });
     }

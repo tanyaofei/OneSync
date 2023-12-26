@@ -1,6 +1,7 @@
 package io.github.hello09x.onesync.repository.model;
 
 
+import io.github.hello09x.bedrock.util.KeyBinds;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import io.github.hello09x.bedrock.database.Table;
 import io.github.hello09x.bedrock.database.TableField;
@@ -47,7 +48,7 @@ public record Snapshot(
 
 ) {
 
-    private final static DateTimeFormatter FULL_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private final static DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final static DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     public @NotNull ItemStack toMenuItem() {
@@ -62,7 +63,7 @@ public record Snapshot(
                     empty(),
                     text("「左键」查看详情", GRAY),
                     text("「右键」恢复数据", GRAY),
-                    textOfChildren(text("「"), keybind("key.drop"), text(" 键」删除")).color(GRAY)
+                    textOfChildren(text("「"), keybind(KeyBinds.DROP), text(" 键」删除")).color(GRAY)
             ).map(Components::noItalic).toList());
         });
 
@@ -79,7 +80,7 @@ public record Snapshot(
         } else if (diff == 2) {
             return "前天 " + TIME_FORMATTER.format(dateTime);
         } else {
-            return FULL_DATE_TIME_FORMATTER.format(dateTime);
+            return DATE_TIME_FORMATTER.format(dateTime);
         }
     }
 

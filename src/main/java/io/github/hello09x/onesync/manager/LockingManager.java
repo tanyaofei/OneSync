@@ -90,7 +90,7 @@ public class LockingManager implements PluginMessageListener {
     /**
      * 解锁当前服务器的
      */
-    public void releaseCurrentServer() {
+    public void releaseAll() {
         if (repository.deleteByServerId(this.serverId) > 0) {
             this.broadcastRequireAll();
         }

@@ -1,6 +1,7 @@
 package io.github.hello09x.onesync.manager;
 
 import com.google.common.base.Throwables;
+import io.github.hello09x.bedrock.util.KeyBinds;
 import io.github.hello09x.bedrock.util.Lores;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
@@ -79,7 +80,7 @@ public class MenuManager {
                 }
             });
 
-            if (page != 1) {
+            if (page > 1) {
                 menu.setButton(
                         45,
                         Material.PAPER,
@@ -118,7 +119,8 @@ public class MenuManager {
         var owner = Bukkit.getOfflinePlayer(header.playerId());
         var menu = Main.getChestMenuRegistry().createMenu(54, text("%s 的快照 #%d".formatted(owner.getName(), header.id())), onCancel);
 
-        Consumer<InventoryClickEvent> here = x -> this.openSnapshot(viewer, id, onCancel);
+        Runnable here0 = () -> this.openSnapshot(viewer, id, onCancel);
+        Consumer<InventoryClickEvent> here = x -> here0.run();
         int i = 0;
         for (var handler : SnapshotHandler.getImpl()) {
             var snapshot = handler.getOne(header.id());
@@ -129,7 +131,7 @@ public class MenuManager {
             var button = snapshot.toMenuItem(viewer, here);
             Lores.append(button.item(), List.of(
                     noItalic("「右键」恢复", GRAY),
-                    noItalic(textOfChildren(text("「"), keybind("key.drop"), text(" 键」删除"))).color(GRAY)
+                    noItalic(textOfChildren(text("「"), keybind(KeyBinds.DROP), text(" 键」删除"))).color(GRAY)
             ));
             menu.setButton(i++, button.item(), event -> {
                 switch (event.getClick()) {
@@ -144,13 +146,14 @@ public class MenuManager {
                     case DROP -> this.openConfirm(
                             viewer,
                             text("确认删除「%s」?".formatted(handler.snapshotType()), RED),
-                            () -> removeSnapshot(viewer, handler, id, () -> this.openSnapshot(viewer, id, onCancel)),
+                            () -> removeSnapshot(viewer, handler, id, here0),
                             here
                     );
                     // 传递给按钮自定义事件
                     default -> {
-                        if (button.onClick() != null) {
-                            button.onClick().accept(event);
+                        var onClick = button.onClick();
+                        if (onClick != null) {
+                            onClick.accept(event);
                         }
                     }
                 }
@@ -186,7 +189,7 @@ public class MenuManager {
             @NotNull Player viewer,
             @NotNull SnapshotHandler<T> handler,
             @NotNull Long snapshotId,
-            @NotNull Runnable onDelete
+            @NotNull Runnable onFinish
     ) {
         try {
             handler.remove(Collections.singletonList(snapshotId));
@@ -197,7 +200,7 @@ public class MenuManager {
             return;
         }
 
-        onDelete.run();
+        onFinish.run();
     }
 
     /**

@@ -2,14 +2,16 @@ package io.github.hello09x.onesync.manager;
 
 import com.google.common.base.Throwables;
 import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.api.handler.SnapshotComponent;
+import io.github.hello09x.onesync.api.event.PlayerPrepareRestoreEvent;
+import io.github.hello09x.onesync.api.event.PlayerAttemptRestoreEvent;
+import io.github.hello09x.onesync.api.event.PlayerFinishRestoreEvent;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
+import io.github.hello09x.onesync.manager.entity.PreparedSnapshotComponent;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import org.apache.commons.lang3.time.StopWatch;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,7 +28,7 @@ public class SynchronizeManager {
     private final static Logger log = Main.getInstance().getLogger();
     private final LockingManager lockingManager = LockingManager.instance;
     private final SnapshotManager snapshotManager = SnapshotManager.instance;
-    private final Map<UUID, List<PreparedSnapshot>> prepared = new ConcurrentHashMap<>();
+    private final Map<UUID, List<PreparedSnapshotComponent>> prepared = new ConcurrentHashMap<>();
 
     /**
      * 判断玩家是否正在恢复数据
@@ -77,7 +79,7 @@ public class SynchronizeManager {
                 return null;
             }
 
-            var snapshots = new ArrayList<PreparedSnapshot>();
+            var components = new ArrayList<PreparedSnapshotComponent>();
             for (var registration : SnapshotHandler.getRegistrations()) {
                 var handler = registration.getProvider();
                 try {
@@ -85,7 +87,7 @@ public class SynchronizeManager {
                     if (component == null) {
                         continue;
                     }
-                    snapshots.add(new PreparedSnapshot(
+                    components.add(new PreparedSnapshotComponent(
                             registration,
                             component
                     ));
@@ -100,7 +102,13 @@ public class SynchronizeManager {
                     throw e;
                 }
             }
-            this.prepared.put(playerId, snapshots);
+
+            var event = new PlayerPrepareRestoreEvent(
+                    !Bukkit.isPrimaryThread(), playerId, playerName, snapshot, components
+            );
+            event.callEvent();
+
+            this.prepared.put(playerId, components);
             return null;
         } catch (Throwable e) {
             return "[OneSync] 加载数据失败, 请联系管理员";
@@ -132,17 +140,20 @@ public class SynchronizeManager {
                 return false;
             }
 
+            new PlayerAttemptRestoreEvent(player, prepared).callEvent();
+
             for (var pair : prepared) {
-                var registration = pair.registration;
-                var component = pair.snapshot;
+                var registration = pair.registration();
+                var component = pair.component();
                 var handler = registration.getProvider();
 
                 if (component == null) {
                     continue;
                 }
                 if (!registration.getPlugin().isEnabled()) {
-                    log.severe("插件 [%s] 已卸载, 无法为 %s 恢复「%s」数据".formatted(player.getName(), registration.getPlugin().getName(), handler.snapshotType()));
                     Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(text("[OneSync] 玩家数据发生变化, 请重新登陆")));    // 在当前 tick 踢会报错
+                    new PlayerFinishRestoreEvent(player, PlayerFinishRestoreEvent.Result.FAILED).callEvent();
+                    log.severe("插件 [%s] 已卸载, 无法为 %s 恢复「%s」数据".formatted(player.getName(), registration.getPlugin().getName(), handler.snapshotType()));
                     return false;
                 }
 
@@ -151,7 +162,7 @@ public class SynchronizeManager {
                 } catch (Throwable e) {
                     log.severe("恢复 %s 由 [%s] 提供的「%s」数据失败: %s".formatted(
                             player.getName(),
-                            pair.registration.getPlugin().getName(),
+                            pair.registration().getPlugin().getName(),
                             player.getUniqueId(),
                             e.getMessage()
                     ));
@@ -159,11 +170,14 @@ public class SynchronizeManager {
                 }
             }
 
-            this.setRestoring(player, false);    // 设置玩家已经恢复完毕, 其他创建快照事件才会处理他
+            this.setRestoring(player, false);      // 设置玩家已经恢复完毕, 其他创建快照事件才会处理他
             lockingManager.acquire(player.getUniqueId());  // 锁定玩家, 当玩家退出游戏时才解锁
+
+            new PlayerFinishRestoreEvent(player, PlayerFinishRestoreEvent.Result.SUCCESS).callEvent();
             return true;
         } catch (Throwable e) {
             Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(text("[OneSync] 恢复玩家数据失败, 请联系管理员")));
+            new PlayerFinishRestoreEvent(player, PlayerFinishRestoreEvent.Result.FAILED).callEvent();
             log.severe(Throwables.getStackTraceAsString(e));
             return false;
         }
@@ -212,18 +226,6 @@ public class SynchronizeManager {
         if (Main.isDebugging()) {
             log.info("[%s] 保存 %d 名玩家数据完毕, 耗时 %d ms".formatted(cause, players.size(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
         }
-    }
-
-    public record PreparedSnapshot(
-
-            @SuppressWarnings("rawtypes")
-            RegisteredServiceProvider<SnapshotHandler> registration,
-
-            @Nullable
-            SnapshotComponent snapshot
-
-    ) {
-
     }
 
 

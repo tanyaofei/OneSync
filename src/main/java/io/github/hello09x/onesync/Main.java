@@ -70,7 +70,7 @@ public final class Main extends JavaPlugin {
                 mgr.addPacketListener(SynchronizeListener.instance);
             }
 
-            LockingManager.instance.releaseCurrentServer(); // 崩服重启, 释放上一次会话的锁
+            LockingManager.instance.releaseAll();           // 崩服重启, 释放上一次会话的锁
             LockingManager.instance.acquireAll();           // 热重载
         } catch (Throwable e) {
             getLogger().severe("加载插件失败, 为了数据安全, 关闭当前服务器: %s".formatted(Throwables.getStackTraceAsString(e)));
