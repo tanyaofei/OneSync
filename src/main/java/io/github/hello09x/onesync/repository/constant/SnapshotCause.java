@@ -7,7 +7,6 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 
 import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.Component.textOfChildren;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
@@ -42,9 +41,7 @@ public enum SnapshotCause {
     /**
      * 命令触发
      */
-    COMMAND(text("🔠 命令触发", DARK_GRAY), Material.MUSIC_DISC_5)
-
-    ;
+    COMMAND(text("🔠 命令触发", DARK_GRAY), Material.MUSIC_DISC_5);
 
     final Component displayName;
 

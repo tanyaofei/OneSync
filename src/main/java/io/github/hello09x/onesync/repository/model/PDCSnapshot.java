@@ -1,9 +1,9 @@
 package io.github.hello09x.onesync.repository.model;
 
-import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.bedrock.database.Table;
 import io.github.hello09x.bedrock.database.TableField;
 import io.github.hello09x.bedrock.database.TableId;
+import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -17,9 +17,10 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import static io.github.hello09x.bedrock.util.Components.noItalic;
+import static net.kyori.adventure.text.Component.empty;
 import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.Component.*;
-import static net.kyori.adventure.text.format.NamedTextColor.*;
+import static net.kyori.adventure.text.format.NamedTextColor.DARK_GREEN;
+import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 
 @Table("pdc_snapshot")
 public record PDCSnapshot(
@@ -37,7 +38,7 @@ public record PDCSnapshot(
     }
 
     @Override
-    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onCancel) {
+    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onClickOutside) {
         var item = new ItemStack(Material.STRUCTURE_VOID);
         item.editMeta(meta -> {
             meta.displayName(noItalic("PDC", DARK_GREEN));

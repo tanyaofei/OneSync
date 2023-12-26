@@ -1,6 +1,7 @@
 package io.github.hello09x.onesync.manager;
 
 import com.google.common.base.Throwables;
+import io.github.hello09x.bedrock.menu.ChestMenuBuilder;
 import io.github.hello09x.bedrock.util.KeyBinds;
 import io.github.hello09x.bedrock.util.Lores;
 import io.github.hello09x.onesync.Main;
@@ -43,11 +44,11 @@ public class MenuManager {
     public void openSnapshotPage(@NotNull Player viewer, int page, @NotNull OfflinePlayer player) {
         var p = repository.selectPageByPlayerId(page, 45, player.getUniqueId());
 
-        var menu = Main.getChestMenuRegistry().createMenu(
-                54,
-                text(player.getName() + " 的快照 [%d]".formatted(page)),
-                event -> viewer.closeInventory()
-        );
+        var menu = Main.getChestMenuRegistry()
+                .builder()
+                .title(text(player.getName() + " 的快照 [%d]".formatted(page)))
+                .size(54)
+                .onClickOutside(event -> viewer.closeInventory());
 
         Consumer<InventoryClickEvent> here = x -> this.openSnapshotPage(viewer, page, player);
         var snapshots = p.records();
@@ -55,7 +56,7 @@ public class MenuManager {
         while (itr.hasNext()) {
             var i = itr.nextIndex();
             var snapshot = itr.next();
-            menu.setButton(i, snapshot.toMenuItem(), event -> {
+            menu.onClickButton(i, snapshot.toMenuItem(), event -> {
                 switch (event.getClick()) {
                     // 左键打开详情
                     case LEFT -> this.openSnapshot(
@@ -81,7 +82,7 @@ public class MenuManager {
             });
 
             if (page > 1) {
-                menu.setButton(
+                menu.onClickButton(
                         45,
                         Material.PAPER,
                         text("上一页"),
@@ -90,7 +91,7 @@ public class MenuManager {
             }
 
             if (p.pages() > page) {
-                menu.setButton(
+                menu.onClickButton(
                         53,
                         Material.PAPER,
                         text("下一页"),
@@ -98,7 +99,7 @@ public class MenuManager {
                 );
             }
 
-            viewer.openInventory(menu.getInventory());
+            viewer.openInventory(menu.build());
         }
     }
 
@@ -110,16 +111,19 @@ public class MenuManager {
     public void openSnapshot(
             @NotNull Player viewer,
             @NotNull Long id,
-            @NotNull Consumer<InventoryClickEvent> onCancel
+            @NotNull Consumer<InventoryClickEvent> onClickOutside
     ) {
         var header = repository.selectById(id);
         if (header == null) {
             return;
         }
         var owner = Bukkit.getOfflinePlayer(header.playerId());
-        var menu = Main.getChestMenuRegistry().createMenu(54, text("%s 的快照 #%d".formatted(owner.getName(), header.id())), onCancel);
+        var menu = Main.getChestMenuRegistry()
+                .builder()
+                .title(text("%s 的快照 #%d".formatted(owner.getName(), header.id())))
+                .onClickOutside(onClickOutside);
 
-        Runnable here0 = () -> this.openSnapshot(viewer, id, onCancel);
+        Runnable here0 = () -> this.openSnapshot(viewer, id, onClickOutside);
         Consumer<InventoryClickEvent> here = x -> here0.run();
         int i = 0;
         for (var handler : SnapshotHandler.getImpl()) {
@@ -133,7 +137,7 @@ public class MenuManager {
                     noItalic("「右键」恢复", GRAY),
                     noItalic(textOfChildren(text("「"), keybind(KeyBinds.DROP), text(" 键」删除"))).color(GRAY)
             ));
-            menu.setButton(i++, button.item(), event -> {
+            menu.onClickButton(i++, button.item(), event -> {
                 switch (event.getClick()) {
                     // 右键恢复
                     case RIGHT -> this.openConfirm(
@@ -160,7 +164,7 @@ public class MenuManager {
             });
         }
 
-        viewer.openInventory(menu.getInventory());
+        viewer.openInventory(menu.build());
     }
 
     /**
@@ -168,14 +172,18 @@ public class MenuManager {
      *
      * @param viewer    操作者
      * @param onConfirm 确认操作函数
-     * @param onCancel  取消操作函数
+     * @param onClickOutside  取消操作函数
      */
-    public void openConfirm(@NotNull Player viewer, @NotNull Component title, @NotNull Runnable onConfirm, @NotNull Consumer<InventoryClickEvent> onCancel) {
-        var menu = Main.getChestMenuRegistry().createMenu(45, title, onCancel);
-        menu.setButton(22, Material.GREEN_STAINED_GLASS_PANE, noItalic("确定", GREEN), event -> onConfirm.run());
+    public void openConfirm(@NotNull Player viewer, @NotNull Component title, @NotNull Runnable onConfirm, @NotNull Consumer<InventoryClickEvent> onClickOutside) {
+        var menu = Main.getChestMenuRegistry()
+                .builder()
+                .title(title)
+                .size(45)
+                .onClickOutside(onClickOutside);
+        menu.onClickButton(22, Material.GREEN_STAINED_GLASS_PANE, noItalic("确定", GREEN), event -> onConfirm.run());
         Stream.of(12, 13, 14, 21, 23, 30, 31, 32)
-                .forEach(slot -> menu.setButton(slot, Material.BLACK_STAINED_GLASS_PANE, empty()));
-        viewer.openInventory(menu.getInventory());
+                .forEach(slot -> menu.onClickButton(slot, Material.BLACK_STAINED_GLASS_PANE, empty(), ChestMenuBuilder.ignore()));
+        viewer.openInventory(menu.build());
     }
 
     /**

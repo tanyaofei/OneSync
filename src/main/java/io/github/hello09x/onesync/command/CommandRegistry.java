@@ -1,10 +1,10 @@
 package io.github.hello09x.onesync.command;
 
+import dev.jorel.commandapi.CommandPermission;
+import dev.jorel.commandapi.arguments.EntitySelectorArgument;
 import io.github.hello09x.onesync.command.impl.ReloadCommand;
 import io.github.hello09x.onesync.command.impl.SnapshotCommand;
 import io.github.hello09x.onesync.command.impl.UnlockCommand;
-import dev.jorel.commandapi.CommandPermission;
-import dev.jorel.commandapi.arguments.EntitySelectorArgument;
 
 import static io.github.hello09x.bedrock.command.Commands.*;
 

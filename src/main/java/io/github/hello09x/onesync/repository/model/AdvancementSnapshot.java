@@ -1,10 +1,10 @@
 package io.github.hello09x.onesync.repository.model;
 
-import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.bedrock.database.Table;
 import io.github.hello09x.bedrock.database.TableField;
 import io.github.hello09x.bedrock.database.TableId;
 import io.github.hello09x.bedrock.database.typehandler.JsonTypeHandler;
+import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -45,7 +45,7 @@ public record AdvancementSnapshot(
     }
 
     @Override
-    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onCancel) {
+    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onClickOutside) {
         var item = new ItemStack(Material.GRASS_BLOCK);
         item.editMeta(meta -> {
             meta.displayName(noItalic("成就", WHITE));

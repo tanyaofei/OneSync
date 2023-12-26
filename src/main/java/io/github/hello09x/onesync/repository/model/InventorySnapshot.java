@@ -1,11 +1,13 @@
 package io.github.hello09x.onesync.repository.model;
 
-import io.github.hello09x.onesync.api.handler.SnapshotComponent;
-import io.github.hello09x.onesync.util.ItemStackMapTypeHandler;
-import io.github.hello09x.onesync.util.MenuTemplate;
 import io.github.hello09x.bedrock.database.Table;
 import io.github.hello09x.bedrock.database.TableField;
 import io.github.hello09x.bedrock.database.TableId;
+import io.github.hello09x.onesync.api.handler.SnapshotComponent;
+import io.github.hello09x.onesync.handler.InventorySnapshotHandler;
+import io.github.hello09x.onesync.util.ItemStackMapTypeHandler;
+import io.github.hello09x.onesync.util.MenuTemplate;
+import org.apache.commons.lang.mutable.MutableBoolean;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -52,7 +54,7 @@ public record InventorySnapshot(
     }
 
     @Override
-    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onCancel) {
+    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onClickOutside) {
         var item = new ItemStack(Material.CHEST);
         item.editMeta(meta -> {
             meta.displayName(noItalic("背包", GOLD));
@@ -62,6 +64,24 @@ public record InventorySnapshot(
                     noItalic("「左键」查看详情", GRAY)
             ));
         });
-        return new MenuItem(item, ignored -> MenuTemplate.openInventoryMenu(viewer, text("背包"), this.items, onCancel));
+
+        var modified = new MutableBoolean();
+        return new MenuItem(
+                item,
+                ignored -> MenuTemplate.openInventoryMenu(
+                        viewer,
+                        text("背包"),
+                        41,
+                        this.items,
+                        newItems -> InventorySnapshotHandler.instance.updateItems(this.snapshotId, newItems),
+                        event -> {
+                            if (modified.booleanValue()) {
+                                // 先关闭保存数据再打开加载数据
+                                event.getWhoClicked().closeInventory();
+                            }
+                            onClickOutside.accept(event);
+                        },
+                        modified
+                ));
     }
 }

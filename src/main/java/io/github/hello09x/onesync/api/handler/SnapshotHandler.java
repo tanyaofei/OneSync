@@ -41,6 +41,7 @@ public interface SnapshotHandler<T extends SnapshotComponent> {
 
     /**
      * 保存玩家数据
+     *
      * @param player 玩家
      */
     void save(@NotNull Long snapshotId, @NotNull Player player);
@@ -65,7 +66,7 @@ public interface SnapshotHandler<T extends SnapshotComponent> {
     /**
      * 应用快照
      *
-     * @param player    玩家
+     * @param player   玩家
      * @param snapshot 快照
      */
     default void apply(@NotNull Player player, @NotNull T snapshot) {
@@ -75,7 +76,7 @@ public interface SnapshotHandler<T extends SnapshotComponent> {
     /**
      * 应用快照
      *
-     * @param player    玩家
+     * @param player   玩家
      * @param snapshot 快照
      */
     default void applyUnsafe(@NotNull Player player, SnapshotComponent snapshot) {
@@ -85,9 +86,9 @@ public interface SnapshotHandler<T extends SnapshotComponent> {
     /**
      * 应用快照
      *
-     * @param player    玩家
+     * @param player   玩家
      * @param snapshot 快照
-     * @param force     是否强制应用, {@code true} 则表示这是管理员操作强制应用此快照, {@code false} 则表示可能是由于玩家登陆等恢复同步数据
+     * @param force    是否强制应用, {@code true} 则表示这是管理员操作强制应用此快照, {@code false} 则表示可能是由于玩家登陆等恢复同步数据
      */
     @SuppressWarnings("unchecked")
     default void applyUnsafe(@NotNull Player player, SnapshotComponent snapshot, boolean force) {

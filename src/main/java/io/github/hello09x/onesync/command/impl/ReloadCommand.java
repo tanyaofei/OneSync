@@ -1,7 +1,7 @@
 package io.github.hello09x.onesync.command.impl;
 
-import io.github.hello09x.onesync.config.OneSyncConfig;
 import dev.jorel.commandapi.executors.CommandArguments;
+import io.github.hello09x.onesync.config.OneSyncConfig;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 

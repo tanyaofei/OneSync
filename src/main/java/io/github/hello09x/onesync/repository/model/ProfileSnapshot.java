@@ -1,13 +1,13 @@
 package io.github.hello09x.onesync.repository.model;
 
-import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.api.handler.SnapshotComponent;
-import io.github.hello09x.onesync.handler.ProfileSnapshotHandler;
 import com.google.common.base.Throwables;
 import io.github.hello09x.bedrock.database.Table;
 import io.github.hello09x.bedrock.database.TableField;
 import io.github.hello09x.bedrock.database.TableId;
 import io.github.hello09x.bedrock.util.Components;
+import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.api.handler.SnapshotComponent;
+import io.github.hello09x.onesync.handler.ProfileSnapshotHandler;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -101,7 +101,7 @@ public record ProfileSnapshot(
     }
 
     @Override
-    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onCancel) {
+    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onClickOutside) {
         var item = new ItemStack(Material.PLAYER_HEAD);
         item.editMeta(meta -> {
             meta.displayName(Components.noItalic("档案", YELLOW));

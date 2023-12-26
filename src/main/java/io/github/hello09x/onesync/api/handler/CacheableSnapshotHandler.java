@@ -15,7 +15,7 @@ public abstract class CacheableSnapshotHandler<T extends SnapshotComponent> impl
     @Override
     public final void save(@NotNull Long snapshotId, @NotNull Player player) {
         var snapshot = this.save0(snapshotId, player);
-        theLast.setValue(snapshot);
+        this.invalidate();
     }
 
     @Override
@@ -28,7 +28,7 @@ public abstract class CacheableSnapshotHandler<T extends SnapshotComponent> impl
     @Override
     public final void remove(@NotNull List<Long> snapshotIds) {
         this.remove0(snapshotIds);
-        theLast.setValue(null);
+        this.invalidate();
     }
 
     protected abstract @Nullable T save0(@NotNull Long snapshotId, @NotNull Player player);
@@ -37,5 +37,8 @@ public abstract class CacheableSnapshotHandler<T extends SnapshotComponent> impl
 
     protected abstract void remove0(@NotNull List<Long> snapshotIds);
 
+    protected void invalidate() {
+        this.theLast.setValue(null);
+    }
 
 }

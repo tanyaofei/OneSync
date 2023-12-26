@@ -1,7 +1,7 @@
 package io.github.hello09x.onesync.handler;
 
-import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
+import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.PotionEffectSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.PotionEffectSnapshot;
 import org.bukkit.entity.Player;

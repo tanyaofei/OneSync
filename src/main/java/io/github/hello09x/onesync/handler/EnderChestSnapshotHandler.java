@@ -5,12 +5,13 @@ import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.EnderChestSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.EnderChestSnapshot;
-import lombok.SneakyThrows;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Map;
 
 public class EnderChestSnapshotHandler extends CacheableSnapshotHandler<EnderChestSnapshot> {
 
@@ -24,7 +25,6 @@ public class EnderChestSnapshotHandler extends CacheableSnapshotHandler<EnderChe
     }
 
     @Override
-    @SneakyThrows
     public @Nullable EnderChestSnapshot getOne0(@NotNull Long snapshotId) {
         return repository.selectById(snapshotId);
     }
@@ -58,4 +58,10 @@ public class EnderChestSnapshotHandler extends CacheableSnapshotHandler<EnderChe
 
         InventoryUtils.replace(player.getEnderChest(), snapshot.items(), true);
     }
+
+    public void updateItems(@NotNull Long snapshotId, @NotNull Map<Integer, ItemStack> items) {
+        repository.updateItemsBySnapshotId(snapshotId, items);
+        this.invalidate();
+    }
+
 }

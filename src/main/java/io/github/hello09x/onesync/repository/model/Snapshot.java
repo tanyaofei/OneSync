@@ -1,12 +1,12 @@
 package io.github.hello09x.onesync.repository.model;
 
 
-import io.github.hello09x.bedrock.util.KeyBinds;
-import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import io.github.hello09x.bedrock.database.Table;
 import io.github.hello09x.bedrock.database.TableField;
 import io.github.hello09x.bedrock.database.TableId;
 import io.github.hello09x.bedrock.util.Components;
+import io.github.hello09x.bedrock.util.KeyBinds;
+import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +18,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import static io.github.hello09x.bedrock.util.Components.noItalic;
 import static net.kyori.adventure.text.Component.*;
 import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 import static net.kyori.adventure.text.format.NamedTextColor.WHITE;

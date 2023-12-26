@@ -4,14 +4,15 @@ import io.github.hello09x.bedrock.util.InventoryUtils;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
-import io.github.hello09x.onesync.repository.model.InventorySnapshot;
 import io.github.hello09x.onesync.repository.InventorySnapshotRepository;
-import lombok.SneakyThrows;
+import io.github.hello09x.onesync.repository.model.InventorySnapshot;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 public class InventorySnapshotHandler extends CacheableSnapshotHandler<InventorySnapshot> {
@@ -28,7 +29,6 @@ public class InventorySnapshotHandler extends CacheableSnapshotHandler<Inventory
     }
 
     @Override
-    @SneakyThrows
     public @Nullable InventorySnapshot getOne0(@NotNull Long snapshotId) {
         return repository.selectById(snapshotId);
     }
@@ -63,6 +63,11 @@ public class InventorySnapshotHandler extends CacheableSnapshotHandler<Inventory
 
         InventoryUtils.replace(player.getInventory(), snapshot.items(), true);
         player.getInventory().setHeldItemSlot(snapshot.heldItemSlot());
+    }
+
+    public void updateItems(@NotNull Long snapshotId, @NotNull Map<Integer, ItemStack> items) {
+        repository.updateItemsBySnapshotId(snapshotId, items);
+        this.invalidate();
     }
 
 }

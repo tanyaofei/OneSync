@@ -1,14 +1,16 @@
 package io.github.hello09x.onesync.repository;
 
-import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.util.ItemStackMapTypeHandler;
 import io.github.hello09x.bedrock.database.Repository;
+import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.InventorySnapshot;
+import io.github.hello09x.onesync.util.ItemStackMapTypeHandler;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.Map;
 
 public class InventorySnapshotRepository extends Repository<InventorySnapshot> {
 
@@ -29,6 +31,17 @@ public class InventorySnapshotRepository extends Repository<InventorySnapshot> {
                 stm.setString(2, snapshot.playerId().toString());
                 ItemStackMapTypeHandler.instance.setParameter(stm, 3, snapshot.items());
                 stm.setInt(4, snapshot.heldItemSlot());
+                return stm.executeUpdate();
+            }
+        });
+    }
+
+    public int updateItemsBySnapshotId(@NotNull Long snapshotId, @NotNull Map<Integer, ItemStack> items) {
+        var sql = "update inventory_snapshot set items = ? where snapshot_id = ?";
+        return execute(connection -> {
+            try (PreparedStatement stm = connection.prepareStatement(sql)) {
+                ItemStackMapTypeHandler.instance.setParameter(stm, 1, items);
+                stm.setLong(2, snapshotId);
                 return stm.executeUpdate();
             }
         });

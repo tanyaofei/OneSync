@@ -3,7 +3,6 @@ package io.github.hello09x.onesync.config;
 import io.github.hello09x.bedrock.config.Config;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
