@@ -16,8 +16,10 @@ public class PlayerAttemptRestoreEvent extends PlayerEvent {
 
     public final static HandlerList HANDLERS = new HandlerList();
 
+    /**
+     * 即将用来恢复的快照数据, 这是一个不可修改的列表
+     */
     @Getter
-    @NotNull
     private final List<PreparedSnapshotComponent> components;
 
     public PlayerAttemptRestoreEvent(@NotNull Player who, @NotNull List<PreparedSnapshotComponent> components) {

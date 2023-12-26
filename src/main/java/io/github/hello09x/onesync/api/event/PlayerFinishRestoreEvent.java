@@ -36,8 +36,14 @@ public class PlayerFinishRestoreEvent extends PlayerEvent {
 
     public enum Result {
 
+        /**
+         * 成功
+         */
         SUCCESS,
 
+        /**
+         * 失败, 玩家会在下一时刻踢掉
+         */
         FAILED
 
     }

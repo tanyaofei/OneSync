@@ -108,7 +108,7 @@ public class SynchronizeManager {
             );
             event.callEvent();
 
-            this.prepared.put(playerId, components);
+            this.prepared.put(playerId, event.getComponents());
             return null;
         } catch (Throwable e) {
             return "[OneSync] 加载数据失败, 请联系管理员";
@@ -140,7 +140,9 @@ public class SynchronizeManager {
                 return false;
             }
 
-            new PlayerAttemptRestoreEvent(player, prepared).callEvent();
+            var event = new PlayerAttemptRestoreEvent(player, prepared);
+            event.callEvent();
+            prepared = event.getComponents();
 
             for (var pair : prepared) {
                 var registration = pair.registration();
