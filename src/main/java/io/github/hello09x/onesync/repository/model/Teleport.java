@@ -9,19 +9,16 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Table("teleport_request")
-public record TeleportRequest(
+public record Teleport(
 
-        @TableField("requester_id")
-        UUID requesterId,
+        @TableField("requester")
+        String requester,
 
-        @TableField("receiver_id")
-        UUID receiverId,
+        @TableField("receiver")
+        String receiver,
 
         @TableField("type")
         TeleportType type,
-
-        @TableField("status")
-        TeleportStatus status,
 
         @TableField("created_at")
         LocalDateTime createdAt

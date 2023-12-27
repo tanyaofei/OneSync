@@ -1,0 +1,104 @@
+package io.github.hello09x.onesync.repository;
+
+import io.github.hello09x.bedrock.database.Repository;
+import io.github.hello09x.onesync.repository.model.Teleport;
+import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+
+public class TeleportRepository extends Repository<Teleport> {
+
+    public final static TeleportRepository instance = new TeleportRepository();
+
+    public TeleportRepository(@NotNull Plugin plugin) {
+        super(plugin);
+    }
+
+    public int insert(@NotNull Teleport teleport) {
+        var sql = "insert into teleport (requester, receiver, type) values (?, ?, ?)";
+        return execute(connection -> {
+            try (PreparedStatement stm = connection.prepareStatement(sql)) {
+                stm.setString(1, teleport.requester());
+                stm.setString(2, teleport.receiver());
+                stm.setString(3, teleport.type().name());
+                return stm.executeUpdate();
+            }
+        });
+    }
+
+    public boolean existsByRequesterAndReceiver(@NotNull String requester, @NotNull String receiver) {
+        var sql = "select exists (select 1 from teleport where requester = ? and receiver = ?)";
+        return execute(connection -> {
+            try (PreparedStatement stm = connection.prepareStatement(sql)) {
+                stm.setString(1, requester);
+                stm.setString(2, receiver);
+                var rs = stm.executeQuery();
+                rs.next();
+                return rs.getInt(1) >= 1;
+            }
+        });
+    }
+
+    public @Nullable Teleport selectLatestByReceiver(@NotNull String receiver) {
+        var sql = "select * from teleport where receiver = ? order by created_at desc limit 1";
+        return execute(connection -> {
+            try (PreparedStatement stm = connection.prepareStatement(sql)) {
+                stm.setString(1, receiver);
+                return mapOne(stm.executeQuery());
+            }
+        });
+    }
+
+    public @Nullable Teleport selectLatestByRequesterAndReceiver(@NotNull String requester, @NotNull String receiver) {
+        var sql = "select * from teleport where requester = ? and receiver = ? limit 1";
+        return execute(connection -> {
+            try (PreparedStatement stm = connection.prepareStatement(sql)) {
+                stm.setString(1, requester);
+                stm.setString(2, receiver);
+                return mapOne(stm.executeQuery());
+            }
+        });
+    }
+
+    public int deleteByRequesterAndReceiver(@NotNull String requester, @NotNull String receiver) {
+        var sql = "delete from teleport where requester = ? and receiver = ?";
+        return execute(connection -> {
+            try (PreparedStatement stm = connection.prepareStatement(sql)) {
+                stm.setString(1, requester);
+                stm.setString(2, receiver);
+                return stm.executeUpdate();
+            }
+        });
+    }
+
+    @Override
+    protected void initTables() {
+        execute(connection -> {
+            Statement stm = connection.createStatement();
+            var rs = stm.executeQuery("select * from information_schema.INNODB_TABLES where name = '%s'".formatted(connection.getCatalog() + "/" + "teleport"));
+            if (rs.next()) {
+                return;
+            }
+            stm.executeUpdate("""
+                    create table teleport
+                    (
+                        requester  varchar(32)                        not null comment '请求人',
+                        receiver   varchar(32)                        not null comment '接受人',
+                        type       varchar(32)                        not null comment '类型',
+                        created_at datetime default CURRENT_TIMESTAMP not null comment '创建时间'
+                    );
+                    """);
+            stm.executeUpdate("""
+                    create index teleport_request_receiver_id_index
+                        on teleport (receiver);
+                    """);
+            stm.executeUpdate("""
+                    create index teleport_request_requester_id_index
+                        on teleport (requester);
+                    """);
+        });
+    }
+}

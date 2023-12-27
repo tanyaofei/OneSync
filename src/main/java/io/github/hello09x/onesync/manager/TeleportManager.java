@@ -5,6 +5,9 @@ import com.google.common.io.ByteStreams;
 import io.github.hello09x.bedrock.util.MCUtils;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.constant.Channels;
+import io.github.hello09x.onesync.repository.TeleportRepository;
+import io.github.hello09x.onesync.repository.constant.TeleportType;
+import io.github.hello09x.onesync.repository.model.Teleport;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -36,6 +39,7 @@ public class TeleportManager implements PluginMessageListener {
     private final PlayerManager playerList = PlayerManager.instance;
     private final ServerManager serverList = ServerManager.instance;
     public final static TeleportManager instance = new TeleportManager();
+    private final TeleportRepository repository = TeleportRepository.instance;
 
     private final Map<String, Pair<Location, MutableInt>> teleportLocations = MCUtils.isFolia()
             ? new ConcurrentHashMap<>()
@@ -53,41 +57,64 @@ public class TeleportManager implements PluginMessageListener {
         this.teleportLocations.entrySet().removeIf(entry -> entry.getValue().getRight().decrementAndGet() <= 0);
     }
 
-    public @Nullable Component tp(@NotNull Player requester, @NotNull String receiver) {
+    public @NotNull Component tp(@NotNull Player requester, @NotNull String receiver) {
+        if (repository.existsByRequesterAndReceiver(requester.getName(), receiver)) {
+            return textOfChildren(text("你已经对 ", GRAY), text(receiver, WHITE), text(" 发起过传送请求了", GRAY));
+        }
+
+        var teleport = new Teleport(
+                requester.getName(),
+                receiver,
+                TeleportType.TP,
+                null
+        );
+        repository.insert(teleport);
+
         var out = ByteStreams.newDataOutput();
         out.writeUTF(COMMAND_TP);
         out.writeUTF(requester.getName());
         out.writeUTF(receiver);
         var message = out.toByteArray();
-
         requester.sendPluginMessage(Main.getInstance(), CHANNEL, message);
         this.onPluginMessageReceived(CHANNEL, requester, message);
 
-        return null;
+        return text("传送请求已发送, 等待对方接受", GRAY);
     }
 
-    public @Nullable Component tphere(@NotNull Player requester, @NotNull String receiver) {
+    public @NotNull Component tphere(@NotNull Player requester, @NotNull String receiver) {
+        if (repository.existsByRequesterAndReceiver(requester.getName(), receiver)) {
+            return textOfChildren(text("你已经对 ", GRAY), text(receiver, WHITE), text(" 发起过传送请求了", GRAY));
+        }
+
         var out = ByteStreams.newDataOutput();
         out.writeUTF(COMMAND_TPHERE);
         out.writeUTF(requester.getName());
-        out.writeUTF(Objects.requireNonNull(receiver));
+        out.writeUTF(receiver);
         var message = out.toByteArray();
-
         requester.sendPluginMessage(Main.getInstance(), CHANNEL, message);
         this.onPluginMessageReceived(CHANNEL, requester, message);
 
-        return null;
+        return text("传送请求已发送, 等待对方接受", GRAY);
     }
 
-    public void tpaccept(@NotNull Player receiver, @NotNull String requester) {
+    public @Nullable Component tpaccept(@NotNull Player receiver, @Nullable String requester) {
+        var teleport = requester == null
+                ? repository.selectLatestByReceiver(receiver.getName())
+                : repository.selectLatestByRequesterAndReceiver(requester, receiver.getName());
+
+        if (teleport == null) {
+            return text("你没有接收到任何传送请求", GRAY);
+        }
+
         var out = ByteStreams.newDataOutput();
         out.writeUTF(COMMAND_TPACCEPT);
         out.writeUTF(receiver.getName());
-        out.writeUTF(requester);
+        out.writeUTF(teleport.receiver());
         var message = out.toByteArray();
 
         receiver.sendPluginMessage(Main.getInstance(), CHANNEL, message);
         this.onPluginMessageReceived(CHANNEL, receiver, message);
+        return null;
     }
 
     @Override

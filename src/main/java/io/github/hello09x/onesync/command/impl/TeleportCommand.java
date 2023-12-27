@@ -2,7 +2,6 @@ package io.github.hello09x.onesync.command.impl;
 
 import dev.jorel.commandapi.executors.CommandArguments;
 import io.github.hello09x.onesync.manager.TeleportManager;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +15,8 @@ public class TeleportCommand {
 
     public void tp(@NotNull Player sender, @NotNull CommandArguments args) {
         var receiver = (String) Objects.requireNonNull(args.get("player"));
-        manager.tp(sender, receiver);
+        var message = manager.tp(sender, receiver);
+        sender.sendMessage(message);
     }
 
     public void tphere(@NotNull Player sender, @NotNull CommandArguments args) {
