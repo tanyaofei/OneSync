@@ -60,14 +60,17 @@ public final class Main extends JavaPlugin {
 
             {
                 var messenger = getServer().getMessenger();
-                messenger.registerIncomingPluginChannel(this, LockingManager.CHANNEL, LockingManager.instance);
-                messenger.registerOutgoingPluginChannel(this, LockingManager.CHANNEL);
-                messenger.registerIncomingPluginChannel(this, ServerManager.CHANNEL, ServerManager.instance);
-                messenger.registerOutgoingPluginChannel(this, ServerManager.CHANNEL);
-                messenger.registerIncomingPluginChannel(this, PlayerManager.CHANNEL, PlayerManager.instance);
-                messenger.registerOutgoingPluginChannel(this, PlayerManager.CHANNEL);
-                messenger.registerIncomingPluginChannel(this, TeleportManager.CHANNEL, TeleportManager.instance);
-                messenger.registerOutgoingPluginChannel(this, TeleportManager.CHANNEL);
+                messenger.registerIncomingPluginChannel(this, "BungeeCord", LockingManager.instance);
+                messenger.registerOutgoingPluginChannel(this, "BungeeCord");
+
+                messenger.registerIncomingPluginChannel(this, "BungeeCord", ServerManager.instance);
+                messenger.registerOutgoingPluginChannel(this, "BungeeCord");
+
+                messenger.registerIncomingPluginChannel(this, "BungeeCord", PlayerManager.instance);
+                messenger.registerOutgoingPluginChannel(this, "BungeeCord");
+
+                messenger.registerIncomingPluginChannel(this, "BungeeCord", TeleportManager.instance);
+                messenger.registerOutgoingPluginChannel(this, "BungeeCord");
             }
 
             {

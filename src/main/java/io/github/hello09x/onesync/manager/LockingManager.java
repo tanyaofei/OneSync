@@ -1,11 +1,13 @@
 package io.github.hello09x.onesync.manager;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
+import io.github.hello09x.bedrock.pluginmessage.PluginMessages;
 import io.github.hello09x.bedrock.util.MCUtils;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.config.OneSyncConfig;
-import io.github.hello09x.onesync.constant.Channels;
+import io.github.hello09x.onesync.constant.SubChannels;
 import io.github.hello09x.onesync.repository.LockingRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -21,8 +23,8 @@ import java.util.logging.Logger;
 public class LockingManager implements PluginMessageListener {
 
     public final static LockingManager instance = new LockingManager();
-    public final static String CHANNEL = Channels.Locking;
     public final static String COMMAND_ACQUIRE = "Acquire";
+    private final static String SUB_CHANNEL = SubChannels.Locking;
     private final static Logger log = Main.getInstance().getLogger();
     private final static String ACQUIRE_ALL = "ALL";
     private final LockingRepository repository = LockingRepository.instance;
@@ -140,20 +142,31 @@ public class LockingManager implements PluginMessageListener {
      * @param player 玩家
      */
     public void broadcastRequire(@NotNull OfflinePlayer player) {
+        var r = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
+        if (r == null) {
+            return;
+        }
+
         var message = ByteStreams.newDataOutput();
         message.writeUTF(COMMAND_ACQUIRE);
         message.writeUTF(player.getUniqueId().toString());
-        Bukkit.getServer().sendPluginMessage(Main.getInstance(), CHANNEL, message.toByteArray());
+        r.sendPluginMessage(Main.getInstance(), "BungeeCord", PluginMessages.asForwardMessage(SUB_CHANNEL, message));
     }
 
     /**
      * 发送插件消息, 让其他服务器重新上锁
      */
     private void broadcastRequireAll() {
+        var r = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
+        if (r == null) {
+            return;
+        }
+
         var message = ByteStreams.newDataOutput();
         message.writeUTF(COMMAND_ACQUIRE);
         message.writeUTF(ACQUIRE_ALL);
-        Bukkit.getServer().sendPluginMessage(Main.getInstance(), CHANNEL, message.toByteArray());
+
+        r.sendPluginMessage(Main.getInstance(), "BungeeCord", PluginMessages.asForwardMessage(SUB_CHANNEL, message));
     }
 
     @Override
@@ -162,11 +175,15 @@ public class LockingManager implements PluginMessageListener {
             @NotNull Player player,
             byte @NotNull [] message
     ) {
-        if (!channel.equals(CHANNEL)) {
+        if (!channel.equals("BungeeCord")) {
             return;
         }
 
-        var in = ByteStreams.newDataInput(message);
+        var in = PluginMessages.parseForwardMessage(SUB_CHANNEL, message);
+        if (in == null) {
+            return;
+        }
+
         if (!in.readUTF().equals(COMMAND_ACQUIRE)) {
             return;
         }

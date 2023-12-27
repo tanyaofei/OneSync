@@ -27,9 +27,9 @@ public class CommandRegistry {
                 throw CustomArgument.CustomArgumentException.fromString("该玩家不在线");
             }
 
-//            if (name.equals(info.sender().getName())) {
-//                throw CustomArgument.CustomArgumentException.fromString("该命令不能对自己使用");
-//            }
+            if (name.equals(info.sender().getName())) {
+                throw CustomArgument.CustomArgumentException.fromString("该命令不能对自己使用");
+            }
 
             return name;
         }).replaceSuggestions(ArgumentSuggestions.stringCollection(info -> {
@@ -39,7 +39,7 @@ public class CommandRegistry {
             return PlayerManager.instance
                     .getPlayers()
                     .stream()
-                    .filter(n -> n.toLowerCase().contains(input) /*&& !n.equals(senderName)*/)
+                    .filter(n -> n.toLowerCase().contains(input) && !n.equals(senderName))
                     .toList();
         }));
     }

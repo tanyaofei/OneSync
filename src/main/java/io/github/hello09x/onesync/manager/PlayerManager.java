@@ -17,10 +17,7 @@ import java.util.Set;
 
 public class PlayerManager implements PluginMessageListener {
 
-
     public final static PlayerManager instance = new PlayerManager();
-
-    public final static String CHANNEL = "BungeeCord";
 
     /**
      * key: playerName

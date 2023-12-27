@@ -1,6 +1,6 @@
 package io.github.hello09x.onesync.constant;
 
-public interface Channels {
+public interface SubChannels {
 
     String Locking = "onesync:locking";
 

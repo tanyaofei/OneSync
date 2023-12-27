@@ -12,8 +12,6 @@ public class ServerManager implements PluginMessageListener {
 
     public final static ServerManager instance = new ServerManager();
 
-    public final static String CHANNEL = "BungeeCord";
-
     @NotNull
     private String current = "";
 
