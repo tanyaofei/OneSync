@@ -1,11 +1,11 @@
 package io.github.hello09x.onesync.manager;
 
 import com.google.common.base.Throwables;
-import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
 import io.github.hello09x.bedrock.util.MCUtils;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.config.OneSyncConfig;
+import io.github.hello09x.onesync.constant.Channels;
 import io.github.hello09x.onesync.repository.LockingRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 public class LockingManager implements PluginMessageListener {
 
     public final static LockingManager instance = new LockingManager();
-    public final static String CHANNEL = "onesync:locking";
+    public final static String CHANNEL = Channels.Locking;
     public final static String COMMAND_ACQUIRE = "Acquire";
     private final static Logger log = Main.getInstance().getLogger();
     private final static String ACQUIRE_ALL = "ALL";
@@ -73,7 +73,7 @@ public class LockingManager implements PluginMessageListener {
      * @param player 玩家
      */
     public void acquire(@NotNull Player player) {
-        MCUtils.ensureMain();
+        MCUtils.ensureMainThread();
         repository.setLock(player.getUniqueId(), this.serverId, true);
     }
 
@@ -83,7 +83,7 @@ public class LockingManager implements PluginMessageListener {
      * @param player 玩家
      */
     public void release(@NotNull Player player) {
-        MCUtils.ensureMain();
+        MCUtils.ensureMainThread();
         repository.setLock(player.getUniqueId(), this.serverId, false);
     }
 
@@ -100,7 +100,7 @@ public class LockingManager implements PluginMessageListener {
      * 对所有当前服务器在线的玩家上锁
      */
     public void acquireAll() {
-        MCUtils.ensureMain();
+        MCUtils.ensureMainThread();
         for (var p : Bukkit.getOnlinePlayers()) {
             try {
                 repository.setLock(p.getUniqueId(), this.serverId, true);
@@ -111,13 +111,14 @@ public class LockingManager implements PluginMessageListener {
     }
 
     /**
-     * 移除锁, 无论这个锁是哪台服务器上的, 之后再让所有服务器该玩家上锁
+     * 移除锁, 无论这个锁是哪台服务器上的, 之后再让所有服务器对该玩家上锁
      *
      * @param player 玩家
      */
     public void reacquire(@NotNull OfflinePlayer player) {
         if (repository.deleteByPlayerId(player.getUniqueId()) > 0) {
             this.acquire(player.getUniqueId());
+            // 避免这个玩家是在别的服务器上玩的, 让其他服务器对该玩家重新上锁
             this.broadcastRequire(player);
         }
     }
@@ -128,6 +129,7 @@ public class LockingManager implements PluginMessageListener {
     public void requireAll() {
         if (repository.deleteAll() > 0) {
             this.acquireAll();
+            // 因为删掉了所有服务器的锁, 需要让其他服务器重新上锁
             this.broadcastRequireAll();
         }
     }
@@ -138,26 +140,20 @@ public class LockingManager implements PluginMessageListener {
      * @param player 玩家
      */
     public void broadcastRequire(@NotNull OfflinePlayer player) {
-        var r = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
-        if (r != null) {
-            var message = ByteStreams.newDataOutput();
-            message.writeUTF(COMMAND_ACQUIRE);
-            message.writeUTF(player.getUniqueId().toString());
-            r.sendPluginMessage(Main.getInstance(), CHANNEL, message.toByteArray());
-        }
+        var message = ByteStreams.newDataOutput();
+        message.writeUTF(COMMAND_ACQUIRE);
+        message.writeUTF(player.getUniqueId().toString());
+        Bukkit.getServer().sendPluginMessage(Main.getInstance(), CHANNEL, message.toByteArray());
     }
 
     /**
      * 发送插件消息, 让其他服务器重新上锁
      */
     private void broadcastRequireAll() {
-        var r = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
-        if (r != null) {
-            var message = ByteStreams.newDataOutput();
-            message.writeUTF(COMMAND_ACQUIRE);
-            message.writeUTF(ACQUIRE_ALL);
-            r.sendPluginMessage(Main.getInstance(), CHANNEL, message.toByteArray());
-        }
+        var message = ByteStreams.newDataOutput();
+        message.writeUTF(COMMAND_ACQUIRE);
+        message.writeUTF(ACQUIRE_ALL);
+        Bukkit.getServer().sendPluginMessage(Main.getInstance(), CHANNEL, message.toByteArray());
     }
 
     @Override

@@ -15,7 +15,7 @@ public class PDCSnapshotHandler extends CacheableSnapshotHandler<PDCSnapshot> {
 
     public final static PDCSnapshotHandler instance = new PDCSnapshotHandler();
     private final PDCSnapshotRepository repository = PDCSnapshotRepository.instance;
-    private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
+    private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
 
     @Override
     public @NotNull String snapshotType() {

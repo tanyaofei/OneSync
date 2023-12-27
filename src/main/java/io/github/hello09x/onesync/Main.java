@@ -10,8 +10,7 @@ import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.handler.*;
 import io.github.hello09x.onesync.listener.SnapshotListener;
 import io.github.hello09x.onesync.listener.SynchronizeListener;
-import io.github.hello09x.onesync.manager.LockingManager;
-import io.github.hello09x.onesync.manager.SynchronizeManager;
+import io.github.hello09x.onesync.manager.*;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -63,6 +62,12 @@ public final class Main extends JavaPlugin {
                 var messenger = getServer().getMessenger();
                 messenger.registerIncomingPluginChannel(this, LockingManager.CHANNEL, LockingManager.instance);
                 messenger.registerOutgoingPluginChannel(this, LockingManager.CHANNEL);
+                messenger.registerIncomingPluginChannel(this, ServerManager.CHANNEL, ServerManager.instance);
+                messenger.registerOutgoingPluginChannel(this, ServerManager.CHANNEL);
+                messenger.registerIncomingPluginChannel(this, PlayerManager.CHANNEL, PlayerManager.instance);
+                messenger.registerOutgoingPluginChannel(this, PlayerManager.CHANNEL);
+                messenger.registerIncomingPluginChannel(this, TeleportManager.CHANNEL, TeleportManager.instance);
+                messenger.registerOutgoingPluginChannel(this, TeleportManager.CHANNEL);
             }
 
             {

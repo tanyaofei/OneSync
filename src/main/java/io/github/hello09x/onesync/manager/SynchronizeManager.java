@@ -175,7 +175,7 @@ public class SynchronizeManager {
             }
 
             this.setRestoring(player, false);      // 设置玩家已经恢复完毕, 其他创建快照事件才会处理他
-            lockingManager.acquire(player.getUniqueId());  // 锁定玩家, 当玩家退出游戏时才解锁
+            lockingManager.acquire(player);  // 锁定玩家, 当玩家退出游戏时才解锁
             new PlayerFinishRestoreEvent(player, PlayerFinishRestoreEvent.Result.SUCCESS).callEvent();
             return true;
         } catch (Throwable e) {

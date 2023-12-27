@@ -21,8 +21,9 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
 
     public final static OneSyncConfig instance = new OneSyncConfig(Main.getInstance(), "2");
 
-    private final Synchronize synchronize = new Synchronize();
-    private final Snapshot snapshot = new Snapshot();
+    private final SynchronizeConfig synchronize = new SynchronizeConfig();
+    private final SnapshotConfig snapshot = new SnapshotConfig();
+    private final TeleportConfig teleport = new TeleportConfig();
     private boolean debug;
 
     @Setter
@@ -43,7 +44,7 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
 
     @Getter
     @ToString
-    public final static class Synchronize {
+    public final static class SynchronizeConfig {
         private boolean inventory;
         private boolean enderChest;
         private boolean pdc;
@@ -75,7 +76,7 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
 
     @Getter
     @ToString
-    public final static class Snapshot {
+    public final static class SnapshotConfig {
 
         private int capacity;
 
@@ -96,6 +97,15 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
                     return null;
                 }
             }).filter(Objects::nonNull).collect(Collectors.toSet());
+        }
+    }
+
+    @Getter
+    @ToString
+    public final static class TeleportConfig {
+        private boolean enabled;
+        public void reload(@NotNull FileConfiguration file) {
+            this.enabled = file.getBoolean("teleport.enabled", false);
         }
     }
 

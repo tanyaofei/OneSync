@@ -41,7 +41,7 @@ public record VaultSnapshot(
     }
 
     @Override
-    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onClickOutside) {
+    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> prevMenu) {
         var item = new ItemStack(Material.EMERALD);
         item.editMeta(meta -> {
             meta.displayName(noItalic("经济", GOLD));

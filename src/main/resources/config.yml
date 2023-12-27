@@ -16,6 +16,7 @@ debug: true
 # 注意 2: 因为服务器异常关闭的锁定, 可能导致玩家的数据不是最新的!!!
 server-id: ''
 
+# 同步配置
 synchronize:
 
   # 玩家背包
@@ -57,6 +58,8 @@ synchronize:
     # 氧气值
     air: false
 
+
+# 快照配置
 snapshot:
 
   # 每位玩家最大快照数量
@@ -74,3 +77,11 @@ snapshot:
   when:
     - WORLD_SAVE
     - PLAYER_GAME_MODE_CHANGE
+
+
+# 跨服传送配置
+teleport:
+
+  # 是否启用
+  enabled: false
+

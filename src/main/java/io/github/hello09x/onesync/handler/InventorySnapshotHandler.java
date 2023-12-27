@@ -21,7 +21,7 @@ public class InventorySnapshotHandler extends CacheableSnapshotHandler<Inventory
     private final static Logger log = Main.getInstance().getLogger();
 
     private final InventorySnapshotRepository repository = InventorySnapshotRepository.instance;
-    private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
+    private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
 
     @Override
     public @NotNull String snapshotType() {

@@ -7,7 +7,7 @@ import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.onesync.handler.EnderChestSnapshotHandler;
 import io.github.hello09x.onesync.util.ItemStackMapTypeHandler;
 import io.github.hello09x.onesync.util.MenuTemplate;
-import org.apache.commons.lang.mutable.MutableBoolean;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -46,7 +46,7 @@ public record EnderChestSnapshot(
     }
 
     @Override
-    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onClickOutside) {
+    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> prevMenu) {
         var item = new ItemStack(Material.ENDER_CHEST);
         item.editMeta(meta -> {
             meta.displayName(noItalic("末影箱", LIGHT_PURPLE));
@@ -57,14 +57,13 @@ public record EnderChestSnapshot(
             ));
         });
 
-
         var modified = new MutableBoolean();
         return new MenuItem(
                 item,
-                ignored -> MenuTemplate.openInventoryMenu(
+                x -> MenuTemplate.openInventoryMenu(
                         viewer,
                         text("末影箱"),
-                        InventoryType.ENDER_CHEST.getDefaultSize(),
+                        InventoryType.ENDER_CHEST,
                         this.items,
                         newItems -> EnderChestSnapshotHandler.instance.updateItems(this.snapshotId, newItems),
                         event -> {
@@ -72,7 +71,7 @@ public record EnderChestSnapshot(
                                 // 先关闭保存数据再打开加载数据
                                 event.getWhoClicked().closeInventory();
                             }
-                            onClickOutside.accept(event);
+                            prevMenu.accept(event);
                         },
                         modified
                 ));

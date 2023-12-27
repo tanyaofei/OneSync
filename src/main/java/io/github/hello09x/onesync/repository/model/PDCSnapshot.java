@@ -38,7 +38,7 @@ public record PDCSnapshot(
     }
 
     @Override
-    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onClickOutside) {
+    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> prevMenu) {
         var item = new ItemStack(Material.STRUCTURE_VOID);
         item.editMeta(meta -> {
             meta.displayName(noItalic("PDC", DARK_GREEN));

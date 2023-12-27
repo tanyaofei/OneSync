@@ -25,7 +25,7 @@ public class VaultSnapshotHandler extends CacheableSnapshotHandler<VaultSnapshot
 
     private final VaultSnapshotRepository repository = VaultSnapshotRepository.instance;
 
-    private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
+    private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
 
     private final Holder holder;
 

@@ -45,7 +45,7 @@ public record AdvancementSnapshot(
     }
 
     @Override
-    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onClickOutside) {
+    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> prevMenu) {
         var item = new ItemStack(Material.GRASS_BLOCK);
         item.editMeta(meta -> {
             meta.displayName(noItalic("成就", WHITE));

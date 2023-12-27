@@ -17,7 +17,7 @@ public class EnderChestSnapshotHandler extends CacheableSnapshotHandler<EnderChe
 
     public final static EnderChestSnapshotHandler instance = new EnderChestSnapshotHandler();
     private final EnderChestSnapshotRepository repository = EnderChestSnapshotRepository.instance;
-    private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
+    private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
 
     @Override
     public @NotNull String snapshotType() {

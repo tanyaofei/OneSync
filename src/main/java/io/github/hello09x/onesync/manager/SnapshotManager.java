@@ -24,7 +24,7 @@ public class SnapshotManager {
     public final static SnapshotManager instance = new SnapshotManager();
     private final static Logger log = Main.getInstance().getLogger();
     private final SnapshotRepository repository = SnapshotRepository.instance;
-    private final OneSyncConfig.Snapshot config = OneSyncConfig.instance.getSnapshot();
+    private final OneSyncConfig.SnapshotConfig config = OneSyncConfig.instance.getSnapshot();
 
     /**
      * 创建快照, 如果该玩家正在登陆, 并未恢复完数据, 则不会为他创建快照

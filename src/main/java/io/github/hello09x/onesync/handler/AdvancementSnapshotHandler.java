@@ -29,7 +29,7 @@ public class AdvancementSnapshotHandler extends CacheableSnapshotHandler<Advance
             .collect(Collectors.toMap(adv -> adv.getKey().asString(), Function.identity()));
 
     private final AdvancementSnapshotRepository repository = AdvancementSnapshotRepository.instance;
-    private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
+    private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
 
     @Override
     public @NotNull String snapshotType() {

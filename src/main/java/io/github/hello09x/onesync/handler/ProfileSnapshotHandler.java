@@ -18,7 +18,7 @@ public class ProfileSnapshotHandler extends CacheableSnapshotHandler<ProfileSnap
     public final static ProfileSnapshotHandler instance = new ProfileSnapshotHandler();
 
     private final ProfileSnapshotRepository repository = ProfileSnapshotRepository.instance;
-    private final OneSyncConfig.Synchronize config = OneSyncConfig.instance.getSynchronize();
+    private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
 
     @Override
     public @NotNull String snapshotType() {

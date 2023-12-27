@@ -7,7 +7,7 @@ import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.onesync.handler.InventorySnapshotHandler;
 import io.github.hello09x.onesync.util.ItemStackMapTypeHandler;
 import io.github.hello09x.onesync.util.MenuTemplate;
-import org.apache.commons.lang.mutable.MutableBoolean;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -55,7 +55,7 @@ public record InventorySnapshot(
     }
 
     @Override
-    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onClickOutside) {
+    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> prevMenu) {
         var item = new ItemStack(Material.CHEST);
         item.editMeta(meta -> {
             meta.displayName(noItalic("背包", GOLD));
@@ -69,10 +69,10 @@ public record InventorySnapshot(
         var modified = new MutableBoolean();
         return new MenuItem(
                 item,
-                ignored -> MenuTemplate.openInventoryMenu(
+                x -> MenuTemplate.openInventoryMenu(
                         viewer,
                         text("背包"),
-                        InventoryType.PLAYER.getDefaultSize(),
+                        InventoryType.PLAYER,
                         this.items,
                         newItems -> InventorySnapshotHandler.instance.updateItems(this.snapshotId, newItems),
                         event -> {
@@ -80,7 +80,7 @@ public record InventorySnapshot(
                                 // 先关闭保存数据再打开加载数据
                                 event.getWhoClicked().closeInventory();
                             }
-                            onClickOutside.accept(event);
+                            prevMenu.accept(event);
                         },
                         modified
                 ));

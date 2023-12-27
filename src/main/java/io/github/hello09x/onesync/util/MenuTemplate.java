@@ -1,13 +1,14 @@
 package io.github.hello09x.onesync.util;
 
 import io.github.hello09x.bedrock.util.InventoryUtils;
+import io.github.hello09x.bedrock.util.Mth;
 import io.github.hello09x.onesync.Main;
 import net.kyori.adventure.text.Component;
-import org.apache.commons.lang.mutable.MutableBoolean;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,7 +23,7 @@ public class MenuTemplate {
      *
      * @param viewer         操作者
      * @param title          标题
-     * @param size           容器原始大小
+     * @param type           容器类型
      * @param items          容器内容
      * @param updateItems    更新回调
      * @param onClickOutside 点击外部回调
@@ -31,23 +32,19 @@ public class MenuTemplate {
     public static void openInventoryMenu(
             @NotNull Player viewer,
             @NotNull Component title,
-            int size,
+            InventoryType type,
             @NotNull Map<Integer, ItemStack> items,
             @NotNull Consumer<Map<Integer, ItemStack>> updateItems,
             @NotNull Consumer<InventoryClickEvent> onClickOutside,
             @NotNull MutableBoolean modified
     ) {
-        int fixedSize;
-        if (size % 9 != 0) {
-            fixedSize = size / 9 * 9 + 9;
-        } else {
-            fixedSize = size;
-        }
+        var size = type.getDefaultSize();
+        int alignedSize = Mth.align(size, 9);
 
         var menu = Main.getChestMenuRegistry()
                 .builder()
                 .title(title)
-                .size(fixedSize)
+                .size(alignedSize)
                 .onClickOutside(onClickOutside)
                 .onClose(event -> {
                     if (modified.booleanValue()) {
@@ -58,51 +55,54 @@ public class MenuTemplate {
 
         // 点击下方容器事件
         var onClickBottom = (Consumer<InventoryClickEvent>) event -> {
-            var item = event.getCurrentItem();
-            if (item == null) {
-                return;
+            switch (event.getClick()) {
+                case LEFT -> {
+                    // 左键将下方容器物品移动到上方容器里
+                    if (InventoryUtils.moveItem(
+                            event.getView().getBottomInventory(),
+                            event.getSlot(),
+                            event.getView().getTopInventory())
+                    ) {
+                        modified.setValue(true);
+                    }
+                }
+                case MIDDLE -> {
+                    if (InventoryUtils.copyItem(
+                            event.getView().getBottomInventory(),
+                            event.getSlot(),
+                            event.getView().getTopInventory())
+                    ) {
+                        modified.setValue(true);
+                    }
+                }
             }
-            if (event.getClick() != ClickType.LEFT) {
-                return;
-            }
-
-            var top = event.getView().getTopInventory();
-            var slot = top.firstEmpty();
-            if (slot == -1 || slot >= size) {
-                return;
-            }
-
-            top.setItem(slot, item);
-            modified.setValue(true);
         };
         menu.onClickBottom(onClickBottom);
 
         // 点击上方容器事件
         var onClickButton = (Consumer<InventoryClickEvent>) event -> {
-            var item = event.getCurrentItem();
-            if (item == null) {
-                return;
-            }
-
             switch (event.getClick()) {
                 case LEFT -> {
-                    // 左键复制物品
-                    var bottom = event.getView().getBottomInventory();
-                    var slot = bottom.firstEmpty();
-                    if (slot == -1) {
-                        return;
+                    // 左键将上方容器物品移动到下方容器里
+                    if (InventoryUtils.moveItem(
+                            event.getView().getTopInventory(),
+                            event.getSlot(),
+                            event.getView().getBottomInventory())
+                    ) {
+                        modified.setValue(true);
                     }
-                    bottom.setItem(slot, event.getCurrentItem());
                 }
-                case DROP -> {
-                    // Q 键删除物品
-                    item.setAmount(0);
-                    modified.setValue(true);
+                case MIDDLE -> {
+                    // 中键将上方容器物品复制到下方容器
+                    InventoryUtils.copyItem(
+                            event.getView().getTopInventory(),
+                            event.getSlot(),
+                            event.getView().getBottomInventory()
+                    );
                 }
             }
         };
-
-        for (int i = fixedSize - 1; i >= 0; i--) {
+        for (int i = alignedSize - 1; i >= 0; i--) {
             var item = Optional.ofNullable(items.get(i)).orElseGet(() -> new ItemStack(Material.AIR));
             menu.onClickButton(i, item, onClickButton);
         }

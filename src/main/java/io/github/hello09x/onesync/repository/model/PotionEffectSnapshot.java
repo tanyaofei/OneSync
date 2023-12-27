@@ -45,7 +45,7 @@ public record PotionEffectSnapshot(
     }
 
     @Override
-    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onClickOutside) {
+    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> prevMenu) {
         var item = new ItemStack(Material.POTION);
         item.editMeta(meta -> {
             meta.displayName(noItalic("效果", DARK_PURPLE));

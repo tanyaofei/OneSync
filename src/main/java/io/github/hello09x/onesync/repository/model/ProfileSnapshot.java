@@ -101,7 +101,7 @@ public record ProfileSnapshot(
     }
 
     @Override
-    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> onClickOutside) {
+    public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> prevMenu) {
         var item = new ItemStack(Material.PLAYER_HEAD);
         item.editMeta(meta -> {
             meta.displayName(Components.noItalic("档案", YELLOW));
