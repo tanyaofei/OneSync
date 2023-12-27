@@ -69,15 +69,15 @@ public class CommandRegistry {
                 ).register();
 
         command("tpa")
-                .withAliases("stp")
+                .withAliases("stpa")
                 .withArguments(globalPlayer("player"))
-                .executesPlayer(TeleportCommand.instance::tp)
+                .executesPlayer(TeleportCommand.instance::tpa)
                 .register();
 
         command("tpahere")
                 .withAliases("stpahere")
                 .withArguments(globalPlayer("player"))
-                .executesPlayer(TeleportCommand.instance::tphere)
+                .executesPlayer(TeleportCommand.instance::tpahere)
                 .register();
 
         command("tpaccept")
@@ -87,9 +87,9 @@ public class CommandRegistry {
                 .register();
 
         command("tpadeny")
-                .withAliases("stpdeny")
+                .withAliases("stpadeny")
                 .withOptionalArguments(globalPlayer("player"))
-                .executesPlayer(TeleportCommand.instance::tpdeny)
+                .executesPlayer(TeleportCommand.instance::tpadeny)
                 .register();
 
     }

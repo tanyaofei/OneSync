@@ -143,7 +143,7 @@ public class TeleportManager implements PluginMessageListener {
                 text(" 请求传送到你身边 ", GRAY),
                 text("[接受]", GREEN).clickEvent(ClickEvent.runCommand("/stpaccept " + requester)),
                 space(),
-                text("[拒绝]", RED).clickEvent(ClickEvent.runCommand("/stpdeny" + requester))
+                text("[拒绝]", RED).clickEvent(ClickEvent.runCommand("/stpadeny" + requester))
         ));
     }
 
@@ -160,7 +160,7 @@ public class TeleportManager implements PluginMessageListener {
                 space(),
                 text("[接受]", GREEN).clickEvent(ClickEvent.runCommand("/stpaccept " + requester)),
                 space(),
-                text("[拒绝]", RED).clickEvent(ClickEvent.runCommand("/stpdeny " + requester))
+                text("[拒绝]", RED).clickEvent(ClickEvent.runCommand("/stpadeny " + requester))
         ));
     }
 

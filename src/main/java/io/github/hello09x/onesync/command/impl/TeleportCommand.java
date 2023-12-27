@@ -13,13 +13,13 @@ public class TeleportCommand {
 
     private final TeleportManager manager = TeleportManager.instance;
 
-    public void tp(@NotNull Player sender, @NotNull CommandArguments args) {
+    public void tpa(@NotNull Player sender, @NotNull CommandArguments args) {
         var receiver = (String) Objects.requireNonNull(args.get("player"));
         var message = manager.tp(sender, receiver);
         sender.sendMessage(message);
     }
 
-    public void tphere(@NotNull Player sender, @NotNull CommandArguments args) {
+    public void tpahere(@NotNull Player sender, @NotNull CommandArguments args) {
         var receiver = (String) Objects.requireNonNull(args.get("player"));
         manager.tphere(sender, receiver);
     }
@@ -29,7 +29,7 @@ public class TeleportCommand {
         manager.tpaccept(sender, requester);
     }
 
-    public void tpdeny(@NotNull Player sender, @NotNull CommandArguments args) {
+    public void tpadeny(@NotNull Player sender, @NotNull CommandArguments args) {
         var requester = (String) args.get("player");
         // todo
     }
