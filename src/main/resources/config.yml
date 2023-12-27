@@ -83,5 +83,7 @@ snapshot:
 teleport:
 
   # 是否启用
+  # 启用此功能要重启服务器
+  # 请保持多个服务器的这个配置统一, 否则会发生奇怪的事情
   enabled: false
 

@@ -68,14 +68,14 @@ public class CommandRegistry {
                                 .executes(SnapshotCommand.instance::save)
                 ).register();
 
-        command("tp")
+        command("tpa")
                 .withAliases("stp")
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tp)
                 .register();
 
-        command("tphere")
-                .withAliases("stphere")
+        command("tpahere")
+                .withAliases("stpahere")
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tphere)
                 .register();
@@ -86,7 +86,7 @@ public class CommandRegistry {
                 .executesPlayer(TeleportCommand.instance::tpaccept)
                 .register();
 
-        command("tpdeny")
+        command("tpadeny")
                 .withAliases("stpdeny")
                 .withOptionalArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpdeny)
