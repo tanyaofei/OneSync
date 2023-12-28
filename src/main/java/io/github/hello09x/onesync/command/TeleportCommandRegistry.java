@@ -1,17 +1,16 @@
 package io.github.hello09x.onesync.command;
 
-import dev.jorel.commandapi.CommandPermission;
-import dev.jorel.commandapi.arguments.*;
-import io.github.hello09x.onesync.command.impl.ReloadCommand;
-import io.github.hello09x.onesync.command.impl.SnapshotCommand;
+import dev.jorel.commandapi.arguments.Argument;
+import dev.jorel.commandapi.arguments.ArgumentSuggestions;
+import dev.jorel.commandapi.arguments.CustomArgument;
+import dev.jorel.commandapi.arguments.StringArgument;
 import io.github.hello09x.onesync.command.impl.TeleportCommand;
-import io.github.hello09x.onesync.command.impl.UnlockCommand;
 import io.github.hello09x.onesync.manager.PlayerManager;
 import org.jetbrains.annotations.NotNull;
 
-import static io.github.hello09x.bedrock.command.Commands.*;
+import static io.github.hello09x.bedrock.command.Commands.command;
 
-public class CommandRegistry {
+public class TeleportCommandRegistry {
 
     public static @NotNull Argument<String> globalPlayer(@NotNull String nodeName) {
         return new CustomArgument<>(new StringArgument(nodeName), info -> {
@@ -44,55 +43,30 @@ public class CommandRegistry {
         }));
     }
 
-    public static void register() {
-        command("onesync")
-                .withSubcommands(
-                        command("reload")
-                                .withPermission(CommandPermission.OP)
-                                .executes(ReloadCommand.instance::reload),
-                        command("unlock")
-                                .withPermission(CommandPermission.OP)
-                                .withArguments(offlinePlayer("player"))
-                                .executes(UnlockCommand.instance::unlock),
-                        command("unlock-all")
-                                .withPermission(CommandPermission.OP)
-                                .executes(UnlockCommand.instance::unlockAll),
-                        command("snapshot")
-                                .withPermission(CommandPermission.OP)
-                                .withArguments(offlinePlayer("player"))
-                                .withOptionalArguments(int32("page", 1))
-                                .executesPlayer(SnapshotCommand.instance::snapshot),
-                        command("save")
-                                .withPermission(CommandPermission.OP)
-                                .withArguments(new EntitySelectorArgument.ManyPlayers("players"))
-                                .executes(SnapshotCommand.instance::save)
-                ).register();
 
+    public static void register() {
         command("tpa")
                 .withAliases("stpa")
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpa)
-                .register();
+                .override();
 
         command("tpahere")
                 .withAliases("stpahere")
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpahere)
-                .register();
+                .override();
 
         command("tpaccept")
                 .withAliases("stpaccept")
                 .withOptionalArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpaccept)
-                .register();
+                .override();
 
-        command("tpadeny")
-                .withAliases("stpadeny")
+        command("tpdeny")
+                .withAliases("stpdeny")
                 .withOptionalArguments(globalPlayer("player"))
-                .executesPlayer(TeleportCommand.instance::tpadeny)
-                .register();
-
+                .executesPlayer(TeleportCommand.instance::tpdeny)
+                .override();
     }
-
-
 }

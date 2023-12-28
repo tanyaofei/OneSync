@@ -12,6 +12,7 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -78,18 +79,21 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
     @ToString
     public final static class SnapshotConfig {
 
+        /**
+         * 每个玩家最大快照数
+         */
         private int capacity;
 
+        /**
+         * 每个玩家多少天内每天至少保留一份最后的快照
+         */
         private int keepDays;
-
-        private boolean compress;
 
         private Set<SnapshotCause> when = Collections.emptySet();
 
         public void reload(@NotNull FileConfiguration file) {
             this.capacity = file.getInt("snapshot.capacity", 45);
             this.keepDays = file.getInt("snapshot.keep-days", 7);
-            this.compress = file.getBoolean("snapshot.compress", false);
             this.when = file.getStringList("snapshot.when").stream().map(name -> {
                 try {
                     return SnapshotCause.valueOf(name);
@@ -103,9 +107,15 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
     @Getter
     @ToString
     public final static class TeleportConfig {
+
         private boolean enabled;
+        private int wait;
+        private Duration expiresIn;
+
         public void reload(@NotNull FileConfiguration file) {
             this.enabled = file.getBoolean("teleport.enabled", false);
+            this.expiresIn = Duration.ofSeconds(file.getInt("teleport.expires-in", 60));
+            this.wait = 20 * file.getInt("teleport.wait", 3);
         }
     }
 

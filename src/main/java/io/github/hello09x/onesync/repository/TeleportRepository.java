@@ -9,6 +9,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 public class TeleportRepository extends Repository<Teleport> {
 
@@ -43,22 +45,24 @@ public class TeleportRepository extends Repository<Teleport> {
         });
     }
 
-    public @Nullable Teleport selectLatestByReceiver(@NotNull String receiver) {
-        var sql = "select * from teleport where receiver = ? order by created_at desc limit 1";
+    public @Nullable Teleport selectLatestByReceiverAfter(@NotNull String receiver, @NotNull LocalDateTime createdAtAfter) {
+        var sql = "select * from teleport where receiver = ? and created_at > ? order by created_at desc limit 1";
         return execute(connection -> {
             try (PreparedStatement stm = connection.prepareStatement(sql)) {
                 stm.setString(1, receiver);
+                stm.setTimestamp(3, Timestamp.valueOf(createdAtAfter));
                 return mapOne(stm.executeQuery());
             }
         });
     }
 
-    public @Nullable Teleport selectLatestByRequesterAndReceiver(@NotNull String requester, @NotNull String receiver) {
-        var sql = "select * from teleport where requester = ? and receiver = ? limit 1";
+    public @Nullable Teleport selectLatestByRequesterAndReceiverAfter(@NotNull String requester, @NotNull String receiver, @NotNull LocalDateTime createdAtAfter) {
+        var sql = "select * from teleport where requester = ? and receiver = ? and created_at > ? limit 1";
         return execute(connection -> {
             try (PreparedStatement stm = connection.prepareStatement(sql)) {
                 stm.setString(1, requester);
                 stm.setString(2, receiver);
+                stm.setTimestamp(3, Timestamp.valueOf(createdAtAfter));
                 return mapOne(stm.executeQuery());
             }
         });
@@ -70,6 +74,16 @@ public class TeleportRepository extends Repository<Teleport> {
             try (PreparedStatement stm = connection.prepareStatement(sql)) {
                 stm.setString(1, requester);
                 stm.setString(2, receiver);
+                return stm.executeUpdate();
+            }
+        });
+    }
+
+    public int deleteByCreatedAtBefore(@NotNull LocalDateTime before) {
+        var sql = "delete from teleport where created_at < ?";
+        return execute(connection -> {
+            try (PreparedStatement stm = connection.prepareStatement(sql)) {
+                stm.setTimestamp(1, Timestamp.valueOf(before));
                 return stm.executeUpdate();
             }
         });

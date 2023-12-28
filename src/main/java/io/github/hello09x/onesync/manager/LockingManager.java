@@ -3,8 +3,8 @@ package io.github.hello09x.onesync.manager;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
-import io.github.hello09x.bedrock.pluginmessage.PluginMessages;
 import io.github.hello09x.bedrock.util.MCUtils;
+import io.github.hello09x.bedrock.util.PluginMessages;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.constant.SubChannels;
@@ -24,9 +24,10 @@ public class LockingManager implements PluginMessageListener {
 
     public final static LockingManager instance = new LockingManager();
     public final static String COMMAND_ACQUIRE = "Acquire";
+    private final static String ACQUIRE_ALL = "ALL";
     private final static String SUB_CHANNEL = SubChannels.Locking;
     private final static Logger log = Main.getInstance().getLogger();
-    private final static String ACQUIRE_ALL = "ALL";
+
     private final LockingRepository repository = LockingRepository.instance;
 
     private String serverId = OneSyncConfig.instance.getServerId();
@@ -150,7 +151,7 @@ public class LockingManager implements PluginMessageListener {
         var message = ByteStreams.newDataOutput();
         message.writeUTF(COMMAND_ACQUIRE);
         message.writeUTF(player.getUniqueId().toString());
-        r.sendPluginMessage(Main.getInstance(), "BungeeCord", PluginMessages.asForwardMessage(SUB_CHANNEL, message));
+        r.sendPluginMessage(Main.getInstance(), "BungeeCord", PluginMessages.box(SUB_CHANNEL, message));
     }
 
     /**
@@ -166,7 +167,7 @@ public class LockingManager implements PluginMessageListener {
         message.writeUTF(COMMAND_ACQUIRE);
         message.writeUTF(ACQUIRE_ALL);
 
-        r.sendPluginMessage(Main.getInstance(), "BungeeCord", PluginMessages.asForwardMessage(SUB_CHANNEL, message));
+        r.sendPluginMessage(Main.getInstance(), "BungeeCord", PluginMessages.box(SUB_CHANNEL, message));
     }
 
     @Override
@@ -179,7 +180,7 @@ public class LockingManager implements PluginMessageListener {
             return;
         }
 
-        var in = PluginMessages.parseForwardMessage(SUB_CHANNEL, message);
+        var in = PluginMessages.unbox(SUB_CHANNEL, message);
         if (in == null) {
             return;
         }

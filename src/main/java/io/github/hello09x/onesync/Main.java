@@ -5,11 +5,13 @@ import com.google.common.base.Throwables;
 import com.google.gson.Gson;
 import io.github.hello09x.bedrock.menu.ChestMenuRegistry;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
-import io.github.hello09x.onesync.command.CommandRegistry;
+import io.github.hello09x.onesync.command.SynchronizeCommandRegistry;
+import io.github.hello09x.onesync.command.TeleportCommandRegistry;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.handler.*;
 import io.github.hello09x.onesync.listener.SnapshotListener;
 import io.github.hello09x.onesync.listener.SynchronizeListener;
+import io.github.hello09x.onesync.listener.TeleportListener;
 import io.github.hello09x.onesync.manager.*;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import lombok.Getter;
@@ -39,7 +41,7 @@ public final class Main extends JavaPlugin {
     public void onEnable() {
         try {
             chestMenuRegistry = new ChestMenuRegistry(this);
-            CommandRegistry.register();
+            SynchronizeCommandRegistry.register();
 
             {
                 var sm = Bukkit.getServicesManager();
@@ -58,18 +60,10 @@ public final class Main extends JavaPlugin {
                 pm.registerEvents(SnapshotListener.instance, this);
             }
 
+
             {
                 var messenger = getServer().getMessenger();
                 messenger.registerIncomingPluginChannel(this, "BungeeCord", LockingManager.instance);
-                messenger.registerOutgoingPluginChannel(this, "BungeeCord");
-
-                messenger.registerIncomingPluginChannel(this, "BungeeCord", ServerManager.instance);
-                messenger.registerOutgoingPluginChannel(this, "BungeeCord");
-
-                messenger.registerIncomingPluginChannel(this, "BungeeCord", PlayerManager.instance);
-                messenger.registerOutgoingPluginChannel(this, "BungeeCord");
-
-                messenger.registerIncomingPluginChannel(this, "BungeeCord", TeleportManager.instance);
                 messenger.registerOutgoingPluginChannel(this, "BungeeCord");
             }
 
@@ -80,6 +74,31 @@ public final class Main extends JavaPlugin {
 
             LockingManager.instance.releaseAll();           // 崩服重启, 释放上一次会话的锁
             LockingManager.instance.acquireAll();           // 热重载
+
+            // region Teleport start
+            if (OneSyncConfig.instance.getTeleport().isEnabled()) {
+                // 不支持 reload 命令重载
+                TeleportCommandRegistry.register();
+
+                {
+                    var pm = getServer().getPluginManager();
+                    pm.registerEvents(TeleportListener.instance, this);
+
+                }
+
+                {
+                    var messenger = getServer().getMessenger();
+                    messenger.registerIncomingPluginChannel(this, "BungeeCord", ServerManager.instance);
+                    messenger.registerOutgoingPluginChannel(this, "BungeeCord");
+
+                    messenger.registerIncomingPluginChannel(this, "BungeeCord", PlayerManager.instance);
+                    messenger.registerOutgoingPluginChannel(this, "BungeeCord");
+
+                    messenger.registerIncomingPluginChannel(this, "BungeeCord", TeleportManager.instance);
+                    messenger.registerOutgoingPluginChannel(this, "BungeeCord");
+                }
+            }
+            // endregion Teleport end
         } catch (Throwable e) {
             getLogger().severe("加载插件失败, 为了数据安全, 关闭当前服务器: %s".formatted(Throwables.getStackTraceAsString(e)));
             Bukkit.shutdown();

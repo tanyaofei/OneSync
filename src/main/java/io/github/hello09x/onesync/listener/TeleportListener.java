@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class TeleportListener implements Listener {
 
+    public final static TeleportListener instance = new TeleportListener();
 
     private final TeleportManager manager = TeleportManager.instance;
 

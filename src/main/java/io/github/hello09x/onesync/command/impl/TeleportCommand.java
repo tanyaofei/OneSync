@@ -28,15 +28,14 @@ public class TeleportCommand {
 
     public void tpaccept(@NotNull Player sender, @NotNull CommandArguments args) {
         var requester = (String) args.get("player");
-        var message = manager.accept(sender, requester);
-        if (message != null) {
-            sender.sendMessage(message);
-        }
+        var message = manager.answer(sender, requester, true);
+        sender.sendMessage(message);
     }
 
-    public void tpadeny(@NotNull Player sender, @NotNull CommandArguments args) {
+    public void tpdeny(@NotNull Player sender, @NotNull CommandArguments args) {
         var requester = (String) args.get("player");
-        // todo
+        var message = manager.answer(sender, requester, false);
+        sender.sendMessage(message);
     }
 
 }
