@@ -56,6 +56,17 @@ public class TeleportRepository extends Repository<Teleport> {
         });
     }
 
+    public @Nullable Teleport selectLatestByRequesterBefore(@NotNull String requester, @NotNull LocalDateTime createdAtBefore) {
+        var sql = "select * from teleport where requester = ? and created_at < ? order by created_at desc limit 1";
+        return execute(connection -> {
+            try (PreparedStatement stm = connection.prepareStatement(sql)) {
+                stm.setString(1, requester);
+                stm.setTimestamp(2, Timestamp.valueOf(createdAtBefore));
+                return mapOne(stm.executeQuery());
+            }
+        });
+    }
+
     public @Nullable Teleport selectLatestByRequesterAndReceiverAfter(@NotNull String requester, @NotNull String receiver, @NotNull LocalDateTime createdAtBefore) {
         var sql = "select * from teleport where requester = ? and receiver = ? and created_at < ? limit 1";
         return execute(connection -> {

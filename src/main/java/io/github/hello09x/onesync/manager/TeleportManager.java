@@ -18,6 +18,8 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jetbrains.annotations.NotNull;
@@ -25,13 +27,13 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import static net.kyori.adventure.sound.Sound.sound;
 import static net.kyori.adventure.text.Component.*;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 
@@ -85,14 +87,14 @@ public class TeleportManager implements PluginMessageListener {
         var expirations = LocalDateTime.now().plus(config.getExpiresIn());
         var existed = repository.selectLatestByRequesterAndReceiverAfter(requester.getName(), receiver, expirations);
         if (existed != null) {
-            if (existed.type() == type) {
+            if (existed.type() != type) {
                 repository.deleteByRequesterAndReceiver(requester.getName(), receiver);
             } else {
                 return textOfChildren(text("你已经对 ", GRAY), text(receiver, WHITE), text(" 发起过传送请求了", GRAY));
             }
         }
 
-        var teleport = new Teleport(requester.getName(), receiver, TeleportType.TP, null);
+        var teleport = new Teleport(requester.getName(), receiver, type, null);
         repository.insert(teleport);
 
         var out = ByteStreams.newDataOutput();
@@ -103,7 +105,12 @@ public class TeleportManager implements PluginMessageListener {
 
         requester.sendPluginMessage(Main.getInstance(), "BungeeCord", PluginMessages.box(SUB_CHANNEL, out));
         this.onPluginMessageReceived("BungeeCord", requester, PluginMessages.boxLocal(SUB_CHANNEL, out));
-        return text("传送请求已发送, 等待对方接受", GRAY);
+        return textOfChildren(
+                text("传送请求已发送给 "), text(receiver, WHITE), text(", 等待对方接受"),
+                text(" [取消]", RED)
+                        .clickEvent(ClickEvent.runCommand("/stpcancel " + receiver))
+                        .hoverEvent(HoverEvent.showText(text("/stpacancel " + receiver)))
+        ).color(GRAY);
     }
 
     /**
@@ -139,6 +146,27 @@ public class TeleportManager implements PluginMessageListener {
                 text(teleport.requester(), WHITE),
                 text(" 的传送请求")
         ).color(GRAY);
+    }
+
+    /**
+     * 取消传送请求
+     *
+     * @param requester 发送人
+     * @param receiver  接收人
+     * @return 返回给发送人的提示消息
+     */
+    public @NotNull Component cancel(@NotNull Player requester, @Nullable String receiver) {
+        var expirations = LocalDateTime.now().plus(config.getExpiresIn());
+        var teleport = receiver == null
+                ? repository.selectLatestByRequesterBefore(requester.getName(), expirations)
+                : repository.selectLatestByRequesterAndReceiverAfter(requester.getName(), receiver, expirations);
+
+        if (teleport == null) {
+            return text("你没有发起任何传送请求", GRAY);
+        }
+
+        repository.deleteByRequesterAndReceiver(teleport.requester(), teleport.receiver());
+        return text("取消传送请求成功", GRAY);
     }
 
     @Override
@@ -196,6 +224,8 @@ public class TeleportManager implements PluginMessageListener {
                             .hoverEvent(HoverEvent.showText(text("/stpdeny")))
             ));
         }
+
+        receiver.playSound(sound(Sound.BLOCK_NOTE_BLOCK_BELL, SoundCategory.PLAYERS, 0.8F, 1.0F));
     }
 
     public @Nullable Location getTeleportLocation(@NotNull Player player) {
@@ -214,16 +244,21 @@ public class TeleportManager implements PluginMessageListener {
         var requester = in.readUTF();
         var receiver = in.readUTF();
 
-        var teleportor = this.getAB(type, requester, receiver)[0];
-        if (teleportor == null) {
+        Optional.ofNullable(Bukkit.getPlayerExact(requester)).ifPresent(p -> p.sendMessage(textOfChildren(
+                text(receiver, WHITE),
+                text(" 已接受你的传送请求", GRAY)
+        )));
+
+        var teleported = this.getAB(type, requester, receiver)[0];
+        if (teleported == null) {
             // 需要被传送的人不在此服务器
             return;
         }
 
-        var pos = teleportor.getLocation();
+        var pos = teleported.getLocation();
         Runnable teleport0 = () -> {
-            if (this.isMoved(pos, teleportor.getLocation())) {
-                teleportor.sendMessage(text("你动了, 传送取消", GRAY));
+            if (this.isMoved(pos, teleported.getLocation())) {
+                teleported.sendMessage(text("你动了, 传送取消", GRAY));
                 return;
             }
 
@@ -233,19 +268,19 @@ public class TeleportManager implements PluginMessageListener {
             out.writeUTF(requester);
             out.writeUTF(receiver);
 
-            teleportor.sendPluginMessage(Main.getInstance(), "BungeeCord", PluginMessages.box(SUB_CHANNEL, out));
-            this.onPluginMessageReceived("BungeeCord", teleportor, PluginMessages.boxLocal(SUB_CHANNEL, out));
+            teleported.sendPluginMessage(Main.getInstance(), "BungeeCord", PluginMessages.box(SUB_CHANNEL, out));
+            this.onPluginMessageReceived("BungeeCord", teleported, PluginMessages.boxLocal(SUB_CHANNEL, out));
         };
 
         var wait = config.getWait();
         if (wait <= 0) {
             teleport0.run();
         } else {
-            teleportor.showTitle(Title.title(
-                    text("正在准备传送"),
-                    text("请不要移动")
+            teleported.showTitle(Title.title(
+                    text("正在准备传送", GOLD),
+                    text("请不要移动", GOLD)
             ));
-            Folia.runTaskLater(Main.getInstance(), teleportor, teleport0, wait * 20);
+            Folia.runTaskLater(Main.getInstance(), teleported, teleport0, wait);
         }
     }
 
@@ -296,7 +331,7 @@ public class TeleportManager implements PluginMessageListener {
             // 两个人都在同一个服务器
             t.teleportAsync(player.getLocation()).thenAccept(success -> {
                 if (!success) {
-                    Folia.runTask(Main.getInstance(), t, () -> t.sendMessage(text("传送失败, 可能被第三方插件取消", RED)));
+                    t.sendMessage(text("传送失败: 可能被第三方插件取消", RED));
                 }
             });
         } else {
@@ -306,7 +341,7 @@ public class TeleportManager implements PluginMessageListener {
             out.writeUTF("ConnectOther");
             out.writeUTF(teleportor);
             out.writeUTF(serverList.getCurrent());
-            player.sendPluginMessage(Main.getInstance(), "BungeeCord", PluginMessages.box(SUB_CHANNEL, out));
+            player.sendPluginMessage(Main.getInstance(), "BungeeCord", out.toByteArray());
         }
     }
 

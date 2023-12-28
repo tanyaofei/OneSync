@@ -2,15 +2,12 @@ package io.github.hello09x.onesync.manager;
 
 import com.google.common.io.ByteStreams;
 import io.github.hello09x.bedrock.util.Folia;
-import io.github.hello09x.bedrock.util.MCUtils;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jetbrains.annotations.NotNull;
-
-import static net.kyori.adventure.text.format.NamedTextColor.RED;
 
 public class ServerManager implements PluginMessageListener {
 
@@ -20,16 +17,18 @@ public class ServerManager implements PluginMessageListener {
     @NotNull
     private String current = "";
 
-    public ServerManager() {
-        Folia.runTaskTimer(Main.getInstance(), this::getCurrentServer0, 20, 20 * 60);
+    private ServerManager() {
+        Folia.runTaskTimer(Main.getInstance(), this::getCurrentServer0, 20, 100);
     }
 
     private void getCurrentServer0() {
         if (!config.isEnabled()) {
-            var out = ByteStreams.newDataOutput();
-            out.writeUTF("GetServer");
-            Bukkit.getServer().sendPluginMessage(Main.getInstance(), "BungeeCord", out.toByteArray());
+            return;
         }
+
+        var out = ByteStreams.newDataOutput();
+        out.writeUTF("GetServer");
+        Bukkit.getServer().sendPluginMessage(Main.getInstance(), "BungeeCord", out.toByteArray());
     }
 
     public @NotNull String getCurrent() {

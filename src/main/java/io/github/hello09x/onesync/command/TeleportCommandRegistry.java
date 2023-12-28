@@ -45,28 +45,34 @@ public class TeleportCommandRegistry {
 
 
     public static void register() {
-        command("tpa")
-                .withAliases("stpa")
+        command("stpa")
+                .withAliases("tpa")
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpa)
                 .override();
 
-        command("tpahere")
-                .withAliases("stpahere")
+        command("stpahere")
+                .withAliases("tpahere")
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpahere)
                 .override();
 
-        command("tpaccept")
-                .withAliases("stpaccept")
+        command("stpaccept")
+                .withAliases("tpaccept")
                 .withOptionalArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpaccept)
                 .override();
 
-        command("tpdeny")
-                .withAliases("stpdeny")
+        command("stpdeny")
+                .withAliases("tpdeny")
                 .withOptionalArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpdeny)
+                .override();
+
+        command("stpcancel")
+                .withAliases("tpcancel")
+                .withOptionalArguments(globalPlayer("player"))
+                .executesPlayer(TeleportCommand.instance::tpcancel)
                 .override();
     }
 }

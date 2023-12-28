@@ -38,4 +38,10 @@ public class TeleportCommand {
         sender.sendMessage(message);
     }
 
+    public void tpcancel(@NotNull Player sender, @NotNull CommandArguments args) {
+        var receiver = (String) args.get("player");
+        var message = manager.cancel(sender, receiver);
+        sender.sendMessage(message);
+    }
+
 }

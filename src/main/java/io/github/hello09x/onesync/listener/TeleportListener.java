@@ -28,7 +28,9 @@ public class TeleportListener implements Listener {
         }
 
         player.teleportAsync(pos).thenAccept(success -> {
-            Folia.runTask(Main.getInstance(), player, () -> player.sendMessage(text("传送失败, 可能被第三方插件取消", RED)));
+            if (!success) {
+                player.sendMessage(text("传送失败: 可能被第三方插件取消", RED));
+            }
         });
     }
 
