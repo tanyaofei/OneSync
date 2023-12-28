@@ -128,16 +128,16 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
             this.wait = 20 * file.getInt("teleport.wait", 3);
 
             this.commands.clear();
-            this.commands.put("stpa", getNonBlankString(file, "teleport.command.stpa", "stpa"));
-            this.commands.put("stpahere", getNonBlankString(file, "teleport.command.stpahere", "stpahere"));
-            this.commands.put("stpaccept", getNonBlankString(file, "teleport.command.stpaccept", "stpaccept"));
-            this.commands.put("stpdeny", getNonBlankString(file, "teleport.command.stpdeny", "stpdeny"));
-            this.commands.put("stpcacel", getNonBlankString(file, "teleport.command.stpcacel", "stpcacel"));
+            this.commands.put("stpa", getNonBlankString(file, "teleport.commands.stpa", "tpa"));
+            this.commands.put("stpahere", getNonBlankString(file, "teleport.commands.stpahere", "tpahere"));
+            this.commands.put("stpaccept", getNonBlankString(file, "teleport.commands.stpaccept", "tpaccept"));
+            this.commands.put("stpdeny", getNonBlankString(file, "teleport.commands.stpdeny", "tpdeny"));
+            this.commands.put("stpcacel", getNonBlankString(file, "teleport.commands.stpcacel", "tpcacel"));
 
-            this.commands.put("stp", getNonBlankString(file, "teleport.command.stp", "stp"));
-            this.commands.put("stphere", getNonBlankString(file, "teleport.command.stphere", "stphere"));
-            this.commands.put("stphereall", getNonBlankString(file, "teleport.command.stphereall", "stphereall"));
-            this.commands.put("stpahereall", getNonBlankString(file, "teleport.command.stpahereall", "stpahereall"));
+            this.commands.put("stp", getNonBlankString(file, "teleport.commands.stp", "tp"));
+            this.commands.put("stphere", getNonBlankString(file, "teleport.commands.stphere", "tphere"));
+            this.commands.put("stphereall", getNonBlankString(file, "teleport.commands.stphereall", "tphereall"));
+            this.commands.put("stpahereall", getNonBlankString(file, "teleport.commands.stpahereall", "tpahereall"));
         }
     }
 

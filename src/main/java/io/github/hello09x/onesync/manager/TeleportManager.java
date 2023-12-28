@@ -1,5 +1,6 @@
 package io.github.hello09x.onesync.manager;
 
+import com.google.common.base.Throwables;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
 import io.github.hello09x.bedrock.util.Folia;
@@ -16,15 +17,14 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.title.Title;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.tuple.Pair;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Sound;
-import org.bukkit.SoundCategory;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -278,11 +278,6 @@ public class TeleportManager implements PluginMessageListener {
 
         var pos = teleported.getLocation();
         Runnable teleport0 = () -> {
-            if (this.isMoved(pos, teleported.getLocation())) {
-                teleported.sendMessage(text("你动了, 传送取消", GRAY));
-                return;
-            }
-
             var out = ByteStreams.newDataOutput();
             out.writeUTF(CTL_TELEPORT);
             out.writeUTF(type.name());
@@ -299,9 +294,59 @@ public class TeleportManager implements PluginMessageListener {
         } else {
             teleported.showTitle(Title.title(
                     text("正在准备传送", GOLD),
-                    text("请不要移动", GOLD)
+                    text("请不要移动", GOLD),
+                    Title.Times.times(Duration.ofMillis(500), Duration.ofSeconds(wait / 20), Duration.ofMillis(500))
             ));
-            Folia.runTaskLater(Main.getInstance(), teleported, teleport0, wait);
+
+            if (Folia.isFolia()) {
+                var waiting = teleported.getScheduler().runAtFixedRate(Main.getInstance(), task -> {
+                    try {
+                        if (this.isMoved(pos, teleported.getLocation())) {
+                            teleported.showTitle(Title.title(text("行动取消", GOLD), text("你动了", GOLD)));
+                            task.cancel();
+                            return;
+                        }
+
+                        teleported.getWorld().spawnParticle(Particle.SPELL_MOB_AMBIENT, teleported.getEyeLocation(), 20);
+                    } catch (Throwable e) {
+                        task.cancel();
+                        log.severe(Throwables.getStackTraceAsString(e));
+                    }
+                }, null, 1, 20);
+                if (waiting != null) {
+                    teleported.getScheduler().runDelayed(Main.getInstance(), task -> {
+                        if (waiting.isCancelled()) {
+                            return;
+                        }
+                        waiting.cancel();
+                        teleport0.run();
+                    }, null, config.getWait());
+                }
+            } else {
+                var waiting = new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (isMoved(pos, teleported.getLocation())) {
+                                teleported.showTitle(Title.title(text("行动取消", GOLD), text("你动了", GOLD)));
+                                super.cancel();
+                                return;
+                            }
+                            teleported.getWorld().spawnParticle(Particle.SPELL_MOB_AMBIENT, teleported.getEyeLocation(), 20);
+                        } catch (Throwable e) {
+                            super.cancel();
+                            log.severe(Throwables.getStackTraceAsString(e));
+                        }
+                    }
+                }.runTaskTimer(Main.getInstance(), 1, 20);
+                Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+                    if (waiting.isCancelled()) {
+                        return;
+                    }
+                    waiting.cancel();
+                    teleport0.run();
+                }, config.getWait());
+            }
         }
     }
 
