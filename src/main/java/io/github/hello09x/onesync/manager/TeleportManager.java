@@ -298,48 +298,23 @@ public class TeleportManager implements PluginMessageListener {
                     Title.Times.times(Duration.ofMillis(500), Duration.ofSeconds(wait / 20), Duration.ofMillis(500))
             ));
 
-            if (Folia.isFolia()) {
-                var waiting = teleported.getScheduler().runAtFixedRate(Main.getInstance(), task -> {
-                    try {
-                        if (this.isMoved(pos, teleported.getLocation())) {
-                            teleported.showTitle(Title.title(text("行动取消", GOLD), text("你动了", GOLD)));
-                            task.cancel();
-                            return;
-                        }
-
-                        teleported.getWorld().spawnParticle(Particle.SPELL_MOB_AMBIENT, teleported.getEyeLocation(), 20);
-                    } catch (Throwable e) {
+            var waiting = Folia.runTaskTimer(Main.getInstance(), teleported, task -> {
+                try {
+                    if (this.isMoved(pos, teleported.getLocation())) {
+                        teleported.showTitle(Title.title(text("行动取消", GOLD), text("你动了", GOLD)));
                         task.cancel();
-                        log.severe(Throwables.getStackTraceAsString(e));
+                        return;
                     }
-                }, null, 1, 20);
-                if (waiting != null) {
-                    teleported.getScheduler().runDelayed(Main.getInstance(), task -> {
-                        if (waiting.isCancelled()) {
-                            return;
-                        }
-                        waiting.cancel();
-                        teleport0.run();
-                    }, null, config.getWait());
+
+                    teleported.getWorld().spawnParticle(Particle.SPELL_MOB_AMBIENT, teleported.getEyeLocation(), 20);
+                } catch (Throwable e) {
+                    task.cancel();
+                    log.severe(Throwables.getStackTraceAsString(e));
                 }
-            } else {
-                var waiting = new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            if (isMoved(pos, teleported.getLocation())) {
-                                teleported.showTitle(Title.title(text("行动取消", GOLD), text("你动了", GOLD)));
-                                super.cancel();
-                                return;
-                            }
-                            teleported.getWorld().spawnParticle(Particle.SPELL_MOB_AMBIENT, teleported.getEyeLocation(), 20);
-                        } catch (Throwable e) {
-                            super.cancel();
-                            log.severe(Throwables.getStackTraceAsString(e));
-                        }
-                    }
-                }.runTaskTimer(Main.getInstance(), 1, 20);
-                Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+            }, 1, 20);
+
+            if (waiting != null) {
+                Folia.runTaskLater(Main.getInstance(), teleported, () -> {
                     if (waiting.isCancelled()) {
                         return;
                     }
