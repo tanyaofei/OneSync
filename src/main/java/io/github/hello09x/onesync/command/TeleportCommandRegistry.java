@@ -6,10 +6,12 @@ import dev.jorel.commandapi.arguments.ArgumentSuggestions;
 import dev.jorel.commandapi.arguments.CustomArgument;
 import dev.jorel.commandapi.arguments.StringArgument;
 import io.github.hello09x.onesync.command.impl.TeleportCommand;
+import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.manager.PlayerManager;
 import org.jetbrains.annotations.NotNull;
 
 import static io.github.hello09x.bedrock.command.Commands.command;
+import static io.github.hello09x.bedrock.command.Commands.literal;
 
 public class TeleportCommandRegistry {
 
@@ -46,48 +48,65 @@ public class TeleportCommandRegistry {
 
 
     public static void register() {
+
+        var alias = OneSyncConfig.instance.getTeleport().getCommands();
+
         command("stpa")
-                .withAliases("tpa")
+                .withAliases(alias.getOrDefault("stpa", "stpa"))
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpa)
                 .override();
 
         command("stpahere")
-                .withAliases("tpahere")
+                .withAliases(alias.getOrDefault("stpahere", "stpahere"))
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpahere)
                 .override();
 
         command("stpaccept")
-                .withAliases("tpaccept")
+                .withAliases(alias.getOrDefault("stpaccept", "stpaccept"))
                 .withOptionalArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpaccept)
                 .override();
 
         command("stpdeny")
-                .withAliases("tpdeny")
+                .withAliases(alias.getOrDefault("stpdeny", "stpdeny"))
                 .withOptionalArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpdeny)
                 .override();
 
         command("stpcancel")
-                .withAliases("tpcancel")
+                .withAliases(alias.getOrDefault("stpcancel", "stpcancel"))
                 .withOptionalArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpcancel)
                 .override();
 
-        command("tp")
-                .withAliases("stp")
+        command("stp")
+                .withAliases(alias.getOrDefault("stp", "stp"))
                 .withPermission(CommandPermission.OP)
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tp)
                 .override();
 
-        command("tphere")
-                .withAliases("stphere")
+        command("stphere")
+                .withAliases(alias.getOrDefault("stphere", "stphere"))
                 .withPermission(CommandPermission.OP)
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tphere)
+                .override();
+
+        command("stpahereall")
+                .withAliases(alias.getOrDefault("stpahereall", "stpahereall"))
+                .withPermission(CommandPermission.OP)
+                .withArguments(literal("confirm"))
+                .executesPlayer(TeleportCommand.instance::tpahereall)
+                .override();
+
+        command("stphereall")
+                .withAliases(alias.getOrDefault("stphereall", "stphereall"))
+                .withPermission(CommandPermission.OP)
+                .withArguments(literal("confirm"))
+                .executesPlayer(TeleportCommand.instance::tphereall)
                 .override();
 
     }

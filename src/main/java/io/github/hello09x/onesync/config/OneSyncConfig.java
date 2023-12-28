@@ -35,6 +35,14 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
         this.reload(false);
     }
 
+    private static @NotNull String getNonBlankString(@NotNull FileConfiguration file, @NotNull String path, @NotNull String def) {
+        var value = file.getString(path, def);
+        if (value.isBlank()) {
+            return def;
+        }
+        return value;
+    }
+
     @Override
     protected void reload(@NotNull FileConfiguration file) {
         this.debug = file.getBoolean("debug", true);
@@ -109,6 +117,7 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
     @ToString
     public final static class TeleportConfig {
 
+        private final Map<String, String> commands = new HashMap<>();
         private boolean enabled;
         private int wait;
         private Duration expiresIn;
@@ -117,6 +126,18 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
             this.enabled = file.getBoolean("teleport.enabled", false);
             this.expiresIn = Duration.ofSeconds(file.getInt("teleport.expires-in", 60));
             this.wait = 20 * file.getInt("teleport.wait", 3);
+
+            this.commands.clear();
+            this.commands.put("stpa", getNonBlankString(file, "teleport.command.stpa", "stpa"));
+            this.commands.put("stpahere", getNonBlankString(file, "teleport.command.stpahere", "stpahere"));
+            this.commands.put("stpaccept", getNonBlankString(file, "teleport.command.stpaccept", "stpaccept"));
+            this.commands.put("stpdeny", getNonBlankString(file, "teleport.command.stpdeny", "stpdeny"));
+            this.commands.put("stpcacel", getNonBlankString(file, "teleport.command.stpcacel", "stpcacel"));
+
+            this.commands.put("stp", getNonBlankString(file, "teleport.command.stp", "stp"));
+            this.commands.put("stphere", getNonBlankString(file, "teleport.command.stphere", "stphere"));
+            this.commands.put("stphereall", getNonBlankString(file, "teleport.command.stphereall", "stphereall"));
+            this.commands.put("stpahereall", getNonBlankString(file, "teleport.command.stpahereall", "stpahereall"));
         }
     }
 

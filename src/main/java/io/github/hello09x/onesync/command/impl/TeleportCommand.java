@@ -1,6 +1,7 @@
 package io.github.hello09x.onesync.command.impl;
 
 import dev.jorel.commandapi.executors.CommandArguments;
+import io.github.hello09x.onesync.manager.PlayerManager;
 import io.github.hello09x.onesync.manager.TeleportManager;
 import io.github.hello09x.onesync.repository.constant.TeleportType;
 import org.bukkit.entity.Player;
@@ -34,6 +35,26 @@ public class TeleportCommand {
         var receiver = (String) Objects.requireNonNull(args.get("player"));
         var message = manager.ask(sender, receiver, TeleportType.TPHERE, false);
         sender.sendMessage(message);
+    }
+
+    public void tpahereall(@NotNull Player sender, @NotNull CommandArguments args) {
+        var receivers = PlayerManager.instance.getPlayers();
+        for (var receiver : receivers) {
+            if (receiver.equals(sender.getName())) {
+                continue;
+            }
+            manager.ask(sender, receiver, TeleportType.TPHERE, false);
+        }
+    }
+
+    public void tphereall(@NotNull Player sender, @NotNull CommandArguments args) {
+        var receivers = PlayerManager.instance.getPlayers();
+        for (var receiver : receivers) {
+            if (receiver.equals(sender.getName())) {
+                continue;
+            }
+            manager.ask(sender, receiver, TeleportType.TPHERE, true);
+        }
     }
 
     public void tpaccept(@NotNull Player sender, @NotNull CommandArguments args) {
