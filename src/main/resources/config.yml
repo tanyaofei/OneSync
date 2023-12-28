@@ -1,4 +1,4 @@
-version: 2
+version: 3
 
 datasource:
   driver-class: com.mysql.cj.jdbc.Driver
@@ -35,6 +35,7 @@ synchronize:
   potion-effects: false
 
   # 经济, 对 Vault 插件的支持
+  # 注意: 只是提供了支持了 Vault 的跨服, 你仍需 ESS、CMI 之类的经济插件
   vault: false
 
   # 玩家档案

@@ -1,6 +1,7 @@
 package io.github.hello09x.onesync.manager;
 
 import com.google.common.base.Throwables;
+import io.github.hello09x.bedrock.util.Folia;
 import io.github.hello09x.bedrock.util.MCUtils;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.event.PlayerAttemptRestoreEvent;
@@ -232,11 +233,7 @@ public class SynchronizeManager {
     }
 
     private void kickOnNextTick(@NotNull Player player, @NotNull Component reason) {
-        if (MCUtils.isFolia()) {
-            player.getScheduler().run(Main.getInstance(), x -> player.kick(reason), null);
-        } else {
-            Bukkit.getScheduler().runTask(Main.getInstance(), () -> player.kick(reason));
-        }
+        Folia.runTaskLater(Main.getInstance(), player, () -> player.kick(reason), 1);
     }
 
 

@@ -102,6 +102,7 @@ public final class Main extends JavaPlugin {
         } catch (Throwable e) {
             getLogger().severe("加载插件失败, 为了数据安全, 关闭当前服务器: %s".formatted(Throwables.getStackTraceAsString(e)));
             Bukkit.shutdown();
+            throw e;
         }
     }
 

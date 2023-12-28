@@ -1,8 +1,7 @@
 package io.github.hello09x.onesync.manager;
 
-import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
-import io.github.hello09x.bedrock.util.MCUtils;
+import io.github.hello09x.bedrock.util.Folia;
 import io.github.hello09x.onesync.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -26,11 +25,7 @@ public class PlayerManager implements PluginMessageListener {
     private Set<String> players = new HashSet<>();
 
     private PlayerManager() {
-        if (MCUtils.isFolia()) {
-            Bukkit.getGlobalRegionScheduler().runAtFixedRate(Main.getInstance(), task -> this.requestUpdatePlayers(), 20, 20);
-        } else {
-            Bukkit.getScheduler().runTaskTimer(Main.getInstance(), this::requestUpdatePlayers, 20, 20);
-        }
+        Folia.runTaskTimer(Main.getInstance(), this::requestUpdatePlayers, 20, 20);
     }
 
     public @NotNull @Unmodifiable Set<String> getPlayers() {

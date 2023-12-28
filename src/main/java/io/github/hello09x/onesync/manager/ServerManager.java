@@ -1,6 +1,7 @@
 package io.github.hello09x.onesync.manager;
 
 import com.google.common.io.ByteStreams;
+import io.github.hello09x.bedrock.util.Folia;
 import io.github.hello09x.bedrock.util.MCUtils;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.config.OneSyncConfig;
@@ -8,6 +9,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jetbrains.annotations.NotNull;
+
+import static net.kyori.adventure.text.format.NamedTextColor.RED;
 
 public class ServerManager implements PluginMessageListener {
 
@@ -18,11 +21,7 @@ public class ServerManager implements PluginMessageListener {
     private String current = "";
 
     public ServerManager() {
-        if (MCUtils.isFolia()) {
-            Bukkit.getGlobalRegionScheduler().runAtFixedRate(Main.getInstance(), task -> this.getCurrentServer0(), 20, 20 * 60);
-        } else {
-            Bukkit.getScheduler().runTaskTimer(Main.getInstance(), this::getCurrentServer0, 20, 20 * 60);
-        }
+        Folia.runTaskTimer(Main.getInstance(), this::getCurrentServer0, 20, 20 * 60);
     }
 
     private void getCurrentServer0() {
