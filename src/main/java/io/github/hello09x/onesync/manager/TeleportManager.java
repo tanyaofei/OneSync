@@ -83,10 +83,10 @@ public class TeleportManager implements PluginMessageListener {
      * @param type      传送类型
      * @return 返回给发送人的提示消息
      */
-    public @NotNull Component ask(@NotNull Player requester, @NotNull String receiver, @NotNull TeleportType type) {
+    public @NotNull Component ask(@NotNull Player requester, @NotNull String receiver, @NotNull TeleportType type, boolean force) {
         var expirations = LocalDateTime.now().plus(config.getExpiresIn());
         var existed = repository.selectLatestByRequesterAndReceiverAfter(requester.getName(), receiver, expirations);
-        if (existed != null) {
+        if (existed != null && !force) {
             if (existed.type() != type) {
                 repository.deleteByRequesterAndReceiver(requester.getName(), receiver);
             } else {
@@ -102,6 +102,7 @@ public class TeleportManager implements PluginMessageListener {
         out.writeUTF(type.name());
         out.writeUTF(requester.getName());
         out.writeUTF(receiver);
+        out.writeBoolean(force);
 
         requester.sendPluginMessage(Main.getInstance(), "BungeeCord", PluginMessages.box(SUB_CHANNEL, out));
         this.onPluginMessageReceived("BungeeCord", requester, PluginMessages.boxLocal(SUB_CHANNEL, out));
@@ -118,10 +119,23 @@ public class TeleportManager implements PluginMessageListener {
      *
      * @param receiver  接收人
      * @param requester 发送人
-     * @param accept    是否接收传送
+     * @param accept    是否接受传送
      * @return 返回给接收人的提示消息
      */
     public @NotNull Component answer(@NotNull Player receiver, @Nullable String requester, boolean accept) {
+        return this.answer(receiver, requester, accept, false);
+    }
+
+    /**
+     * 回应传送请求
+     *
+     * @param receiver  接收人
+     * @param requester 发送人
+     * @param accept    是否接受传送
+     * @param force     是否是强制接受
+     * @return 返回给接受人的消息
+     */
+    public @NotNull Component answer(@NotNull Player receiver, @Nullable String requester, boolean accept, boolean force) {
         var expirations = LocalDateTime.now().plus(config.getExpiresIn());
         var teleport = requester == null
                 ? repository.selectLatestByReceiverBefore(receiver.getName(), expirations)
@@ -137,6 +151,7 @@ public class TeleportManager implements PluginMessageListener {
         out.writeUTF(teleport.type().name());
         out.writeUTF(teleport.requester());
         out.writeUTF(teleport.receiver());
+        out.writeBoolean(force);
         receiver.sendPluginMessage(Main.getInstance(), "BungeeCord", PluginMessages.box(SUB_CHANNEL, out));
         this.onPluginMessageReceived("BungeeCord", receiver, PluginMessages.boxLocal(SUB_CHANNEL, out));
 
@@ -198,6 +213,11 @@ public class TeleportManager implements PluginMessageListener {
         if (receiver == null) {
             return;
         }
+        var force = in.readBoolean();
+        if (force) {
+            this.answer(receiver, requester, true, true);
+            return;
+        }
 
         switch (type) {
             case TP -> receiver.sendMessage(textOfChildren(
@@ -243,6 +263,7 @@ public class TeleportManager implements PluginMessageListener {
         var type = TeleportType.valueOf(in.readUTF());
         var requester = in.readUTF();
         var receiver = in.readUTF();
+        var force = in.readBoolean();
 
         Optional.ofNullable(Bukkit.getPlayerExact(requester)).ifPresent(p -> p.sendMessage(textOfChildren(
                 text(receiver, WHITE),
@@ -273,7 +294,7 @@ public class TeleportManager implements PluginMessageListener {
         };
 
         var wait = config.getWait();
-        if (wait <= 0) {
+        if (wait <= 0 || force) {
             teleport0.run();
         } else {
             teleported.showTitle(Title.title(

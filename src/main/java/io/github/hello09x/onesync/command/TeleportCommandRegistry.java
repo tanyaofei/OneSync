@@ -1,5 +1,6 @@
 package io.github.hello09x.onesync.command;
 
+import dev.jorel.commandapi.CommandPermission;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.ArgumentSuggestions;
 import dev.jorel.commandapi.arguments.CustomArgument;
@@ -74,5 +75,20 @@ public class TeleportCommandRegistry {
                 .withOptionalArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpcancel)
                 .override();
+
+        command("tp")
+                .withAliases("stp")
+                .withPermission(CommandPermission.OP)
+                .withArguments(globalPlayer("player"))
+                .executesPlayer(TeleportCommand.instance::tp)
+                .override();
+
+        command("tphere")
+                .withAliases("stphere")
+                .withPermission(CommandPermission.OP)
+                .withArguments(globalPlayer("player"))
+                .executesPlayer(TeleportCommand.instance::tphere)
+                .override();
+
     }
 }

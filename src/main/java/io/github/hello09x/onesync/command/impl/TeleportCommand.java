@@ -14,15 +14,25 @@ public class TeleportCommand {
 
     private final TeleportManager manager = TeleportManager.instance;
 
+    public void tp(@NotNull Player sender, @NotNull CommandArguments args) {
+        var receiver = (String) Objects.requireNonNull(args.get("player"));
+        manager.ask(sender, receiver, TeleportType.TP, true);
+    }
+
+    public void tphere(@NotNull Player sender, @NotNull CommandArguments args) {
+        var receiver = (String) Objects.requireNonNull(args.get("player"));
+        manager.ask(sender, receiver, TeleportType.TPHERE, true);
+    }
+
     public void tpa(@NotNull Player sender, @NotNull CommandArguments args) {
         var receiver = (String) Objects.requireNonNull(args.get("player"));
-        var message = manager.ask(sender, receiver, TeleportType.TP);
+        var message = manager.ask(sender, receiver, TeleportType.TP, false);
         sender.sendMessage(message);
     }
 
     public void tpahere(@NotNull Player sender, @NotNull CommandArguments args) {
         var receiver = (String) Objects.requireNonNull(args.get("player"));
-        var message = manager.ask(sender, receiver, TeleportType.TPHERE);
+        var message = manager.ask(sender, receiver, TeleportType.TPHERE, false);
         sender.sendMessage(message);
     }
 
