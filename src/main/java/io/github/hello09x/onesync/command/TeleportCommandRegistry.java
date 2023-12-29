@@ -51,7 +51,6 @@ public class TeleportCommandRegistry {
         var commands = OneSyncConfig.instance.getTeleport().getCommands();
         command("stpa")
                 .withAliases(commands.getOrDefault("stpa", "stpa"))
-                .withRequirement(x -> OneSyncConfig.instance.getTeleport().isEnabled())
                 .withPermission(Permissions.TP)
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpa)
@@ -59,14 +58,12 @@ public class TeleportCommandRegistry {
 
         command("stpahere")
                 .withAliases(commands.getOrDefault("stpahere", "stpahere"))
-                .withRequirement(x -> OneSyncConfig.instance.getTeleport().isEnabled())
                 .withPermission(Permissions.TPHERE)
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpahere)
                 .register();
 
         command("stpaccept")
-                .withRequirement(x -> OneSyncConfig.instance.getTeleport().isEnabled())
                 .withAliases(commands.getOrDefault("stpaccept", "stpaccept"))
                 .withOptionalArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpaccept)
@@ -74,21 +71,18 @@ public class TeleportCommandRegistry {
 
         command("stpdeny")
                 .withAliases(commands.getOrDefault("stpdeny", "stpdeny"))
-                .withRequirement(x -> OneSyncConfig.instance.getTeleport().isEnabled())
                 .withOptionalArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpdeny)
                 .register();
 
         command("stpcancel")
                 .withAliases(commands.getOrDefault("stpcancel", "stpcancel"))
-                .withRequirement(x -> OneSyncConfig.instance.getTeleport().isEnabled())
                 .withOptionalArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpcancel)
                 .register();
 
         command("stp")
                 .withAliases(commands.getOrDefault("stp", "stp"))
-                .withRequirement(x -> OneSyncConfig.instance.getTeleport().isEnabled())
                 .withPermission(CommandPermission.OP)
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tp)
@@ -96,7 +90,6 @@ public class TeleportCommandRegistry {
 
         command("stphere")
                 .withAliases(commands.getOrDefault("stphere", "stphere"))
-                .withRequirement(x -> OneSyncConfig.instance.getTeleport().isEnabled())
                 .withPermission(CommandPermission.OP)
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tphere)
@@ -104,7 +97,6 @@ public class TeleportCommandRegistry {
 
         command("stpahereall")
                 .withAliases(commands.getOrDefault("stpahereall", "stpahereall"))
-                .withRequirement(x -> OneSyncConfig.instance.getTeleport().isEnabled())
                 .withPermission(CommandPermission.OP)
                 .withArguments(literal("confirm"))
                 .executesPlayer(TeleportCommand.instance::tpahereall)
@@ -112,7 +104,6 @@ public class TeleportCommandRegistry {
 
         command("stphereall")
                 .withAliases(commands.getOrDefault("stphereall", "stphereall"))
-                .withRequirement(x -> OneSyncConfig.instance.getTeleport().isEnabled())
                 .withPermission(CommandPermission.OP)
                 .withArguments(literal("confirm"))
                 .executesPlayer(TeleportCommand.instance::tphereall)
