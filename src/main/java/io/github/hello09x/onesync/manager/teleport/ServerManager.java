@@ -38,12 +38,12 @@ public class ServerManager implements PluginMessageListener {
 
     @Override
     public void onPluginMessageReceived(@NotNull String channel, @NotNull Player player, byte @NotNull [] message) {
-        if (!channel.equals("BungeeCord")) {
+        if (!channel.equals(BungeeCord.CHANNEL)) {
             return;
         }
 
         var in = ByteStreams.newDataInput(message);
-        if (!in.readUTF().equals("GetServer")) {
+        if (!in.readUTF().equals(BungeeCord.SubChannel.GET_SERVER)) {
             return;
         }
 

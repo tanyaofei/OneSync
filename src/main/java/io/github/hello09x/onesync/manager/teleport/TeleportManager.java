@@ -78,7 +78,7 @@ public class TeleportManager implements PluginMessageListener {
     /**
      * 发起一个传送请求
      *
-     * @param requester 请求发送人
+     * @param requester 发起人
      * @param receiver  接收人
      * @param type      传送类型
      * @return 返回给发送人的提示消息
@@ -120,7 +120,7 @@ public class TeleportManager implements PluginMessageListener {
      * 回应传送请求
      *
      * @param receiver  接收人
-     * @param requester 发送人
+     * @param requester 发起人
      * @param accept    是否接受传送
      * @return 返回给接收人的提示消息
      */
@@ -132,7 +132,7 @@ public class TeleportManager implements PluginMessageListener {
      * 回应传送请求
      *
      * @param receiver  接收人
-     * @param requester 发送人
+     * @param requester 发起人
      * @param accept    是否接受传送
      * @param force     是否是强制接受
      * @return 返回给接受人的消息
@@ -170,7 +170,7 @@ public class TeleportManager implements PluginMessageListener {
     /**
      * 取消传送请求
      *
-     * @param requester 发送人
+     * @param requester 发起人
      * @param receiver  接收人
      * @return 返回给发送人的提示消息
      */
@@ -277,6 +277,7 @@ public class TeleportManager implements PluginMessageListener {
         var receiver = in.readUTF();
         var force = in.readBoolean();
 
+        // 发起人在此服务器
         Optional.ofNullable(Bukkit.getPlayerExact(requester)).ifPresent(p -> p.sendMessage(textOfChildren(
                 text(receiver, WHITE),
                 text(" 已接受你的传送请求", GRAY)

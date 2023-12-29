@@ -47,12 +47,12 @@ public class PlayerManager implements PluginMessageListener {
             @NotNull Player player,
             byte @NotNull [] message
     ) {
-        if (!channel.equals("BungeeCord")) {
+        if (!channel.equals(BungeeCord.CHANNEL)) {
             return;
         }
 
         var in = ByteStreams.newDataInput(message);
-        if (!in.readUTF().equals("PlayerList")) {
+        if (!in.readUTF().equals(BungeeCord.SubChannel.PLAYER_LIST)) {
             return;
         }
 
