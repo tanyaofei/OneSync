@@ -1,6 +1,7 @@
 package io.github.hello09x.onesync.repository;
 
 import io.github.hello09x.bedrock.database.Repository;
+import io.github.hello09x.bedrock.util.Exceptions;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.PDCSnapshot;
 import org.bukkit.plugin.Plugin;
@@ -33,13 +34,8 @@ public class PDCSnapshotRepository extends Repository<PDCSnapshot> {
     protected void initTables() {
         execute(connection -> {
             Statement stm = connection.createStatement();
-            var rs = stm.executeQuery("select * from information_schema.INNODB_TABLES where name = '%s'".formatted(connection.getCatalog() + "/" + "pdc_snapshot"));
-            if (rs.next()) {
-                return;
-            }
-
             stm.executeUpdate("""
-                    create table pdc_snapshot
+                    create table if not exists pdc_snapshot
                     (
                         snapshot_id bigint   not null comment '快照 ID'
                             primary key,
@@ -47,10 +43,12 @@ public class PDCSnapshotRepository extends Repository<PDCSnapshot> {
                         `data`      blob     not null comment 'PDC 数据'
                     );
                     """);
-            stm.executeUpdate("""
-                    create index pdc_snapshot_player_id_index
-                        on pdc_snapshot (player_id);
-                    """);
+            Exceptions.noException(() -> {
+                stm.executeUpdate("""
+                        create index pdc_snapshot_player_id_index
+                            on pdc_snapshot (player_id);
+                        """);
+            });
         });
     }
 }

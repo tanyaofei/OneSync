@@ -1,6 +1,7 @@
 package io.github.hello09x.onesync.repository;
 
 import io.github.hello09x.bedrock.database.Repository;
+import io.github.hello09x.bedrock.util.Exceptions;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.Teleport;
 import org.bukkit.plugin.Plugin;
@@ -104,12 +105,8 @@ public class TeleportRepository extends Repository<Teleport> {
     protected void initTables() {
         execute(connection -> {
             Statement stm = connection.createStatement();
-            var rs = stm.executeQuery("select * from information_schema.INNODB_TABLES where name = '%s'".formatted(connection.getCatalog() + "/" + "teleport"));
-            if (rs.next()) {
-                return;
-            }
             stm.executeUpdate("""
-                    create table teleport
+                    create table if not exists teleport
                     (
                         requester  varchar(32)                        not null comment '请求人',
                         receiver   varchar(32)                        not null comment '接受人',
@@ -117,14 +114,18 @@ public class TeleportRepository extends Repository<Teleport> {
                         created_at datetime default CURRENT_TIMESTAMP not null comment '创建时间'
                     );
                     """);
-            stm.executeUpdate("""
-                    create index teleport_request_receiver_id_index
-                        on teleport (receiver);
-                    """);
-            stm.executeUpdate("""
-                    create index teleport_request_requester_id_index
-                        on teleport (requester);
-                    """);
+            Exceptions.noException(() -> {
+                stm.executeUpdate("""
+                        create index teleport_request_receiver_id_index
+                            on teleport (receiver);
+                        """);
+            });
+            Exceptions.noException(() -> {
+                stm.executeUpdate("""
+                        create index teleport_request_requester_id_index
+                            on teleport (requester);
+                        """);
+            });
         });
     }
 }

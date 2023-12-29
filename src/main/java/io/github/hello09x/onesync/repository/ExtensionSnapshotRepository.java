@@ -1,6 +1,7 @@
 package io.github.hello09x.onesync.repository;
 
 import io.github.hello09x.bedrock.database.Repository;
+import io.github.hello09x.bedrock.util.Exceptions;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.ExtensionSnapshot;
 import io.github.hello09x.onesync.util.NamespacedKeyTypeHandler;
@@ -71,12 +72,8 @@ public class ExtensionSnapshotRepository extends Repository<ExtensionSnapshot> {
     protected void initTables() {
         execute(connection -> {
             Statement stm = connection.createStatement();
-            var rs = stm.executeQuery("select * from information_schema.INNODB_TABLES where name = '%s'".formatted(connection.getCatalog() + "/" + "extension_snapshot"));
-            if (rs.next()) {
-                return;
-            }
             stm.executeUpdate("""
-                    create table extension_snapshot
+                    create table if not exists extension_snapshot
                     (
                         id          int auto_increment comment 'ID'
                             primary key,
@@ -88,10 +85,12 @@ public class ExtensionSnapshotRepository extends Repository<ExtensionSnapshot> {
                             unique (snapshot_id, type)
                     );
                     """);
-            stm.executeUpdate("""
-                    create index extension_snapshot_player_id_index
-                        on extension_snapshot (player_id);
-                    """);
+            Exceptions.noException(() -> {
+                stm.executeUpdate("""
+                        create index extension_snapshot_player_id_index
+                            on extension_snapshot (player_id);
+                        """);
+            });
         });
     }
 }

@@ -2,6 +2,7 @@ package io.github.hello09x.onesync.repository;
 
 import io.github.hello09x.bedrock.database.Repository;
 import io.github.hello09x.bedrock.page.Page;
+import io.github.hello09x.bedrock.util.Exceptions;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.Snapshot;
 import org.bukkit.plugin.Plugin;
@@ -17,6 +18,10 @@ import java.util.UUID;
 public class SnapshotRepository extends Repository<Snapshot> {
 
     public final static SnapshotRepository instance = new SnapshotRepository(Main.getInstance());
+
+    public SnapshotRepository(@NotNull Plugin plugin) {
+        super(plugin);
+    }
 
     public @NotNull Long insert(@NotNull Snapshot snapshot) {
         var sql = """
@@ -63,21 +68,12 @@ public class SnapshotRepository extends Repository<Snapshot> {
         return super.selectPage(page, size, sql, playerId.toString());
     }
 
-    public SnapshotRepository(@NotNull Plugin plugin) {
-        super(plugin);
-    }
-
     @Override
     protected void initTables() {
         execute(connection -> {
             Statement stm = connection.createStatement();
-            var rs = stm.executeQuery("select * from information_schema.INNODB_TABLES where name = '%s'".formatted(connection.getCatalog() + "/" + "snapshot"));
-            if (rs.next()) {
-                return;
-            }
-
             stm.executeUpdate("""
-                    create table `snapshot`
+                    create table if not exists `snapshot`
                     (
                         id         bigint auto_increment
                             primary key,
@@ -86,10 +82,12 @@ public class SnapshotRepository extends Repository<Snapshot> {
                         created_at datetime default CURRENT_TIMESTAMP not null comment '创建时间'
                     );
                     """);
-            stm.executeUpdate("""
-                    create index snapshot_player_id_index
-                        on `snapshot` (player_id);
-                    """);
+            Exceptions.noException(() -> {
+                stm.executeUpdate("""
+                        create index snapshot_player_id_index
+                            on `snapshot` (player_id);
+                        """);
+            });
         });
     }
 }

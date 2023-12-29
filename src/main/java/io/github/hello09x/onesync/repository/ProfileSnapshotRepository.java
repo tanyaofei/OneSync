@@ -1,6 +1,7 @@
 package io.github.hello09x.onesync.repository;
 
 import io.github.hello09x.bedrock.database.Repository;
+import io.github.hello09x.bedrock.util.Exceptions;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.ProfileSnapshot;
 import org.bukkit.plugin.Plugin;
@@ -60,13 +61,8 @@ public class ProfileSnapshotRepository extends Repository<ProfileSnapshot> {
     protected void initTables() {
         execute(connection -> {
             Statement stm = connection.createStatement();
-            var rs = stm.executeQuery("select * from information_schema.INNODB_TABLES where name = '%s'".formatted(connection.getCatalog() + "/" + "profile_snapshot"));
-            if (rs.next()) {
-                return;
-            }
-
             stm.executeUpdate("""
-                    create table profile_snapshot
+                    create table if not exists profile_snapshot
                     (
                         snapshot_id   bigint      not null comment '快照 ID'
                             primary key,
@@ -83,10 +79,12 @@ public class ProfileSnapshotRepository extends Repository<ProfileSnapshot> {
                         remaining_air int         null comment '氧气值'
                     );
                     """);
-            stm.executeUpdate("""
-                    create index profile_snapshot_player_id_index
-                        on profile_snapshot (player_id);
-                    """);
+            Exceptions.noException(() -> {
+                stm.executeUpdate("""
+                        create index profile_snapshot_player_id_index
+                            on profile_snapshot (player_id);
+                        """);
+            });
         });
     }
 }

@@ -1,6 +1,7 @@
 package io.github.hello09x.onesync.repository;
 
 import io.github.hello09x.bedrock.database.Repository;
+import io.github.hello09x.bedrock.util.Exceptions;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.InventorySnapshot;
 import io.github.hello09x.onesync.util.ItemStackMapTypeHandler;
@@ -51,12 +52,8 @@ public class InventorySnapshotRepository extends Repository<InventorySnapshot> {
     protected void initTables() {
         execute(connection -> {
             Statement stm = connection.createStatement();
-            var rs = stm.executeQuery("select * from information_schema.INNODB_TABLES where name = '%s'".formatted(connection.getCatalog() + "/" + "inventory_snapshot"));
-            if (rs.next()) {
-                return;
-            }
             stm.executeUpdate("""
-                    create table inventory_snapshot
+                    create table if not exists `inventory_snapshot`
                     (
                         snapshot_id        bigint        not null comment '快照 ID'
                             primary key,
@@ -65,10 +62,12 @@ public class InventorySnapshotRepository extends Repository<InventorySnapshot> {
                         held_item_slot     int default 0 not null comment '选中的物品槽'
                     );
                     """);
-            stm.executeUpdate("""
-                    create index inventory_snapshot_player_id_index
-                        on inventory_snapshot (player_id);
-                    """);
+            Exceptions.noException(() -> {
+                stm.executeUpdate("""
+                        create index inventory_snapshot_player_id_index
+                            on inventory_snapshot (player_id);
+                        """);
+            });
         });
     }
 

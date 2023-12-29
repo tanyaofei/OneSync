@@ -1,6 +1,7 @@
 package io.github.hello09x.onesync.repository;
 
 import io.github.hello09x.bedrock.database.Repository;
+import io.github.hello09x.bedrock.util.Exceptions;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.EnderChestSnapshot;
 import io.github.hello09x.onesync.util.ItemStackMapTypeHandler;
@@ -50,12 +51,8 @@ public class EnderChestSnapshotRepository extends Repository<EnderChestSnapshot>
     protected void initTables() {
         execute(connection -> {
             Statement stm = connection.createStatement();
-            var rs = stm.executeQuery("select * from information_schema.INNODB_TABLES where name = '%s'".formatted(connection.getCatalog() + "/" + "ender_chest_snapshot"));
-            if (rs.next()) {
-                return;
-            }
             stm.executeUpdate("""
-                    create table ender_chest_snapshot
+                    create table if not exists ender_chest_snapshot
                     (
                         snapshot_id        bigint        not null comment '快照 ID'
                             primary key,
@@ -63,10 +60,12 @@ public class EnderChestSnapshotRepository extends Repository<EnderChestSnapshot>
                         items              json          not null comment '背包物品'
                     );
                     """);
-            stm.executeUpdate("""
-                    create index ender_chest_snapshot_player_id_index
-                        on ender_chest_snapshot (player_id);
-                    """);
+            Exceptions.noException(() -> {
+                stm.executeUpdate("""
+                        create index ender_chest_snapshot_player_id_index
+                            on ender_chest_snapshot (player_id);
+                        """);
+            });
         });
     }
 

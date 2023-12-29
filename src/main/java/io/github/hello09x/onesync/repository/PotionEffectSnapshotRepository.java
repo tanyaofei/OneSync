@@ -1,6 +1,7 @@
 package io.github.hello09x.onesync.repository;
 
 import io.github.hello09x.bedrock.database.Repository;
+import io.github.hello09x.bedrock.util.Exceptions;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.PotionEffectSnapshot;
 import io.github.hello09x.onesync.util.PotionEffectListTypeHandler;
@@ -34,12 +35,8 @@ public class PotionEffectSnapshotRepository extends Repository<PotionEffectSnaps
     protected void initTables() {
         execute(connection -> {
             Statement stm = connection.createStatement();
-            var rs = stm.executeQuery("select * from information_schema.INNODB_TABLES where name = '%s'".formatted(connection.getCatalog() + "/" + "potion_effect_snapshot"));
-            if (rs.next()) {
-                return;
-            }
             stm.executeUpdate("""
-                    create table potion_effect_snapshot
+                    create table if not exists potion_effect_snapshot
                     (
                         snapshot_id bigint   not null comment '快照 ID'
                             primary key,
@@ -47,10 +44,12 @@ public class PotionEffectSnapshotRepository extends Repository<PotionEffectSnaps
                         effects     json     not null comment '效果'
                     );
                     """);
-            stm.executeUpdate("""
+            Exceptions.noException(() -> {
+                stm.executeUpdate("""
                     create index potion_effect_snapshot_player_id_index
                         on potion_effect_snapshot (player_id);
                     """);
+            });
         });
     }
 }
