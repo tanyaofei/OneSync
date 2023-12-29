@@ -1,4 +1,4 @@
-package io.github.hello09x.onesync.manager.entity;
+package io.github.hello09x.onesync.manager.synchronize.entity;
 
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;

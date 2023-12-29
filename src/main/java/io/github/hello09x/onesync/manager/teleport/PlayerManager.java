@@ -1,9 +1,9 @@
-package io.github.hello09x.onesync.manager;
+package io.github.hello09x.onesync.manager.teleport;
 
 import com.google.common.io.ByteStreams;
+import io.github.hello09x.bedrock.util.BungeeCord;
 import io.github.hello09x.bedrock.util.Folia;
 import io.github.hello09x.onesync.Main;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jetbrains.annotations.NotNull;
@@ -14,29 +14,30 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+@SuppressWarnings("UnstableApiUsage")
 public class PlayerManager implements PluginMessageListener {
 
     public final static PlayerManager instance = new PlayerManager();
 
-    /**
-     * key: playerName
-     * value: serverName
-     */
     private Set<String> players = new HashSet<>();
 
+    private final static int TICK_PERIOD = 20;
+
     private PlayerManager() {
-        Folia.runTaskTimer(Main.getInstance(), this::requestUpdatePlayers, 20, 20);
+        Folia.runTaskTimer(Main.getInstance(), this::tick, TICK_PERIOD, TICK_PERIOD);
     }
 
     public @NotNull @Unmodifiable Set<String> getPlayers() {
         return Collections.unmodifiableSet(this.players);
     }
 
-    private void requestUpdatePlayers() {
-        var message = ByteStreams.newDataOutput();
-        message.writeUTF("PlayerList");
-        message.writeUTF("ALL");
-        Bukkit.getServer().sendPluginMessage(Main.getInstance(), "BungeeCord", message.toByteArray());
+    private long updatedAt = 0;
+
+    private void tick() {
+        if ((System.currentTimeMillis() - updatedAt) / 1000 < TICK_PERIOD / 20) {
+            return;
+        }
+        BungeeCord.getPlayerList(Main.getInstance());
     }
 
 
@@ -60,5 +61,6 @@ public class PlayerManager implements PluginMessageListener {
         }
 
         this.players = new HashSet<>(Arrays.asList(in.readUTF().split(", ")));
+        updatedAt = System.currentTimeMillis();
     }
 }

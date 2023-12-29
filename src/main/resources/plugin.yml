@@ -4,13 +4,21 @@ main: io.github.hello09x.onesync.Main
 api-version: '1.20'
 folia-supported: true
 
-
 depend:
   - CommandAPI
   - ProtocolLib
 
 softdepend:
   - Vault
+  - CMI         # 覆盖 tp 命令
+  - Essentials  # 覆盖 tp 命令
 
 libraries:
   - com.mysql:mysql-connector-j:8.1.0
+
+permissions:
+  onesync.teleport.tpa:
+    default: true
+
+  onesync.teleport.tpahere:
+    default: false

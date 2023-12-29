@@ -3,21 +3,28 @@ package io.github.hello09x.onesync;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.google.common.base.Throwables;
 import com.google.gson.Gson;
+import dev.jorel.commandapi.CommandAPI;
 import io.github.hello09x.bedrock.menu.ChestMenuRegistry;
+import io.github.hello09x.bedrock.util.BungeeCord;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.command.SynchronizeCommandRegistry;
 import io.github.hello09x.onesync.command.TeleportCommandRegistry;
 import io.github.hello09x.onesync.config.OneSyncConfig;
-import io.github.hello09x.onesync.handler.*;
 import io.github.hello09x.onesync.listener.SnapshotListener;
 import io.github.hello09x.onesync.listener.SynchronizeListener;
 import io.github.hello09x.onesync.listener.TeleportListener;
-import io.github.hello09x.onesync.manager.*;
+import io.github.hello09x.onesync.manager.synchronize.LockingManager;
+import io.github.hello09x.onesync.manager.synchronize.SynchronizeManager;
+import io.github.hello09x.onesync.manager.synchronize.handler.*;
+import io.github.hello09x.onesync.manager.teleport.PlayerManager;
+import io.github.hello09x.onesync.manager.teleport.ServerManager;
+import io.github.hello09x.onesync.manager.teleport.TeleportManager;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
+
 
 public final class Main extends JavaPlugin {
 
@@ -63,8 +70,8 @@ public final class Main extends JavaPlugin {
 
             {
                 var messenger = getServer().getMessenger();
-                messenger.registerIncomingPluginChannel(this, "BungeeCord", LockingManager.instance);
-                messenger.registerOutgoingPluginChannel(this, "BungeeCord");
+                messenger.registerIncomingPluginChannel(this, BungeeCord.CHANNEL, LockingManager.instance);
+                messenger.registerOutgoingPluginChannel(this, BungeeCord.CHANNEL);
             }
 
             {
@@ -76,27 +83,23 @@ public final class Main extends JavaPlugin {
             LockingManager.instance.acquireAll();           // 热重载
 
             // region Teleport start
-            if (OneSyncConfig.instance.getTeleport().isEnabled()) {
-                // 不支持 reload 命令重载
-                TeleportCommandRegistry.register();
+            TeleportCommandRegistry.register();
 
-                {
-                    var pm = getServer().getPluginManager();
-                    pm.registerEvents(TeleportListener.instance, this);
+            {
+                var pm = getServer().getPluginManager();
+                pm.registerEvents(TeleportListener.instance, this);
+            }
 
-                }
+            {
+                var messenger = getServer().getMessenger();
+                messenger.registerIncomingPluginChannel(this, BungeeCord.CHANNEL, ServerManager.instance);
+                messenger.registerOutgoingPluginChannel(this, BungeeCord.CHANNEL);
 
-                {
-                    var messenger = getServer().getMessenger();
-                    messenger.registerIncomingPluginChannel(this, "BungeeCord", ServerManager.instance);
-                    messenger.registerOutgoingPluginChannel(this, "BungeeCord");
+                messenger.registerIncomingPluginChannel(this, BungeeCord.CHANNEL, PlayerManager.instance);
+                messenger.registerOutgoingPluginChannel(this, BungeeCord.CHANNEL);
 
-                    messenger.registerIncomingPluginChannel(this, "BungeeCord", PlayerManager.instance);
-                    messenger.registerOutgoingPluginChannel(this, "BungeeCord");
-
-                    messenger.registerIncomingPluginChannel(this, "BungeeCord", TeleportManager.instance);
-                    messenger.registerOutgoingPluginChannel(this, "BungeeCord");
-                }
+                messenger.registerIncomingPluginChannel(this, BungeeCord.CHANNEL, TeleportManager.instance);
+                messenger.registerOutgoingPluginChannel(this, BungeeCord.CHANNEL);
             }
             // endregion Teleport end
         } catch (Throwable e) {
@@ -108,7 +111,6 @@ public final class Main extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
         super.onDisable();
         SynchronizeManager.instance.saveAndUnlockAll(SnapshotCause.PLUGIN_DISABLE);  // 关闭服务器不会调用 PlayerQuitEvent 事件, 因此需要全量保存一次
 

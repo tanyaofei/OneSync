@@ -1,6 +1,6 @@
 package io.github.hello09x.onesync.api.event;
 
-import io.github.hello09x.onesync.manager.entity.PreparedSnapshotComponent;
+import io.github.hello09x.onesync.manager.synchronize.entity.PreparedSnapshotComponent;
 import io.github.hello09x.onesync.repository.model.Snapshot;
 import lombok.Getter;
 import org.bukkit.entity.Player;

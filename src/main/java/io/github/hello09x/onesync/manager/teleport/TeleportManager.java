@@ -1,10 +1,10 @@
-package io.github.hello09x.onesync.manager;
+package io.github.hello09x.onesync.manager.teleport;
 
-import com.google.common.base.Throwables;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
+import io.github.hello09x.bedrock.util.BungeeCord;
 import io.github.hello09x.bedrock.util.Folia;
-import io.github.hello09x.bedrock.util.PluginMessages;
+import io.github.hello09x.bedrock.util.Locations;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.constant.SubChannels;
@@ -20,7 +20,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -47,10 +46,11 @@ public class TeleportManager implements PluginMessageListener {
 
     private final static String CTL_ASK = "ask";
     private final static String CTL_ACCEPT = "accept";
-    private final static String CTL_TELEPORT = "teleport";
     private final static String CTL_DENY = "deny";
+    private final static String CTL_TELEPORT = "teleport";
 
     private final ServerManager serverList = ServerManager.instance;
+    private final WarmupManager warmupManager = WarmupManager.instance;
     private final TeleportRepository repository = TeleportRepository.instance;
     private final OneSyncConfig.TeleportConfig config = OneSyncConfig.instance.getTeleport();
 
@@ -59,19 +59,19 @@ public class TeleportManager implements PluginMessageListener {
             : new HashMap<>();
 
     public TeleportManager() {
-        Folia.runTaskTimer(Main.getInstance(), this::tick, 20, 1);
+        Folia.runTaskTimer(Main.getInstance(), this::tickExpiredTeleportLocation, 20, 1);
         if (Folia.isFolia()) {
-            Bukkit.getAsyncScheduler().runAtFixedRate(Main.getInstance(), task -> this.removeExpiredTeleports(), 5, 5, TimeUnit.MINUTES);
+            Bukkit.getAsyncScheduler().runAtFixedRate(Main.getInstance(), task -> this.tickExpiredTeleports(), 5, 5, TimeUnit.MINUTES);
         } else {
-            Bukkit.getScheduler().runTaskTimerAsynchronously(Main.getInstance(), this::removeExpiredTeleports, 20 * 60 * 5, 20 * 60 * 5);
+            Bukkit.getScheduler().runTaskTimerAsynchronously(Main.getInstance(), this::tickExpiredTeleports, 20 * 60 * 5, 20 * 60 * 5);
         }
     }
 
-    private void tick() {
+    private void tickExpiredTeleportLocation() {
         this.teleportLocations.entrySet().removeIf(entry -> entry.getValue().getRight().decrementAndGet() <= 0);
     }
 
-    private void removeExpiredTeleports() {
+    private void tickExpiredTeleports() {
         repository.deleteByCreatedAtBefore(LocalDateTime.now().minus(config.getExpiresIn()));
     }
 
@@ -103,9 +103,11 @@ public class TeleportManager implements PluginMessageListener {
         out.writeUTF(requester.getName());
         out.writeUTF(receiver);
         out.writeBoolean(force);
+        var message = out.toByteArray();
 
-        requester.sendPluginMessage(Main.getInstance(), "BungeeCord", PluginMessages.box(SUB_CHANNEL, out));
-        this.onPluginMessageReceived("BungeeCord", requester, PluginMessages.boxLocal(SUB_CHANNEL, out));
+        BungeeCord.sendPluginMessage(Main.getInstance(), requester, BungeeCord.asForward(SUB_CHANNEL, message));
+        this.onPluginMessageReceived(BungeeCord.CHANNEL, requester, BungeeCord.asReceivedForward(SUB_CHANNEL, message));
+
         return textOfChildren(
                 text("传送请求已发送给 "), text(receiver, WHITE), text(", 等待对方接受"),
                 text(" [取消]", RED)
@@ -152,8 +154,10 @@ public class TeleportManager implements PluginMessageListener {
         out.writeUTF(teleport.requester());
         out.writeUTF(teleport.receiver());
         out.writeBoolean(force);
-        receiver.sendPluginMessage(Main.getInstance(), "BungeeCord", PluginMessages.box(SUB_CHANNEL, out));
-        this.onPluginMessageReceived("BungeeCord", receiver, PluginMessages.boxLocal(SUB_CHANNEL, out));
+        var message = out.toByteArray();
+
+        BungeeCord.sendPluginMessage(Main.getInstance(), receiver, BungeeCord.asForward(SUB_CHANNEL, message));
+        this.onPluginMessageReceived(BungeeCord.CHANNEL, receiver, BungeeCord.asReceivedForward(SUB_CHANNEL, message));
 
         return textOfChildren(
                 text("你"),
@@ -184,13 +188,25 @@ public class TeleportManager implements PluginMessageListener {
         return text("取消传送请求成功", GRAY);
     }
 
+    /**
+     * 获取玩家在此服务器传送的坐标点
+     * <p>当玩家从 A 服务器传送到 B 服务器时, B 服务器会记录传送坐标点, 然后发送消息给 BungeeCord 让玩家切换服务器, 等加入游戏时传送他</p>
+     * <p><b>玩家有可能切换服务器后传送失败</b></p>
+     *
+     * @param player 玩家
+     * @return 传送坐标点
+     */
+    public @Nullable Location getTeleportLocation(@NotNull Player player) {
+        return Optional.ofNullable(this.teleportLocations.remove(player.getName())).map(Pair::getLeft).orElse(null);
+    }
+
     @Override
     public void onPluginMessageReceived(@NotNull String channel, @NotNull Player player, byte @NotNull [] message) {
-        if (!channel.equals("BungeeCord")) {
+        if (!channel.equals(BungeeCord.CHANNEL)) {
             return;
         }
 
-        var in = PluginMessages.unbox(SUB_CHANNEL, message);
+        var in = BungeeCord.parseReceivedForward(SUB_CHANNEL, message);
         if (in == null) {
             return;
         }
@@ -248,10 +264,6 @@ public class TeleportManager implements PluginMessageListener {
         receiver.playSound(sound(Sound.BLOCK_NOTE_BLOCK_BELL, SoundCategory.PLAYERS, 0.8F, 1.0F));
     }
 
-    public @Nullable Location getTeleportLocation(@NotNull Player player) {
-        return Optional.ofNullable(this.teleportLocations.remove(player.getName())).map(Pair::getKey).orElse(null);
-    }
-
     /**
      * 接收到 {@link #CTL_ACCEPT}, 当被传送人在此服务器时处理
      * <ul>
@@ -276,52 +288,64 @@ public class TeleportManager implements PluginMessageListener {
             return;
         }
 
-        var pos = teleported.getLocation();
-        Runnable teleport0 = () -> {
+        Runnable doTeleport = () -> {
             var out = ByteStreams.newDataOutput();
             out.writeUTF(CTL_TELEPORT);
             out.writeUTF(type.name());
             out.writeUTF(requester);
             out.writeUTF(receiver);
+            var message = out.toByteArray();
 
-            teleported.sendPluginMessage(Main.getInstance(), "BungeeCord", PluginMessages.box(SUB_CHANNEL, out));
-            this.onPluginMessageReceived("BungeeCord", teleported, PluginMessages.boxLocal(SUB_CHANNEL, out));
+            BungeeCord.sendPluginMessage(Main.getInstance(), teleported, BungeeCord.asForward(SUB_CHANNEL, message));
+            this.onPluginMessageReceived(BungeeCord.CHANNEL, teleported, BungeeCord.asReceivedForward(SUB_CHANNEL, message));
         };
 
-        var wait = config.getWait();
-        if (wait <= 0 || force) {
-            teleport0.run();
+        var warmup = config.getWarmup();
+        if (warmup <= 0 || force) {
+            doTeleport.run();
         } else {
             teleported.showTitle(Title.title(
                     text("正在准备传送", GOLD),
                     text("请不要移动", GOLD),
-                    Title.Times.times(Duration.ofMillis(500), Duration.ofSeconds(wait / 20), Duration.ofMillis(500))
+                    Title.Times.times(Duration.ofMillis(250), Duration.ofSeconds(warmup), Duration.ofMillis(250))
             ));
 
-            var waiting = Folia.runTaskTimer(Main.getInstance(), teleported, task -> {
-                try {
-                    if (this.isMoved(pos, teleported.getLocation())) {
-                        teleported.showTitle(Title.title(text("行动取消", GOLD), text("你动了", GOLD)));
-                        task.cancel();
-                        return;
-                    }
-
-                    teleported.getWorld().spawnParticle(Particle.SPELL_MOB_AMBIENT, teleported.getEyeLocation(), 20);
-                } catch (Throwable e) {
-                    task.cancel();
-                    log.severe(Throwables.getStackTraceAsString(e));
+            // 延迟 10 tick 再开始预热, 让玩家接收到 title 提示后有一点反应时间
+            Folia.runTaskLater(Main.getInstance(), teleported, () -> {
+                if (!teleported.isOnline()) {
+                    return;
                 }
-            }, 1, 20);
+                var pos = teleported.getLocation();
+                warmupManager.add(teleported, new WarmupManager.Warmup(
+                                x -> {
+                                    if (this.isMoved(pos, teleported.getLocation())) {
+                                        teleported.resetTitle();
+                                        teleported.sendMessage(text("你动了, 行动取消", GRAY));
+                                        return false;
+                                    }
 
-            if (waiting != null) {
-                Folia.runTaskLater(Main.getInstance(), teleported, () -> {
-                    if (waiting.isCancelled()) {
-                        return;
-                    }
-                    waiting.cancel();
-                    teleport0.run();
-                }, config.getWait());
-            }
+                                    if (config.isParticle()) {
+                                        var center = teleported.getEyeLocation();
+                                        var points = Locations.getCirclePoints(center, 0.5, 10);
+                                        for (var point : points) {
+                                            point.getWorld().spawnParticle(
+                                                    Particle.ENCHANTMENT_TABLE,
+                                                    point,
+                                                    1,
+                                                    0.125D,
+                                                    0,
+                                                    0.125D
+                                            );
+                                        }
+                                    }
+
+                                    return true;
+                                },
+                                x -> doTeleport.run(),
+                                new MutableInt(warmup * 20)
+                        )
+                );
+            }, 10);
         }
     }
 
@@ -372,17 +396,25 @@ public class TeleportManager implements PluginMessageListener {
             // 两个人都在同一个服务器
             t.teleportAsync(player.getLocation()).thenAccept(success -> {
                 if (!success) {
-                    t.sendMessage(text("传送失败: 可能被第三方插件取消", RED));
+                    t.sendMessage(text("传送失败: 可能被第三方插件取消或者你被骑了", RED));
+                } else {
+                    if (config.isSound()) {
+                        t.getLocation().getWorld().playSound(
+                                t.getLocation(),
+                                Sound.ENTITY_ENDERMAN_TELEPORT,
+                                SoundCategory.PLAYERS,
+                                0.8F,
+                                1.0F
+                        );
+                    }
                 }
             });
         } else {
             // 传送人不在服务器, 让他切换服务器
             this.teleportLocations.put(teleportor, Pair.of(player.getLocation(), new MutableInt(1200)));
-            var out = ByteStreams.newDataOutput();
-            out.writeUTF("ConnectOther");
-            out.writeUTF(teleportor);
-            out.writeUTF(serverList.getCurrent());
-            player.sendPluginMessage(Main.getInstance(), "BungeeCord", out.toByteArray());
+            if (!BungeeCord.connectOther(Main.getInstance(), teleportor, serverList.getCurrent())) {
+                this.teleportLocations.remove(teleportor);
+            }
         }
     }
 

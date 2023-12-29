@@ -88,10 +88,11 @@ teleport:
   # 修改此项配置重启才生效
   enabled: false
 
+  # 预热
   # 玩家开始传送前需要等待多少秒
   # 等待期间如果移动了则取消传送
   # 单位: 秒
-  wait: 3
+  warmup: 3
 
   # 玩家发起传送请求的有效时间
   # 单位: 秒
@@ -110,3 +111,9 @@ teleport:
     stphere: tphere
     stphereall: tphereall
     stpahereall: tpahereall
+
+  # 当玩家预热时是否产生粒子特效(像念咒语一样)
+  particle: true
+
+  # 当玩家传送完毕后是否发出音效(末影人传送音效)
+  sound: true

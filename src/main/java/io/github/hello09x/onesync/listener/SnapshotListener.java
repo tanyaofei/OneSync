@@ -2,8 +2,8 @@ package io.github.hello09x.onesync.listener;
 
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.config.OneSyncConfig;
-import io.github.hello09x.onesync.manager.SnapshotManager;
-import io.github.hello09x.onesync.manager.SynchronizeManager;
+import io.github.hello09x.onesync.manager.synchronize.SnapshotManager;
+import io.github.hello09x.onesync.manager.synchronize.SynchronizeManager;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;

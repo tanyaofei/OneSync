@@ -55,6 +55,7 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
     @Getter
     @ToString
     public final static class SynchronizeConfig {
+
         private boolean inventory;
         private boolean enderChest;
         private boolean pdc;
@@ -119,13 +120,17 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
 
         private final Map<String, String> commands = new HashMap<>();
         private boolean enabled;
-        private int wait;
+        private int warmup;
         private Duration expiresIn;
+        private boolean particle;
+        private boolean sound;
 
         public void reload(@NotNull FileConfiguration file) {
             this.enabled = file.getBoolean("teleport.enabled", false);
             this.expiresIn = Duration.ofSeconds(file.getInt("teleport.expires-in", 60));
-            this.wait = 20 * file.getInt("teleport.wait", 3);
+            this.warmup = file.getInt("teleport.warmup", 3);
+            this.particle = file.getBoolean("teleport.particle", true);
+            this.sound = file.getBoolean("teleport.sound", true);
 
             this.commands.clear();
             this.commands.put("stpa", getNonBlankString(file, "teleport.commands.stpa", "tpa"));

@@ -4,7 +4,7 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.*;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.manager.SynchronizeManager;
+import io.github.hello09x.onesync.manager.synchronize.SynchronizeManager;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import org.apache.commons.lang3.time.StopWatch;
 import org.bukkit.event.EventHandler;

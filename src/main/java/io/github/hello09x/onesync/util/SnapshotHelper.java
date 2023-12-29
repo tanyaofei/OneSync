@@ -1,4 +1,4 @@
-package io.github.hello09x.onesync.handler.utils;
+package io.github.hello09x.onesync.util;
 
 import io.github.hello09x.onesync.Main;
 import org.jetbrains.annotations.NotNull;

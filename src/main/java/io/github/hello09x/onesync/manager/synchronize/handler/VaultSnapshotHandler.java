@@ -1,4 +1,4 @@
-package io.github.hello09x.onesync.handler;
+package io.github.hello09x.onesync.manager.synchronize.handler;
 
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;

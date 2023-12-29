@@ -4,11 +4,7 @@ import dev.jorel.commandapi.CommandPermission;
 import dev.jorel.commandapi.arguments.*;
 import io.github.hello09x.onesync.command.impl.ReloadCommand;
 import io.github.hello09x.onesync.command.impl.SnapshotCommand;
-import io.github.hello09x.onesync.command.impl.TeleportCommand;
 import io.github.hello09x.onesync.command.impl.UnlockCommand;
-import io.github.hello09x.onesync.config.OneSyncConfig;
-import io.github.hello09x.onesync.manager.PlayerManager;
-import org.jetbrains.annotations.NotNull;
 
 import static io.github.hello09x.bedrock.command.Commands.*;
 

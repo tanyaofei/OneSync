@@ -1,10 +1,9 @@
-package io.github.hello09x.onesync.manager;
+package io.github.hello09x.onesync.manager.synchronize;
 
 import com.google.common.base.Throwables;
-import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
+import io.github.hello09x.bedrock.util.BungeeCord;
 import io.github.hello09x.bedrock.util.MCUtils;
-import io.github.hello09x.bedrock.util.PluginMessages;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.constant.SubChannels;
@@ -143,31 +142,24 @@ public class LockingManager implements PluginMessageListener {
      * @param player 玩家
      */
     public void broadcastRequire(@NotNull OfflinePlayer player) {
-        var r = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
-        if (r == null) {
-            return;
-        }
-
-        var message = ByteStreams.newDataOutput();
-        message.writeUTF(COMMAND_ACQUIRE);
-        message.writeUTF(player.getUniqueId().toString());
-        r.sendPluginMessage(Main.getInstance(), "BungeeCord", PluginMessages.box(SUB_CHANNEL, message));
+        BungeeCord.sendForwardPluginMessage(Main.getInstance(), SUB_CHANNEL, () -> {
+            var message = ByteStreams.newDataOutput();
+            message.writeUTF(COMMAND_ACQUIRE);
+            message.writeUTF(player.getUniqueId().toString());
+            return message.toByteArray();
+        });
     }
 
     /**
      * 发送插件消息, 让其他服务器重新上锁
      */
     private void broadcastRequireAll() {
-        var r = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
-        if (r == null) {
-            return;
-        }
-
-        var message = ByteStreams.newDataOutput();
-        message.writeUTF(COMMAND_ACQUIRE);
-        message.writeUTF(ACQUIRE_ALL);
-
-        r.sendPluginMessage(Main.getInstance(), "BungeeCord", PluginMessages.box(SUB_CHANNEL, message));
+        BungeeCord.sendForwardPluginMessage(Main.getInstance(), SUB_CHANNEL, () -> {
+            var message = ByteStreams.newDataOutput();
+            message.writeUTF(COMMAND_ACQUIRE);
+            message.writeUTF(ACQUIRE_ALL);
+            return message.toByteArray();
+        });
     }
 
     @Override
@@ -176,11 +168,11 @@ public class LockingManager implements PluginMessageListener {
             @NotNull Player player,
             byte @NotNull [] message
     ) {
-        if (!channel.equals("BungeeCord")) {
+        if (!channel.equals(BungeeCord.CHANNEL)) {
             return;
         }
 
-        var in = PluginMessages.unbox(SUB_CHANNEL, message);
+        var in = BungeeCord.parseReceivedForward(SUB_CHANNEL, message);
         if (in == null) {
             return;
         }

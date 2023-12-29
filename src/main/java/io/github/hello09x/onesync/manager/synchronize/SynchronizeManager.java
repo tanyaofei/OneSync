@@ -1,14 +1,13 @@
-package io.github.hello09x.onesync.manager;
+package io.github.hello09x.onesync.manager.synchronize;
 
 import com.google.common.base.Throwables;
 import io.github.hello09x.bedrock.util.Folia;
-import io.github.hello09x.bedrock.util.MCUtils;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.event.PlayerAttemptRestoreEvent;
 import io.github.hello09x.onesync.api.event.PlayerFinishRestoreEvent;
 import io.github.hello09x.onesync.api.event.PlayerPrepareRestoreEvent;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
-import io.github.hello09x.onesync.manager.entity.PreparedSnapshotComponent;
+import io.github.hello09x.onesync.manager.synchronize.entity.PreparedSnapshotComponent;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import net.kyori.adventure.text.Component;
 import org.apache.commons.lang3.time.StopWatch;

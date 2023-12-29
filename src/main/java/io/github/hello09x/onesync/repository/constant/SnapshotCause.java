@@ -21,7 +21,7 @@ public enum SnapshotCause {
     /**
      * 关闭插件
      */
-    PLUGIN_DISABLE(text("🚫 插件关闭", RED), Material.MUSIC_DISC_CHIRP),
+    PLUGIN_DISABLE(text("🚫 插件卸载", RED), Material.MUSIC_DISC_CHIRP),
 
     /**
      * 世界保存

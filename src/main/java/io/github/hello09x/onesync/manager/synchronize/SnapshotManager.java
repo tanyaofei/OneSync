@@ -1,4 +1,4 @@
-package io.github.hello09x.onesync.manager;
+package io.github.hello09x.onesync.manager.synchronize;
 
 import com.google.common.base.Throwables;
 import io.github.hello09x.onesync.Main;

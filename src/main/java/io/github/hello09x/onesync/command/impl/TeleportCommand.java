@@ -1,8 +1,8 @@
 package io.github.hello09x.onesync.command.impl;
 
 import dev.jorel.commandapi.executors.CommandArguments;
-import io.github.hello09x.onesync.manager.PlayerManager;
-import io.github.hello09x.onesync.manager.TeleportManager;
+import io.github.hello09x.onesync.manager.teleport.PlayerManager;
+import io.github.hello09x.onesync.manager.teleport.TeleportManager;
 import io.github.hello09x.onesync.repository.constant.TeleportType;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;

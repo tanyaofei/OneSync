@@ -7,7 +7,7 @@ import io.github.hello09x.bedrock.database.TableId;
 import io.github.hello09x.bedrock.util.Components;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
-import io.github.hello09x.onesync.handler.ProfileSnapshotHandler;
+import io.github.hello09x.onesync.manager.synchronize.handler.ProfileSnapshotHandler;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;

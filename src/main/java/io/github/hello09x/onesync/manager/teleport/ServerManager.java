@@ -1,34 +1,35 @@
-package io.github.hello09x.onesync.manager;
+package io.github.hello09x.onesync.manager.teleport;
 
 import com.google.common.io.ByteStreams;
+import io.github.hello09x.bedrock.util.BungeeCord;
 import io.github.hello09x.bedrock.util.Folia;
 import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.config.OneSyncConfig;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("UnstableApiUsage")
 public class ServerManager implements PluginMessageListener {
 
     public final static ServerManager instance = new ServerManager();
-    private final OneSyncConfig.TeleportConfig config = OneSyncConfig.instance.getTeleport();
+
+    private final static int TICK_PERIOD = 100;
 
     @NotNull
     private String current = "";
 
+    private long updatedAt = 0;
+
     private ServerManager() {
-        Folia.runTaskTimer(Main.getInstance(), this::getCurrentServer0, 20, 100);
+        Folia.runTaskTimer(Main.getInstance(), this::tick, 20, 100);
     }
 
-    private void getCurrentServer0() {
-        if (!config.isEnabled()) {
+    private void tick() {
+        if ((System.currentTimeMillis() - updatedAt) / 1000 < TICK_PERIOD / 20) {
             return;
         }
 
-        var out = ByteStreams.newDataOutput();
-        out.writeUTF("GetServer");
-        Bukkit.getServer().sendPluginMessage(Main.getInstance(), "BungeeCord", out.toByteArray());
+        BungeeCord.getServer(Main.getInstance());
     }
 
     public @NotNull String getCurrent() {
@@ -47,5 +48,6 @@ public class ServerManager implements PluginMessageListener {
         }
 
         this.current = in.readUTF();
+        updatedAt = System.currentTimeMillis();
     }
 }

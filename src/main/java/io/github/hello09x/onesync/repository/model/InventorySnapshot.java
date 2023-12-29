@@ -4,7 +4,7 @@ import io.github.hello09x.bedrock.database.Table;
 import io.github.hello09x.bedrock.database.TableField;
 import io.github.hello09x.bedrock.database.TableId;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
-import io.github.hello09x.onesync.handler.InventorySnapshotHandler;
+import io.github.hello09x.onesync.manager.synchronize.handler.InventorySnapshotHandler;
 import io.github.hello09x.onesync.util.ItemStackMapTypeHandler;
 import io.github.hello09x.onesync.util.MenuTemplate;
 import org.apache.commons.lang3.mutable.MutableBoolean;

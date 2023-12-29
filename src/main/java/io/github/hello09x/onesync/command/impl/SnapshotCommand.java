@@ -1,8 +1,8 @@
 package io.github.hello09x.onesync.command.impl;
 
 import dev.jorel.commandapi.executors.CommandArguments;
-import io.github.hello09x.onesync.manager.MenuManager;
-import io.github.hello09x.onesync.manager.SnapshotManager;
+import io.github.hello09x.onesync.manager.synchronize.MenuManager;
+import io.github.hello09x.onesync.manager.synchronize.SnapshotManager;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
