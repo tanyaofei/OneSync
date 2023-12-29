@@ -18,7 +18,7 @@ libraries:
 
 permissions:
   onesync.teleport.tpa:
-    default: true
+    default: false
 
   onesync.teleport.tpahere:
     default: false

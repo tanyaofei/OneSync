@@ -2,8 +2,8 @@ package io.github.hello09x.onesync.command;
 
 public interface Permissions {
 
-    String TP = "onesync.teleport.tp";
+    String TPA = "onesync.teleport.tpa";
 
-    String TPHERE = "onesync.teleport.tphere";
+    String TPAHERE = "onesync.teleport.tpahere";
 
 }

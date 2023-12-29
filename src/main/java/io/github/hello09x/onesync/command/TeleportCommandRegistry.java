@@ -51,14 +51,14 @@ public class TeleportCommandRegistry {
         var commands = OneSyncConfig.instance.getTeleport().getCommands();
         command("stpa")
                 .withAliases(commands.getOrDefault("stpa", "stpa"))
-                .withPermission(Permissions.TP)
+                .withPermission(Permissions.TPA)
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpa)
                 .register();
 
         command("stpahere")
                 .withAliases(commands.getOrDefault("stpahere", "stpahere"))
-                .withPermission(Permissions.TPHERE)
+                .withPermission(Permissions.TPAHERE)
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpahere)
                 .register();
