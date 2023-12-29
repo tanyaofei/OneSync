@@ -60,8 +60,8 @@ public class SnapshotManager {
         }
 
         this.wipeAsync(player.getUniqueId()).thenAccept(removed -> {
-            if (removed > 0 && Main.isDebugging()) {
-                log.info("已清理 %s %d 份的多余快照".formatted(player.getName(), removed));
+            if (removed > 0) {
+                log.config("已清理 %s %d 份的多余快照".formatted(player.getName(), removed));
             }
         });
         return snapshotId;

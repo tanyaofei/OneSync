@@ -4,6 +4,7 @@ import com.comphenix.protocol.ProtocolLibrary;
 import com.google.common.base.Throwables;
 import com.google.gson.Gson;
 import io.github.hello09x.bedrock.menu.ChestMenuRegistry;
+import io.github.hello09x.bedrock.util.AnyLevelLoggerHandler;
 import io.github.hello09x.bedrock.util.BungeeCord;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.command.SynchronizeCommandRegistry;
@@ -24,6 +25,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.logging.Level;
+
 
 public final class Main extends JavaPlugin {
 
@@ -34,13 +37,21 @@ public final class Main extends JavaPlugin {
     @Getter
     private static ChestMenuRegistry chestMenuRegistry;
 
-    public static boolean isDebugging() {
-        return OneSyncConfig.instance.isDebug();
-    }
-
     @Override
     public void onLoad() {
         instance = this;
+
+        super.getLogger().addHandler(new AnyLevelLoggerHandler(this));
+        if (OneSyncConfig.instance.isDebug()) {
+            super.getLogger().setLevel(Level.CONFIG);
+        }
+        OneSyncConfig.instance.addListener(config -> {
+            if (config.isDebug()) {
+                super.getLogger().setLevel(Level.CONFIG);
+            } else {
+                super.getLogger().setLevel(Level.INFO);
+            }
+        });
     }
 
     @Override
@@ -95,7 +106,7 @@ public final class Main extends JavaPlugin {
                 TeleportCommandRegistry.register();
             }
         } catch (Throwable e) {
-            getLogger().severe("加载插件失败, 为了数据安全, 关闭当前服务器: %s".formatted(Throwables.getStackTraceAsString(e)));
+            getLogger().severe("加载插件失败, 为了数据安全, 关闭当前服务器!\n" + Throwables.getStackTraceAsString(e));
             Bukkit.shutdown();
             throw e;
         }

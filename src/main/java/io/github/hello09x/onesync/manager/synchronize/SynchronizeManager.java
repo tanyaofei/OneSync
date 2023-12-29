@@ -226,9 +226,7 @@ public class SynchronizeManager {
             }
         }
         stopwatch.stop();
-        if (Main.isDebugging()) {
-            log.info("[%s] 保存 %d 名玩家数据完毕, 耗时 %d ms".formatted(cause, players.size(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
-        }
+        log.config("[%s] 保存 %d 名玩家数据完毕, 耗时 %d ms".formatted(cause, players.size(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
     }
 
     private void kickOnNextTick(@NotNull Player player, @NotNull Component reason) {

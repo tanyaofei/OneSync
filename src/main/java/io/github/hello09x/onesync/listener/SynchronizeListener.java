@@ -62,8 +62,8 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
             var packet = new PacketContainer(PacketType.Configuration.Server.DISCONNECT);
             packet.getChatComponents().write(0, WrappedChatComponent.fromText(reason));
             event.setPacket(packet);
-        } else if (Main.isDebugging()) {
-            log.info("[异步] 加载 %s 数据完毕, 耗时 %d ms".formatted(player.getName(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
+        } else {
+            log.config("[异步] 加载 %s 数据完毕, 耗时 %d ms".formatted(player.getName(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
         }
     }
 
@@ -77,8 +77,8 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
         stopwatch.start();
         var success = synchronizeManager.applyPreparedOrKick(player);
         stopwatch.stop();
-        if (success && Main.isDebugging()) {
-            log.info("恢复 %s 数据完毕, 耗时 %d ms".formatted(player.getName(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
+        if (success) {
+            log.config("恢复 %s 数据完毕, 耗时 %d ms".formatted(player.getName(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
         }
     }
 
@@ -91,9 +91,7 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
     public void onQuit(@NotNull PlayerQuitEvent event) {
         var player = event.getPlayer();
         if (synchronizeManager.isRestoring(player)) {
-            if (Main.isDebugging()) {
-                log.warning("[退出游戏] - %s 存在未恢复数据, 本次操作不会保存数据。这可能是由于恢复数据时发生错误导致的".formatted(player.getName()));
-            }
+            log.config("[退出游戏] - %s 存在未恢复数据, 本次操作不会保存数据。这可能是由于恢复数据时发生错误导致的".formatted(player.getName()));
             return;
         }
 
@@ -101,9 +99,7 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
         stopwatch.start();
         synchronizeManager.saveAndUnlock(player, SnapshotCause.PLAYER_QUIT);
         stopwatch.stop();
-        if (Main.isDebugging()) {
-            log.info("玩家 %s 数据保存完毕, 耗时 %d ms".formatted(player.getName(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
-        }
+        log.config("玩家 %s 数据保存完毕, 耗时 %d ms".formatted(player.getName(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
     }
 
 }

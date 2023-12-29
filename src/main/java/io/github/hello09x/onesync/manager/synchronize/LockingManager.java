@@ -42,9 +42,7 @@ public class LockingManager implements PluginMessageListener {
                     throw e;
                 }
                 this.serverId = config.getServerId();
-                if (Main.isDebugging()) {
-                    log.info("服务器 ID 已发生变化, %s -> %s".formatted(old, config.getServerId()));
-                }
+                log.info("服务器 ID 已发生变化, %s -> %s".formatted(old, config.getServerId()));
             }
         });
     }
@@ -181,9 +179,7 @@ public class LockingManager implements PluginMessageListener {
             return;
         }
 
-        if (Main.isDebugging()) {
-            log.info("接收到「relock」消息");
-        }
+        log.config("接收到「relock」消息");
         var arg = in.readUTF();
         if (arg.equals(ACQUIRE_ALL)) {
             this.acquireAll();
