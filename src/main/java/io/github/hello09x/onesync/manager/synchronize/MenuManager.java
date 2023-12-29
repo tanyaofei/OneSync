@@ -10,7 +10,6 @@ import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.repository.SnapshotRepository;
 import io.github.hello09x.onesync.repository.model.Snapshot;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -20,7 +19,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -170,9 +168,9 @@ public class MenuManager {
     /**
      * 打开确认恢复界面
      *
-     * @param viewer    操作者
-     * @param onConfirm 确认操作函数
-     * @param onClickOutside  取消操作函数
+     * @param viewer         操作者
+     * @param onConfirm      确认操作函数
+     * @param onClickOutside 取消操作函数
      */
     public void openConfirm(@NotNull Player viewer, @NotNull Component title, @NotNull Runnable onConfirm, @NotNull Consumer<InventoryClickEvent> onClickOutside) {
         var menu = Main.getChestMenuRegistry()
@@ -202,9 +200,9 @@ public class MenuManager {
         try {
             handler.remove(Collections.singletonList(snapshotId));
         } catch (Throwable e) {
+            log.severe(Throwables.getStackTraceAsString(e));
             viewer.closeInventory();
             viewer.sendMessage(text("删除失败: " + e.getMessage()));
-            log.severe(Throwables.getStackTraceAsString(e));
             return;
         }
 
@@ -294,17 +292,6 @@ public class MenuManager {
                     log.severe(Throwables.getStackTraceAsString(e));
                     viewer.sendMessage(text("删除 %s 的「%s」数据失败".formatted(owner.getName(), handler.snapshotType())));
                 }
-            }
-
-            if (owner.isOnline()) {
-                viewer.sendMessage(textOfChildren(
-                        textOfChildren(
-                                text(Optional.ofNullable(owner.getName()).orElse("玩家"), WHITE),
-                                text(" 当前在线, 删除快照并不会影响他目前的数据", GRAY)
-                        ),
-                        text(" [详细说明]", AQUA)
-                                .hoverEvent(HoverEvent.showText(text("玩家会在退出游戏时保存当前数据, 如果你想影响到玩家的数据, 应当先把玩家踢出游戏后再操作")))
-                ));
             }
         } finally {
             viewer.closeInventory();

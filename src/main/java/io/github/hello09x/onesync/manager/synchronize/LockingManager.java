@@ -3,6 +3,7 @@ package io.github.hello09x.onesync.manager.synchronize;
 import com.google.common.base.Throwables;
 import com.google.common.io.ByteStreams;
 import io.github.hello09x.bedrock.util.BungeeCord;
+import io.github.hello09x.bedrock.util.Exceptions;
 import io.github.hello09x.bedrock.util.MCUtils;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.config.OneSyncConfig;

@@ -324,22 +324,13 @@ public class TeleportManager implements PluginMessageListener {
                                         teleported.sendMessage(text("你动了, 行动取消", GRAY));
                                         return false;
                                     }
-
                                     if (config.isParticle()) {
                                         var center = teleported.getEyeLocation();
                                         var points = Locations.getCirclePoints(center, 0.5, 10);
                                         for (var point : points) {
-                                            point.getWorld().spawnParticle(
-                                                    Particle.ENCHANTMENT_TABLE,
-                                                    point,
-                                                    1,
-                                                    0.125D,
-                                                    0,
-                                                    0.125D
-                                            );
+                                            point.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, point, 1, 0.125D, 0, 0.125D);
                                         }
                                     }
-
                                     return true;
                                 },
                                 x -> doTeleport.run(),
@@ -387,12 +378,12 @@ public class TeleportManager implements PluginMessageListener {
             return;
         }
 
-        var teleportor = switch (type) {
+        var teleported = switch (type) {
             case TP -> requester;
             case TPHERE -> receiver;
         };
 
-        var t = Bukkit.getPlayerExact(teleportor);
+        var t = Bukkit.getPlayerExact(teleported);
         if (t != null) {
             // 两个人都在同一个服务器
             t.teleportAsync(player.getLocation()).thenAccept(success -> {
@@ -412,9 +403,9 @@ public class TeleportManager implements PluginMessageListener {
             });
         } else {
             // 传送人不在服务器, 让他切换服务器
-            this.teleportLocations.put(teleportor, Pair.of(player.getLocation(), new MutableInt(1200)));
-            if (!BungeeCord.connectOther(Main.getInstance(), teleportor, serverList.getCurrent())) {
-                this.teleportLocations.remove(teleportor);
+            this.teleportLocations.put(teleported, Pair.of(player.getLocation(), new MutableInt(1200)));
+            if (!BungeeCord.connectOther(Main.getInstance(), teleported, serverList.getCurrent())) {
+                this.teleportLocations.remove(teleported);
             }
         }
     }
