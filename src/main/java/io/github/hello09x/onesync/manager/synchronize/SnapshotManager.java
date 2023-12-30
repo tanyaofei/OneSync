@@ -1,12 +1,14 @@
 package io.github.hello09x.onesync.manager.synchronize;
 
 import com.google.common.base.Throwables;
+import io.github.hello09x.bedrock.util.Folia;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.SnapshotRepository;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import io.github.hello09x.onesync.repository.model.Snapshot;
+import net.kyori.adventure.util.Ticks;
 import org.apache.commons.lang3.time.StopWatch;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -25,6 +27,27 @@ public class SnapshotManager {
     private final static Logger log = Main.getInstance().getLogger();
     private final SnapshotRepository repository = SnapshotRepository.instance;
     private final OneSyncConfig.SnapshotConfig config = OneSyncConfig.instance.getSnapshot();
+
+    private int periodicals = 0;
+
+    private SnapshotManager() {
+        // 定时保存策略
+        Folia.runTaskTimer(Main.getInstance(), () -> {
+            if (!config.getWhen().contains(SnapshotCause.PERIODICAL)) {
+                return;
+            }
+
+            // 0x3 意味最多分 4 批 0 ~ 3
+            int flag = (periodicals++) & 0x3;
+            var players = Bukkit.getOnlinePlayers().stream().filter(p -> (p.getUniqueId().getLeastSignificantBits() & 0x3) == flag).toList();
+            if (players.isEmpty()) {
+                return;
+            }
+
+            this.create(players, SnapshotCause.PERIODICAL);
+        }, Ticks.TICKS_PER_SECOND * 5 * 60, Ticks.TICKS_PER_SECOND * 5 * 60);   // 每 5 分钟
+
+    }
 
     /**
      * 创建快照, 如果该玩家正在登陆, 并未恢复完数据, 则不会为他创建快照
@@ -59,7 +82,7 @@ public class SnapshotManager {
             }
         }
 
-        this.wipeAsync(player.getUniqueId()).thenAccept(removed -> {
+        this.wipeAsync(player.getUniqueId()).thenAcceptAsync(removed -> {
             if (removed > 0) {
                 log.config("已清理 %s %d 份的多余快照".formatted(player.getName(), removed));
             }
@@ -95,20 +118,6 @@ public class SnapshotManager {
         stopwatch.stop();
         log.info("[%s] - 保存 %d 名玩家快照完毕, 耗时 %d ms".formatted(cause, players.size(), stopwatch.getTime(TimeUnit.MILLISECONDS)));
         return success;
-    }
-
-    /**
-     * 为所有在线玩家创建快照
-     *
-     * @param cause 创建原因
-     */
-    public int createForAll(@NotNull SnapshotCause cause) {
-        var players = Bukkit.getOnlinePlayers();
-        if (players.isEmpty()) {
-            return 0;
-        }
-
-        return this.create(players, cause);
     }
 
     /**

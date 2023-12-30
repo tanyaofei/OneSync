@@ -49,65 +49,65 @@ public class TeleportCommandRegistry {
 
     public static void register() {
         var commands = OneSyncConfig.instance.getTeleport().getCommands();
-        command("stpa")
-                .withAliases(commands.getOrDefault("stpa", "stpa"))
+        command(commands.getOrDefault("stpa", "stpa"))
+                .withAliases("stpa")
                 .withPermission(Permissions.TPA)
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpa)
-                .register();
+                .override();
 
-        command("stpahere")
-                .withAliases(commands.getOrDefault("stpahere", "stpahere"))
+        command(commands.getOrDefault("stpahere", "stpahere"))
+                .withAliases("stpahere")
                 .withPermission(Permissions.TPAHERE)
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpahere)
-                .register();
+                .override();
 
-        command("stpaccept")
-                .withAliases(commands.getOrDefault("stpaccept", "stpaccept"))
+        command(commands.getOrDefault("stpaccept", "stpaccept"))
+                .withAliases("stpaccept")
                 .withOptionalArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpaccept)
-                .register();
+                .override();
 
-        command("stpdeny")
-                .withAliases(commands.getOrDefault("stpdeny", "stpdeny"))
+        command(commands.getOrDefault("stpdeny", "stpdeny"))
+                .withAliases("stpdeny")
                 .withOptionalArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpdeny)
-                .register();
+                .override();
 
-        command("stpcancel")
-                .withAliases(commands.getOrDefault("stpcancel", "stpcancel"))
+        command(commands.getOrDefault("stpcancel", "stpcancel"))
+                .withAliases("stpcancel")
                 .withOptionalArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tpcancel)
-                .register();
+                .override();
 
-        command("stp")
-                .withAliases(commands.getOrDefault("stp", "stp"))
+        command(commands.getOrDefault("stp", "stp"))
+                .withAliases("stp")
                 .withPermission(CommandPermission.OP)
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tp)
-                .register();
+                .override();
 
-        command("stphere")
-                .withAliases(commands.getOrDefault("stphere", "stphere"))
+        command(commands.getOrDefault("stphere", "stphere"))
+                .withAliases("stphere")
                 .withPermission(CommandPermission.OP)
                 .withArguments(globalPlayer("player"))
                 .executesPlayer(TeleportCommand.instance::tphere)
-                .register();
+                .override();
 
-        command("stpahereall")
-                .withAliases(commands.getOrDefault("stpahereall", "stpahereall"))
+        command(commands.getOrDefault("stpahereall", "stpahereall"))
+                .withAliases("stpahereall")
                 .withPermission(CommandPermission.OP)
                 .withArguments(literal("confirm"))
                 .executesPlayer(TeleportCommand.instance::tpahereall)
-                .register();
+                .override();
 
-        command("stphereall")
-                .withAliases(commands.getOrDefault("stphereall", "stphereall"))
+        command(commands.getOrDefault("stphereall", "stphereall"))
+                .withAliases("stphereall")
                 .withPermission(CommandPermission.OP)
                 .withArguments(literal("confirm"))
                 .executesPlayer(TeleportCommand.instance::tphereall)
-                .register();
+                .override();
 
     }
 }

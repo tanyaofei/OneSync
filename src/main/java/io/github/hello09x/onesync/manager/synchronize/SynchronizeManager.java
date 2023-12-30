@@ -63,12 +63,13 @@ public class SynchronizeManager {
         try {
             this.prepared.remove(playerId);
             long startedAt = System.currentTimeMillis();
+            int reties = 0;
             while (lockingManager.isLocked(playerId)) {
                 if (System.currentTimeMillis() - startedAt >= timeout) {
                     return "[OneSync] 加载数据超时, 请联系管理员";
                 }
                 try {
-                    Thread.sleep(50L);
+                    Thread.sleep(10L + ((++reties) - 1) * 50L);
                 } catch (InterruptedException ignored) {
                     // 服务器关闭... 之类的
                     return "[OneSync] 加载数据中断, 请联系管理员";

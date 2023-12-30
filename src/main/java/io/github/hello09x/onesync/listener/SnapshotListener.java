@@ -36,7 +36,12 @@ public class SnapshotListener implements Listener {
             return;
         }
 
-        snapshotManager.createForAll(SnapshotCause.WORLD_SAVE);
+        var players = Bukkit.getOnlinePlayers();
+        if (players.isEmpty()) {
+            return;
+        }
+
+        snapshotManager.create(players, SnapshotCause.WORLD_SAVE);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

@@ -21,22 +21,27 @@ public enum SnapshotCause {
     /**
      * 关闭插件
      */
-    PLUGIN_DISABLE(text("🚫 插件卸载", RED), Material.MUSIC_DISC_CHIRP),
+    PLUGIN_DISABLE(text("🚫 插件卸载", RED), Material.MUSIC_DISC_11),
 
     /**
      * 世界保存
      */
-    WORLD_SAVE(text("🌍 保存地图", AQUA), Material.MUSIC_DISC_WAIT),
+    WORLD_SAVE(text("🌍 保存地图", WHITE), Material.MUSIC_DISC_WAIT),
 
     /**
      * 玩家死亡
      */
-    PLAYER_DEATH(text("💀 玩家死亡", WHITE), Material.MUSIC_DISC_STRAD),
+    PLAYER_DEATH(text("💀 玩家死亡", WHITE), Material.MUSIC_DISC_CHIRP),
 
     /**
      * 游戏模式切换
      */
     PLAYER_GAME_MODE_CHANGE(text("🎮 模式切换", BLUE), Material.MUSIC_DISC_MALL),
+
+    /**
+     * 定时保存
+     */
+    PERIODICAL(text("⏰ 定时保存", WHITE), Material.MUSIC_DISC_13),
 
     /**
      * 命令触发
