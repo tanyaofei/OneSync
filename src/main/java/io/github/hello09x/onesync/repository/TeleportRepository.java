@@ -33,19 +33,6 @@ public class TeleportRepository extends Repository<Teleport> {
         });
     }
 
-    public boolean existsByRequesterAndReceiver(@NotNull String requester, @NotNull String receiver) {
-        var sql = "select exists (select 1 from teleport where requester = ? and receiver = ?)";
-        return execute(connection -> {
-            try (PreparedStatement stm = connection.prepareStatement(sql)) {
-                stm.setString(1, requester);
-                stm.setString(2, receiver);
-                var rs = stm.executeQuery();
-                rs.next();
-                return rs.getInt(1) >= 1;
-            }
-        });
-    }
-
     public @Nullable Teleport selectLatestByReceiverBefore(@NotNull String receiver, @NotNull LocalDateTime createdAtBefore) {
         var sql = "select * from teleport where receiver = ? and created_at < ? order by created_at desc limit 1";
         return execute(connection -> {
