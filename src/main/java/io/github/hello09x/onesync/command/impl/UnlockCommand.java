@@ -49,8 +49,11 @@ public class UnlockCommand {
         MESSAGES.forEach(sender::sendMessage);
     }
 
+    /**
+     * 解锁所有玩家, 即使不在这台服务器
+     */
     public void unlockAll(@NotNull CommandSender sender, @NotNull CommandArguments args) {
-        manager.requireAll();
+        manager.reacquireAll();
         MESSAGES.forEach(sender::sendMessage);
     }
 
