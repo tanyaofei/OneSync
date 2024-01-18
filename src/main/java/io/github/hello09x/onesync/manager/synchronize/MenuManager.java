@@ -69,13 +69,6 @@ public class MenuManager {
                             () -> this.applySnapshot(viewer, snapshot),
                             here
                     );
-                    // Q 删除快照
-                    case DROP -> this.openConfirm(
-                            viewer,
-                            text("确认删除?"),
-                            () -> this.removeSnapshot(viewer, snapshot),
-                            here
-                    );
                 }
             });
 
