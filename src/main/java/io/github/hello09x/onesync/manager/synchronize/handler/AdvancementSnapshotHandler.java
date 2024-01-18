@@ -3,8 +3,10 @@ package io.github.hello09x.onesync.manager.synchronize.handler;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
+import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
 import io.github.hello09x.onesync.repository.AdvancementSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.AdvancementSnapshot;
+import io.github.hello09x.onesync.repository.model.Snapshot;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.advancement.Advancement;
@@ -23,6 +25,11 @@ public class AdvancementSnapshotHandler extends CacheableSnapshotHandler<Advance
 
     public final static AdvancementSnapshotHandler instance = new AdvancementSnapshotHandler();
 
+    private final static SnapshotType TYPE = new SnapshotType(
+            "onesync:snapshot.advancement",
+            "成就"
+    );
+
     private final static Logger log = Main.getInstance().getLogger();
     private final static Map<String, Advancement> ADVANCEMENTS = StreamSupport
             .stream(((Iterable<Advancement>) Bukkit::advancementIterator).spliterator(), false)
@@ -31,9 +38,10 @@ public class AdvancementSnapshotHandler extends CacheableSnapshotHandler<Advance
     private final AdvancementSnapshotRepository repository = AdvancementSnapshotRepository.instance;
     private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
 
+
     @Override
-    public @NotNull String snapshotType() {
-        return "成就";
+    public @NotNull SnapshotType snapshotType() {
+        return TYPE;
     }
 
     @Override
@@ -42,8 +50,14 @@ public class AdvancementSnapshotHandler extends CacheableSnapshotHandler<Advance
     }
 
     @Override
-    public @Nullable AdvancementSnapshot save0(@NotNull Long snapshotId, @NotNull Player player) {
+    public @Nullable AdvancementSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable AdvancementSnapshot initial) {
         if (!config.isAdvancements()) {
+            if (initial != null) {
+                var snapshot = new AdvancementSnapshot(snapshotId, initial.playerId(), initial.advancements());
+                repository.insert(snapshot);
+                return snapshot;
+
+            }
             return null;
         }
 
@@ -65,9 +79,9 @@ public class AdvancementSnapshotHandler extends CacheableSnapshotHandler<Advance
     }
 
     @Override
-    public void apply(@NotNull Player player, @NotNull AdvancementSnapshot snapshot, boolean force) {
-        if (!config.isAdvancements() && !force) {
-            return;
+    public boolean apply(@NotNull Player player, @NotNull AdvancementSnapshot snapshot) {
+        if (!config.isAdvancements()) {
+            return false;
         }
 
         for (var entry : ADVANCEMENTS.entrySet()) {
@@ -88,5 +102,6 @@ public class AdvancementSnapshotHandler extends CacheableSnapshotHandler<Advance
             }
         }
 
+        return true;
     }
 }

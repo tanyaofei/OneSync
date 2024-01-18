@@ -1,5 +1,6 @@
 package io.github.hello09x.onesync.api.handler;
 
+import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -29,7 +30,7 @@ public interface SnapshotHandler<T extends SnapshotComponent> {
     /**
      * @return 快照名称
      */
-    @NotNull String snapshotType();
+    @NotNull SnapshotType snapshotType();
 
     /**
      * 根据快照 ID 获取快照
@@ -44,7 +45,7 @@ public interface SnapshotHandler<T extends SnapshotComponent> {
      *
      * @param player 玩家
      */
-    void save(@NotNull Long snapshotId, @NotNull Player player);
+    void save(@NotNull Long snapshotId, @NotNull Player player, @Nullable T initial);
 
     /**
      * 删除
@@ -59,40 +60,20 @@ public interface SnapshotHandler<T extends SnapshotComponent> {
      *
      * @param player   玩家
      * @param snapshot 快照
-     * @param force    是否强制应用, {@code true} 则表示这是管理员操作强制应用此快照, {@code false} 则表示可能是由于玩家登陆等恢复同步数据
+     * @return 是否应当应用快照
      */
-    void apply(@NotNull Player player, @NotNull T snapshot, boolean force);
+    boolean apply(@NotNull Player player, @NotNull T snapshot);
 
     /**
      * 应用快照
      *
      * @param player   玩家
      * @param snapshot 快照
-     */
-    default void apply(@NotNull Player player, @NotNull T snapshot) {
-        this.apply(player, snapshot, false);
-    }
-
-    /**
-     * 应用快照
-     *
-     * @param player   玩家
-     * @param snapshot 快照
-     */
-    default void applyUnsafe(@NotNull Player player, SnapshotComponent snapshot) {
-        this.applyUnsafe(player, snapshot, false);
-    }
-
-    /**
-     * 应用快照
-     *
-     * @param player   玩家
-     * @param snapshot 快照
-     * @param force    是否强制应用, {@code true} 则表示这是管理员操作强制应用此快照, {@code false} 则表示可能是由于玩家登陆等恢复同步数据
      */
     @SuppressWarnings("unchecked")
-    default void applyUnsafe(@NotNull Player player, SnapshotComponent snapshot, boolean force) {
-        this.apply(player, (T) snapshot, force);
+    default boolean applyUnsafe(@NotNull Player player, SnapshotComponent snapshot) {
+        return this.apply(player, (T) snapshot);
     }
+
 
 }

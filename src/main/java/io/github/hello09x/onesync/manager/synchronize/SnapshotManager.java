@@ -1,8 +1,10 @@
 package io.github.hello09x.onesync.manager.synchronize;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
 import io.github.hello09x.bedrock.util.Folia;
 import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.SnapshotRepository;
@@ -69,8 +71,13 @@ public class SnapshotManager {
         ));
 
         for (var registration : SnapshotHandler.getRegistrations()) {
+            var handler = registration.getProvider();
             try {
-                registration.getProvider().save(snapshotId, player);
+                handler.save(
+                        snapshotId,
+                        player,
+                        (SnapshotComponent) Iterables.getFirst(player.getMetadata(handler.snapshotType().key()), null)
+                );
             } catch (Throwable e) {
                 log.severe("[%s] - 保存 %s 由 [%s] 提供的「%s」快照失败: %s".formatted(
                         cause,

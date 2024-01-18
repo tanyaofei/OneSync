@@ -2,6 +2,7 @@ package io.github.hello09x.onesync.manager.synchronize.handler;
 
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
+import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
 import io.github.hello09x.onesync.repository.PotionEffectSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.PotionEffectSnapshot;
 import org.bukkit.entity.Player;
@@ -14,13 +15,17 @@ import java.util.List;
 public class PotionEffectSnapshotHandler extends CacheableSnapshotHandler<PotionEffectSnapshot> {
 
     public final static PotionEffectSnapshotHandler instance = new PotionEffectSnapshotHandler();
+    private final static SnapshotType TYPE = new SnapshotType(
+            "onesync.snapshot.potion-effect",
+            "效果"
+    );
 
     private final PotionEffectSnapshotRepository repository = PotionEffectSnapshotRepository.instance;
     private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
 
     @Override
-    public @NotNull String snapshotType() {
-        return "效果";
+    public @NotNull SnapshotType snapshotType() {
+        return TYPE;
     }
 
     @Override
@@ -29,8 +34,13 @@ public class PotionEffectSnapshotHandler extends CacheableSnapshotHandler<Potion
     }
 
     @Override
-    public @Nullable PotionEffectSnapshot save0(@NotNull Long snapshotId, @NotNull Player player) {
+    public @Nullable PotionEffectSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable PotionEffectSnapshot initial) {
         if (!config.isPotionEffects()) {
+            if (initial != null) {
+                var snapshot = new PotionEffectSnapshot(snapshotId, initial.playerId(), initial.effects());
+                repository.insert(snapshot);
+                return snapshot;
+            }
             return null;
         }
 
@@ -50,9 +60,9 @@ public class PotionEffectSnapshotHandler extends CacheableSnapshotHandler<Potion
     }
 
     @Override
-    public void apply(@NotNull Player player, @NotNull PotionEffectSnapshot snapshot, boolean force) {
+    public boolean apply(@NotNull Player player, @NotNull PotionEffectSnapshot snapshot) {
         if (!config.isPotionEffects()) {
-            return;
+            return false;
         }
 
         for (var effect : player.getActivePotionEffects()) {
@@ -60,5 +70,6 @@ public class PotionEffectSnapshotHandler extends CacheableSnapshotHandler<Potion
         }
 
         player.addPotionEffects(snapshot.effects());
+        return true;
     }
 }

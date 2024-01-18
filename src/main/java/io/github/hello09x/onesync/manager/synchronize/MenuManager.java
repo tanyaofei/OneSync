@@ -221,7 +221,7 @@ public class MenuManager {
                 return;
             }
             try {
-                handler.apply(owner, snapshot, true);
+                handler.apply(owner, snapshot);
                 viewer.sendMessage(text("恢复 %s 的「%s」数据成功".formatted(owner.getName(), handler.snapshotType())));
             } catch (Throwable e) {
                 log.severe(Throwables.getStackTraceAsString(e));

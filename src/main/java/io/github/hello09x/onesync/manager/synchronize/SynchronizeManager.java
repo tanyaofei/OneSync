@@ -173,6 +173,8 @@ public class SynchronizeManager {
                     ));
                     throw e;    // 外层会 catch 住
                 }
+
+                player.setMetadata(handler.snapshotType().key(), new FixedMetadataValue(Main.getInstance(), component));
             }
 
             this.setRestoring(player, false);      // 设置玩家已经恢复完毕, 其他创建快照事件才会处理他

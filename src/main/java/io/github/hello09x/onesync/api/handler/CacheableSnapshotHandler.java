@@ -13,8 +13,8 @@ public abstract class CacheableSnapshotHandler<T extends SnapshotComponent> impl
     private final MutableObject<T> theLast = new MutableObject<>();
 
     @Override
-    public final void save(@NotNull Long snapshotId, @NotNull Player player) {
-        var snapshot = this.save0(snapshotId, player);
+    public final void save(@NotNull Long snapshotId, @NotNull Player player, @Nullable T initial) {
+        var snapshot = this.save0(snapshotId, player, initial);
         this.theLast.setValue(snapshot);
     }
 
@@ -31,7 +31,7 @@ public abstract class CacheableSnapshotHandler<T extends SnapshotComponent> impl
         this.invalidate();
     }
 
-    protected abstract @Nullable T save0(@NotNull Long snapshotId, @NotNull Player player);
+    protected abstract @Nullable T save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable T initial);
 
     protected abstract @Nullable T getOne0(@NotNull Long snapshotId);
 

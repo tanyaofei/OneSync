@@ -2,6 +2,7 @@ package io.github.hello09x.onesync.manager.synchronize.handler;
 
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
+import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
 import io.github.hello09x.onesync.repository.ProfileSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.ProfileSnapshot;
 import org.bukkit.attribute.Attribute;
@@ -16,13 +17,17 @@ import java.util.Optional;
 public class ProfileSnapshotHandler extends CacheableSnapshotHandler<ProfileSnapshot> {
 
     public final static ProfileSnapshotHandler instance = new ProfileSnapshotHandler();
+    private final static SnapshotType TYPE = new SnapshotType(
+            "onesync.snapshot.profile",
+            "档案"
+    );
 
     private final ProfileSnapshotRepository repository = ProfileSnapshotRepository.instance;
     private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
 
     @Override
-    public @NotNull String snapshotType() {
-        return "档案";
+    public @NotNull SnapshotType snapshotType() {
+        return TYPE;
     }
 
     @Override
@@ -31,7 +36,7 @@ public class ProfileSnapshotHandler extends CacheableSnapshotHandler<ProfileSnap
     }
 
     @Override
-    public @Nullable ProfileSnapshot save0(@NotNull Long snapshotId, @NotNull Player player) {
+    public @Nullable ProfileSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable ProfileSnapshot initial) {
         var gameMode = config.isGameMode() ? player.getGameMode() : null;
         var op = config.isOp() ? player.isOp() : null;
 
@@ -40,12 +45,18 @@ public class ProfileSnapshotHandler extends CacheableSnapshotHandler<ProfileSnap
         if (config.isExp()) {
             level = player.getLevel();
             exp = player.getExp();
+        } else if (initial != null) {
+            level = initial.level();
+            exp = initial.exp();
         }
 
         Double health = null, maxHealth = null;
         if (config.isHealth()) {
             health = player.getHealth();
             maxHealth = Optional.ofNullable(player.getAttribute(Attribute.GENERIC_MAX_HEALTH)).map(AttributeInstance::getBaseValue).orElse(null);
+        } else if (initial != null) {
+            health = initial.health();
+            maxHealth = initial.maxHealth();
         }
 
         Integer foodLevel = null;
@@ -54,11 +65,17 @@ public class ProfileSnapshotHandler extends CacheableSnapshotHandler<ProfileSnap
             foodLevel = player.getFoodLevel();
             saturation = player.getSaturation();
             exhaustion = player.getExhaustion();
+        } else if (initial != null) {
+            foodLevel = initial.foodLevel();
+            saturation = initial.saturation();
+            exhaustion = initial.exhaustion();
         }
 
         Integer remainingAir = null;
         if (config.isAir()) {
             remainingAir = player.getRemainingAir();
+        } else if (initial != null) {
+            remainingAir = initial.remainingAir();
         }
 
         var snapshot = new ProfileSnapshot(
@@ -86,31 +103,32 @@ public class ProfileSnapshotHandler extends CacheableSnapshotHandler<ProfileSnap
     }
 
     @Override
-    public void apply(@NotNull Player player, @NotNull ProfileSnapshot snapshot, boolean force) {
-        if (config.isGameMode() || force) {
+    public boolean apply(@NotNull Player player, @NotNull ProfileSnapshot snapshot) {
+        if (config.isGameMode()) {
             Optional.ofNullable(snapshot.gameMode()).ifPresent(player::setGameMode);
         }
-        if (config.isOp() || force) {
+        if (config.isOp()) {
             Optional.ofNullable(snapshot.op()).ifPresent(player::setOp);
         }
-        if (config.isExp() || force) {
+        if (config.isExp()) {
             Optional.ofNullable(snapshot.level()).ifPresent(player::setLevel);
             Optional.ofNullable(snapshot.exp()).ifPresent(player::setExp);
         }
-        if (config.isHealth() || force) {
+        if (config.isHealth()) {
             Optional.ofNullable(snapshot.health()).ifPresent(player::setHealth);
             Optional.ofNullable(snapshot.maxHealth()).ifPresent(maxHealth -> {
                 Optional.ofNullable(player.getAttribute(Attribute.GENERIC_MAX_HEALTH)).ifPresent(attr -> attr.setBaseValue(maxHealth));
             });
         }
-        if (config.isFood() || force) {
+        if (config.isFood()) {
             Optional.ofNullable(snapshot.foodLevel()).ifPresent(player::setFoodLevel);
             Optional.ofNullable(snapshot.saturation()).ifPresent(player::setSaturation);
             Optional.ofNullable(snapshot.exhaustion()).ifPresent(player::setExhaustion);
         }
-        if (config.isAir() || force) {
+        if (config.isAir()) {
             Optional.ofNullable(snapshot.remainingAir()).ifPresent(player::setRemainingAir);
         }
+        return true;
     }
 
 }

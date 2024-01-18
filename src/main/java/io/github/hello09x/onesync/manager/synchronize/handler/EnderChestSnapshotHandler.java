@@ -3,6 +3,7 @@ package io.github.hello09x.onesync.manager.synchronize.handler;
 import io.github.hello09x.bedrock.util.InventoryUtils;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
+import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
 import io.github.hello09x.onesync.repository.EnderChestSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.EnderChestSnapshot;
 import org.bukkit.entity.Player;
@@ -16,12 +17,16 @@ import java.util.Map;
 public class EnderChestSnapshotHandler extends CacheableSnapshotHandler<EnderChestSnapshot> {
 
     public final static EnderChestSnapshotHandler instance = new EnderChestSnapshotHandler();
+    private final static SnapshotType TYPE = new SnapshotType(
+            "onesync:snapshot.ender-chest",
+            "末影箱"
+    );
     private final EnderChestSnapshotRepository repository = EnderChestSnapshotRepository.instance;
     private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
 
     @Override
-    public @NotNull String snapshotType() {
-        return "末影箱";
+    public @NotNull SnapshotType snapshotType() {
+        return TYPE;
     }
 
     @Override
@@ -30,8 +35,14 @@ public class EnderChestSnapshotHandler extends CacheableSnapshotHandler<EnderChe
     }
 
     @Override
-    public @Nullable EnderChestSnapshot save0(@NotNull Long snapshotId, @NotNull Player player) {
+    public @Nullable EnderChestSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable EnderChestSnapshot initial) {
         if (!config.isEnderChest()) {
+            if (initial != null) {
+                var snapshot = new EnderChestSnapshot(snapshotId, initial.playerId(), initial.items());
+                repository.insert(snapshot);
+                return snapshot;
+
+            }
             return null;
         }
 
@@ -51,12 +62,13 @@ public class EnderChestSnapshotHandler extends CacheableSnapshotHandler<EnderChe
     }
 
     @Override
-    public void apply(@NotNull Player player, @NotNull EnderChestSnapshot snapshot, boolean force) {
+    public boolean apply(@NotNull Player player, @NotNull EnderChestSnapshot snapshot) {
         if (!config.isEnderChest()) {
-            return;
+            return false;
         }
 
         InventoryUtils.replace(player.getEnderChest(), snapshot.items(), true);
+        return true;
     }
 
     public void updateItems(@NotNull Long snapshotId, @NotNull Map<Integer, ItemStack> items) {

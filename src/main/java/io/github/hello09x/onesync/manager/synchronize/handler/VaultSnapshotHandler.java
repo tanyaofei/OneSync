@@ -3,6 +3,7 @@ package io.github.hello09x.onesync.manager.synchronize.handler;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
+import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
 import io.github.hello09x.onesync.repository.VaultSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.VaultSnapshot;
 import net.milkbowl.vault.economy.Economy;
@@ -21,6 +22,10 @@ public class VaultSnapshotHandler extends CacheableSnapshotHandler<VaultSnapshot
 
 
     public final static VaultSnapshotHandler instance = new VaultSnapshotHandler();
+    private final static SnapshotType TYPE = new SnapshotType(
+            "onesync.snapshot.valut",
+            "经济"
+    );
     private final static Logger log = Main.getInstance().getLogger();
 
     private final VaultSnapshotRepository repository = VaultSnapshotRepository.instance;
@@ -38,8 +43,18 @@ public class VaultSnapshotHandler extends CacheableSnapshotHandler<VaultSnapshot
     }
 
     @Override
-    protected @Nullable VaultSnapshot save0(@NotNull Long snapshotId, @NotNull Player player) {
+    public @NotNull SnapshotType snapshotType() {
+        return TYPE;
+    }
+
+    @Override
+    protected @Nullable VaultSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable VaultSnapshot initial) {
         if (!config.isVault()) {
+            if (initial != null) {
+                var snapshot = new VaultSnapshot(snapshotId, initial.playerId(), initial.balance());
+                repository.insert(snapshot);
+                return snapshot;
+            }
             return null;
         }
 
@@ -68,14 +83,9 @@ public class VaultSnapshotHandler extends CacheableSnapshotHandler<VaultSnapshot
     }
 
     @Override
-    public @NotNull String snapshotType() {
-        return "经济";
-    }
-
-    @Override
-    public void apply(@NotNull Player player, @NotNull VaultSnapshot snapshot, boolean force) {
-        if (!config.isVault() || force) {
-            return;
+    public boolean apply(@NotNull Player player, @NotNull VaultSnapshot snapshot) {
+        if (!config.isVault()) {
+            return false;
         }
 
         if (this.holder == null) {
@@ -85,6 +95,7 @@ public class VaultSnapshotHandler extends CacheableSnapshotHandler<VaultSnapshot
         var current = this.holder.economy.getBalance(player);
         this.holder.economy.withdrawPlayer(player, current);
         this.holder.economy.depositPlayer(player, snapshot.balance());
+        return true;
     }
 
     private final static class Holder {

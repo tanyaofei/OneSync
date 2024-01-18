@@ -2,6 +2,7 @@ package io.github.hello09x.onesync.manager.synchronize.handler;
 
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
+import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
 import io.github.hello09x.onesync.repository.PDCSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.PDCSnapshot;
 import org.bukkit.entity.Player;
@@ -14,12 +15,16 @@ import java.util.List;
 public class PDCSnapshotHandler extends CacheableSnapshotHandler<PDCSnapshot> {
 
     public final static PDCSnapshotHandler instance = new PDCSnapshotHandler();
+    private final static SnapshotType TYPE = new SnapshotType(
+            "onesync:snapshot.pdc",
+            "PDC"
+    );
     private final PDCSnapshotRepository repository = PDCSnapshotRepository.instance;
     private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
 
     @Override
-    public @NotNull String snapshotType() {
-        return "PDC";
+    public @NotNull SnapshotType snapshotType() {
+        return TYPE;
     }
 
     @Override
@@ -28,8 +33,13 @@ public class PDCSnapshotHandler extends CacheableSnapshotHandler<PDCSnapshot> {
     }
 
     @Override
-    public @Nullable PDCSnapshot save0(@NotNull Long snapshotId, @NotNull Player player) {
+    public @Nullable PDCSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable PDCSnapshot initial) {
         if (!config.isPdc()) {
+            if (initial != null) {
+                var snapshot = new PDCSnapshot(snapshotId, initial.playerId(), initial.data());
+                repository.insert(snapshot);
+                return snapshot;
+            }
             return null;
         }
 
@@ -56,9 +66,9 @@ public class PDCSnapshotHandler extends CacheableSnapshotHandler<PDCSnapshot> {
     }
 
     @Override
-    public void apply(@NotNull Player player, @NotNull PDCSnapshot snapshot, boolean force) {
-        if (!config.isPdc() && !force) {
-            return;
+    public boolean apply(@NotNull Player player, @NotNull PDCSnapshot snapshot) {
+        if (!config.isPdc()) {
+            return false;
         }
 
         try {
@@ -66,5 +76,6 @@ public class PDCSnapshotHandler extends CacheableSnapshotHandler<PDCSnapshot> {
         } catch (IOException e) {
             throw new Error(e);
         }
+        return true;
     }
 }

@@ -4,6 +4,7 @@ import io.github.hello09x.bedrock.util.InventoryUtils;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
+import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
 import io.github.hello09x.onesync.repository.InventorySnapshotRepository;
 import io.github.hello09x.onesync.repository.model.InventorySnapshot;
 import org.bukkit.entity.Player;
@@ -18,14 +19,18 @@ import java.util.logging.Logger;
 public class InventorySnapshotHandler extends CacheableSnapshotHandler<InventorySnapshot> {
 
     public final static InventorySnapshotHandler instance = new InventorySnapshotHandler();
+    private final static SnapshotType TYPE = new SnapshotType(
+            "onesync:snapshot.inventory",
+            "背包"
+    );
     private final static Logger log = Main.getInstance().getLogger();
 
     private final InventorySnapshotRepository repository = InventorySnapshotRepository.instance;
     private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
 
     @Override
-    public @NotNull String snapshotType() {
-        return "背包";
+    public @NotNull SnapshotType snapshotType() {
+        return TYPE;
     }
 
     @Override
@@ -34,8 +39,13 @@ public class InventorySnapshotHandler extends CacheableSnapshotHandler<Inventory
     }
 
     @Override
-    public @Nullable InventorySnapshot save0(@NotNull Long snapshotId, @NotNull Player player) {
+    public @Nullable InventorySnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable InventorySnapshot initial) {
         if (!config.isInventory()) {
+            if (initial != null) {
+                var snapshot = new InventorySnapshot(snapshotId, initial.playerId(), initial.items(), initial.heldItemSlot());
+                repository.insert(snapshot);
+                return snapshot;
+            }
             return null;
         }
 
@@ -56,13 +66,14 @@ public class InventorySnapshotHandler extends CacheableSnapshotHandler<Inventory
     }
 
     @Override
-    public void apply(@NotNull Player player, @NotNull InventorySnapshot snapshot, boolean force) {
-        if (!config.isInventory() && !force) {
-            return;
+    public boolean apply(@NotNull Player player, @NotNull InventorySnapshot snapshot) {
+        if (!config.isInventory()) {
+            return false;
         }
 
         InventoryUtils.replace(player.getInventory(), snapshot.items(), true);
         player.getInventory().setHeldItemSlot(snapshot.heldItemSlot());
+        return true;
     }
 
     public void updateItems(@NotNull Long snapshotId, @NotNull Map<Integer, ItemStack> items) {
