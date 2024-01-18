@@ -15,7 +15,7 @@ public abstract class CacheableSnapshotHandler<T extends SnapshotComponent> impl
     @Override
     public final void save(@NotNull Long snapshotId, @NotNull Player player) {
         var snapshot = this.save0(snapshotId, player);
-        this.invalidate();
+        this.theLast.setValue(snapshot);
     }
 
     @Override
