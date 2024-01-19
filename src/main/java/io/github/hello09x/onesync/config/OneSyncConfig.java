@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @ToString
 public class OneSyncConfig extends Config<OneSyncConfig> {
 
-    public final static OneSyncConfig instance = new OneSyncConfig(Main.getInstance(), "3");
+    public final static OneSyncConfig instance = new OneSyncConfig(Main.getInstance(), "4");
 
     private final SynchronizeConfig synchronize = new SynchronizeConfig();
     private final SnapshotConfig snapshot = new SnapshotConfig();
