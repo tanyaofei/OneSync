@@ -129,3 +129,5 @@ server3/
 *.iml
 
 lib/
+
+.idea
