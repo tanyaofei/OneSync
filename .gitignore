@@ -124,6 +124,7 @@ fabric.properties
 
 server/
 server2/
+server3/
 
 *.iml
 

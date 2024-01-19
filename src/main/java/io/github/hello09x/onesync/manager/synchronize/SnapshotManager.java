@@ -28,6 +28,7 @@ public class SnapshotManager {
     public final static SnapshotManager instance = new SnapshotManager();
     private final static Logger log = Main.getInstance().getLogger();
     private final SnapshotRepository repository = SnapshotRepository.instance;
+    private final BatonManager batonManager = BatonManager.instance;
     private final OneSyncConfig.SnapshotConfig config = OneSyncConfig.instance.getSnapshot();
 
     private int periodicals = 0;
@@ -76,7 +77,7 @@ public class SnapshotManager {
                 handler.save(
                         snapshotId,
                         player,
-                        (SnapshotComponent) Iterables.getFirst(player.getMetadata(handler.snapshotType().key()), null)
+                        batonManager.get(player, handler.snapshotType().key())
                 );
             } catch (Throwable e) {
                 log.severe("[%s] - 保存 %s 由 [%s] 提供的「%s」快照失败: %s".formatted(

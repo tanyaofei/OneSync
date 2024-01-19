@@ -25,11 +25,14 @@ import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 @Table("pdc_snapshot")
 public record PDCSnapshot(
 
-        @TableId("snapshot_id") Long snapshotId,
+        @TableId("snapshot_id")
+        Long snapshotId,
 
-        @TableField("player_id") UUID playerId,
+        @TableField("player_id")
+        UUID playerId,
 
-        @TableField("data") byte[] data
+        @TableField("data")
+        byte[] data
 
 ) implements SnapshotComponent {
 

@@ -10,6 +10,7 @@ import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.command.SynchronizeCommandRegistry;
 import io.github.hello09x.onesync.command.TeleportCommandRegistry;
 import io.github.hello09x.onesync.config.OneSyncConfig;
+import io.github.hello09x.onesync.listener.BatonListener;
 import io.github.hello09x.onesync.listener.SnapshotListener;
 import io.github.hello09x.onesync.listener.SynchronizeListener;
 import io.github.hello09x.onesync.listener.TeleportListener;
@@ -76,6 +77,7 @@ public final class Main extends JavaPlugin {
                 pm.registerEvents(SynchronizeListener.instance, this);
                 pm.registerEvents(SnapshotListener.instance, this);
                 pm.registerEvents(TeleportListener.instance, this);
+                pm.registerEvents(BatonListener.instance, this);
             }
 
             {

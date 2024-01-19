@@ -2,7 +2,6 @@ package io.github.hello09x.onesync.manager.synchronize;
 
 import com.google.common.base.Throwables;
 import io.github.hello09x.bedrock.menu.ChestMenuBuilder;
-import io.github.hello09x.bedrock.util.KeyBinds;
 import io.github.hello09x.bedrock.util.Lores;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
@@ -14,6 +13,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.jetbrains.annotations.NotNull;
 
@@ -24,7 +24,8 @@ import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 import static io.github.hello09x.bedrock.util.Components.noItalic;
-import static net.kyori.adventure.text.Component.*;
+import static net.kyori.adventure.text.Component.empty;
+import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 public class MenuManager {
@@ -125,31 +126,22 @@ public class MenuManager {
 
             var button = snapshot.toMenuItem(viewer, here);
             Lores.append(button.item(), List.of(
-                    noItalic("「右键」恢复", GRAY),
-                    noItalic(textOfChildren(text("「"), keybind(KeyBinds.DROP), text(" 键」删除"))).color(GRAY)
+                    noItalic("「右键」恢复", GRAY)
             ));
             menu.onClickButton(i++, button.item(), event -> {
-                switch (event.getClick()) {
+                if (event.getClick() == ClickType.RIGHT) {
                     // 右键恢复
-                    case RIGHT -> this.openConfirm(
+                    this.openConfirm(
                             viewer,
                             text("确认恢复「%s」?".formatted(handler.snapshotType())),
                             () -> applySnapshot(viewer, handler, snapshot),
                             here
                     );
-                    // Q 删除
-                    case DROP -> this.openConfirm(
-                            viewer,
-                            text("确认删除「%s」?".formatted(handler.snapshotType()), RED),
-                            () -> removeSnapshot(viewer, handler, id, here0),
-                            here
-                    );
+                } else {
                     // 传递给按钮自定义事件
-                    default -> {
-                        var onClick = button.onClick();
-                        if (onClick != null) {
-                            onClick.accept(event);
-                        }
+                    var onClick = button.onClick();
+                    if (onClick != null) {
+                        onClick.accept(event);
                     }
                 }
             });

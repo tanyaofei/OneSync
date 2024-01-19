@@ -30,6 +30,7 @@ public class SynchronizeManager {
     private final static Logger log = Main.getInstance().getLogger();
     private final LockingManager lockingManager = LockingManager.instance;
     private final SnapshotManager snapshotManager = SnapshotManager.instance;
+    private final BatonManager batonManager  = BatonManager.instance;
     private final Map<UUID, List<PreparedSnapshotComponent>> prepared = new ConcurrentHashMap<>();
 
     /**
@@ -174,7 +175,7 @@ public class SynchronizeManager {
                     throw e;    // 外层会 catch 住
                 }
 
-                player.setMetadata(handler.snapshotType().key(), new FixedMetadataValue(Main.getInstance(), component));
+                batonManager.set(player, handler.snapshotType().key(), component);
             }
 
             this.setRestoring(player, false);      // 设置玩家已经恢复完毕, 其他创建快照事件才会处理他
