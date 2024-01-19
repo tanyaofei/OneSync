@@ -63,6 +63,13 @@ public class MenuManager {
                             snapshot.id(),
                             here
                     );
+                    // Q 删除快照
+                    case DROP -> this.openConfirm(
+                            viewer,
+                            text("确认删除?"),
+                            () -> this.removeSnapshot(viewer, snapshot),
+                            here
+                    );
                     // 右键打开确认恢复界面
                     case RIGHT -> this.openConfirm(
                             viewer,

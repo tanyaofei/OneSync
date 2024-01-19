@@ -50,24 +50,6 @@ public record Snapshot(
     private final static DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final static DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 
-    public @NotNull ItemStack toMenuItem() {
-        var item = new ItemStack(this.cause.getIcon());
-        item.editMeta(meta -> {
-            meta.displayName(Components.noItalic("快照"));
-            meta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
-            meta.lore(Stream.of(
-                    textOfChildren(text("编号: ", GRAY), text("#" + this.id, WHITE)),
-                    textOfChildren(text("节点: ", GRAY), this.cause.getDisplayName()),
-                    textOfChildren(text("时间: ", GRAY), text(stringifyTime(this.createdAt), WHITE)),
-                    empty(),
-                    text("「左键」查看详情", GRAY),
-                    text("「右键」恢复数据", GRAY)
-            ).map(Components::noItalic).toList());
-        });
-
-        return item;
-    }
-
     private static @NotNull String stringifyTime(@NotNull LocalDateTime dateTime) {
         var date = dateTime.toLocalDate();
         var diff = Period.between(date, LocalDate.now()).getDays();
@@ -80,6 +62,25 @@ public record Snapshot(
         } else {
             return DATE_TIME_FORMATTER.format(dateTime);
         }
+    }
+
+    public @NotNull ItemStack toMenuItem() {
+        var item = new ItemStack(this.cause.getIcon());
+        item.editMeta(meta -> {
+            meta.displayName(Components.noItalic("快照"));
+            meta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
+            meta.lore(Stream.of(
+                    textOfChildren(text("编号: ", GRAY), text("#" + this.id, WHITE)),
+                    textOfChildren(text("节点: ", GRAY), this.cause.getDisplayName()),
+                    textOfChildren(text("时间: ", GRAY), text(stringifyTime(this.createdAt), WHITE)),
+                    empty(),
+                    text("「左键」查看详情", GRAY),
+                    text("「右键」恢复数据", GRAY),
+                    textOfChildren(text("「"), keybind(KeyBinds.DROP), text(" 键」删除")).color(GRAY)
+            ).map(Components::noItalic).toList());
+        });
+
+        return item;
     }
 
 }
