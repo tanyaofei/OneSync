@@ -2,6 +2,7 @@ package io.github.hello09x.onesync.manager.synchronize.handler;
 
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
+import io.github.hello09x.onesync.config.Enabled;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
 import io.github.hello09x.onesync.repository.VaultSnapshotRepository;
@@ -23,7 +24,7 @@ public class VaultSnapshotHandler extends CacheableSnapshotHandler<VaultSnapshot
 
     public final static VaultSnapshotHandler instance = new VaultSnapshotHandler();
     private final static SnapshotType TYPE = new SnapshotType(
-            "onesync.snapshot.valut",
+            "onesync.snapshot.vault",
             "经济"
     );
     private final static Logger log = Main.getInstance().getLogger();
@@ -48,10 +49,13 @@ public class VaultSnapshotHandler extends CacheableSnapshotHandler<VaultSnapshot
     }
 
     @Override
-    protected @Nullable VaultSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable VaultSnapshot initial) {
-        if (!config.isVault()) {
-            if (initial != null) {
-                var snapshot = new VaultSnapshot(snapshotId, initial.playerId(), initial.balance());
+    protected @Nullable VaultSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable VaultSnapshot baton) {
+        if (config.getVault() == Enabled.FALSE) {
+            return null;
+        }
+        if (config.getVault() == Enabled.ISOLATED) {
+            if (baton != null) {
+                var snapshot = new VaultSnapshot(snapshotId, baton.playerId(), baton.balance());
                 repository.insert(snapshot);
                 return snapshot;
             }
@@ -84,7 +88,7 @@ public class VaultSnapshotHandler extends CacheableSnapshotHandler<VaultSnapshot
 
     @Override
     public boolean apply(@NotNull Player player, @NotNull VaultSnapshot snapshot) {
-        if (!config.isVault()) {
+        if (config.getVault() != Enabled.TRUE) {
             return false;
         }
 

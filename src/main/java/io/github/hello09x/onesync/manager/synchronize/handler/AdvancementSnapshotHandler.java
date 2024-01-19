@@ -2,11 +2,11 @@ package io.github.hello09x.onesync.manager.synchronize.handler;
 
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
+import io.github.hello09x.onesync.config.Enabled;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
 import io.github.hello09x.onesync.repository.AdvancementSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.AdvancementSnapshot;
-import io.github.hello09x.onesync.repository.model.Snapshot;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.advancement.Advancement;
@@ -50,13 +50,16 @@ public class AdvancementSnapshotHandler extends CacheableSnapshotHandler<Advance
     }
 
     @Override
-    public @Nullable AdvancementSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable AdvancementSnapshot initial) {
-        if (!config.isAdvancements()) {
-            if (initial != null) {
-                var snapshot = new AdvancementSnapshot(snapshotId, initial.playerId(), initial.advancements());
+    public @Nullable AdvancementSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable AdvancementSnapshot baton) {
+        if (config.getAdvancements() == Enabled.FALSE) {
+            return null;
+        }
+
+        if (config.getAdvancements() == Enabled.ISOLATED) {
+            if (baton != null) {
+                var snapshot = new AdvancementSnapshot(snapshotId, baton.playerId(), baton.advancements());
                 repository.insert(snapshot);
                 return snapshot;
-
             }
             return null;
         }
@@ -80,7 +83,7 @@ public class AdvancementSnapshotHandler extends CacheableSnapshotHandler<Advance
 
     @Override
     public boolean apply(@NotNull Player player, @NotNull AdvancementSnapshot snapshot) {
-        if (!config.isAdvancements()) {
+        if (config.getAdvancements() != Enabled.TRUE) {
             return false;
         }
 

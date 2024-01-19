@@ -1,9 +1,11 @@
 package io.github.hello09x.onesync.manager.synchronize.handler;
 
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
+import io.github.hello09x.onesync.config.Enabled;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
 import io.github.hello09x.onesync.repository.PDCSnapshotRepository;
+import io.github.hello09x.onesync.repository.model.AdvancementSnapshot;
 import io.github.hello09x.onesync.repository.model.PDCSnapshot;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -33,10 +35,14 @@ public class PDCSnapshotHandler extends CacheableSnapshotHandler<PDCSnapshot> {
     }
 
     @Override
-    public @Nullable PDCSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable PDCSnapshot initial) {
-        if (!config.isPdc()) {
-            if (initial != null) {
-                var snapshot = new PDCSnapshot(snapshotId, initial.playerId(), initial.data());
+    public @Nullable PDCSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable PDCSnapshot baton) {
+        if (config.getPdc() == Enabled.FALSE) {
+            return null;
+        }
+
+        if (config.getPdc() == Enabled.ISOLATED) {
+            if (baton != null) {
+                var snapshot = new PDCSnapshot(snapshotId, baton.playerId(), baton.data());
                 repository.insert(snapshot);
                 return snapshot;
             }
@@ -67,7 +73,7 @@ public class PDCSnapshotHandler extends CacheableSnapshotHandler<PDCSnapshot> {
 
     @Override
     public boolean apply(@NotNull Player player, @NotNull PDCSnapshot snapshot) {
-        if (!config.isPdc()) {
+        if (config.getPdc() != Enabled.TRUE) {
             return false;
         }
 

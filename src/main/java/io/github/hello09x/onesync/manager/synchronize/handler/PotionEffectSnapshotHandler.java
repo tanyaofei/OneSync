@@ -1,6 +1,7 @@
 package io.github.hello09x.onesync.manager.synchronize.handler;
 
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
+import io.github.hello09x.onesync.config.Enabled;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
 import io.github.hello09x.onesync.repository.PotionEffectSnapshotRepository;
@@ -34,10 +35,14 @@ public class PotionEffectSnapshotHandler extends CacheableSnapshotHandler<Potion
     }
 
     @Override
-    public @Nullable PotionEffectSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable PotionEffectSnapshot initial) {
-        if (!config.isPotionEffects()) {
-            if (initial != null) {
-                var snapshot = new PotionEffectSnapshot(snapshotId, initial.playerId(), initial.effects());
+    public @Nullable PotionEffectSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable PotionEffectSnapshot baton) {
+        if (config.getPotionEffects() == Enabled.FALSE) {
+            return null;
+        }
+
+        if (config.getPotionEffects() == Enabled.ISOLATED) {
+            if (baton != null) {
+                var snapshot = new PotionEffectSnapshot(snapshotId, baton.playerId(), baton.effects());
                 repository.insert(snapshot);
                 return snapshot;
             }
@@ -61,7 +66,7 @@ public class PotionEffectSnapshotHandler extends CacheableSnapshotHandler<Potion
 
     @Override
     public boolean apply(@NotNull Player player, @NotNull PotionEffectSnapshot snapshot) {
-        if (!config.isPotionEffects()) {
+        if (config.getPotionEffects() != Enabled.TRUE) {
             return false;
         }
 

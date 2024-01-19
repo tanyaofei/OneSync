@@ -3,6 +3,7 @@ package io.github.hello09x.onesync.manager.synchronize.handler;
 import io.github.hello09x.bedrock.util.InventoryUtils;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
+import io.github.hello09x.onesync.config.Enabled;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
 import io.github.hello09x.onesync.repository.InventorySnapshotRepository;
@@ -39,10 +40,13 @@ public class InventorySnapshotHandler extends CacheableSnapshotHandler<Inventory
     }
 
     @Override
-    public @Nullable InventorySnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable InventorySnapshot initial) {
-        if (!config.isInventory()) {
-            if (initial != null) {
-                var snapshot = new InventorySnapshot(snapshotId, initial.playerId(), initial.items(), initial.heldItemSlot());
+    public @Nullable InventorySnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable InventorySnapshot baton) {
+        if (config.getInventory() == Enabled.FALSE) {
+            return null;
+        }
+        if (config.getInventory() == Enabled.ISOLATED) {
+            if (baton != null) {
+                var snapshot = new InventorySnapshot(snapshotId, baton.playerId(), baton.items(), baton.heldItemSlot());
                 repository.insert(snapshot);
                 return snapshot;
             }
@@ -67,7 +71,7 @@ public class InventorySnapshotHandler extends CacheableSnapshotHandler<Inventory
 
     @Override
     public boolean apply(@NotNull Player player, @NotNull InventorySnapshot snapshot) {
-        if (!config.isInventory()) {
+        if (config.getInventory() != Enabled.TRUE) {
             return false;
         }
 

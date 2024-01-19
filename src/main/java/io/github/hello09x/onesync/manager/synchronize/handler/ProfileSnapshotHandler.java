@@ -1,6 +1,7 @@
 package io.github.hello09x.onesync.manager.synchronize.handler;
 
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
+import io.github.hello09x.onesync.config.Enabled;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
 import io.github.hello09x.onesync.repository.ProfileSnapshotRepository;
@@ -13,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 public class ProfileSnapshotHandler extends CacheableSnapshotHandler<ProfileSnapshot> {
 
@@ -35,48 +37,41 @@ public class ProfileSnapshotHandler extends CacheableSnapshotHandler<ProfileSnap
         return repository.selectById(snapshotId);
     }
 
+    private static <V> @Nullable V getOrHandover(
+            @Nullable V fromPlayer,
+            @Nullable ProfileSnapshot baton,
+            @NotNull Function<ProfileSnapshot, V> fromBaton,
+            @NotNull Enabled enabled
+    ) {
+        if (enabled == Enabled.FALSE) {
+            return null;
+        }
+        if (enabled == Enabled.ISOLATED) {
+            return Optional.ofNullable(baton).map(fromBaton).orElse(null);
+        }
+        return fromPlayer;
+    }
+
+    private static @Nullable Double getMaxHealth(@NotNull Player player) {
+        return Optional.ofNullable(player.getAttribute(Attribute.GENERIC_MAX_HEALTH)).map(AttributeInstance::getBaseValue).orElse(null);
+    }
+
     @Override
-    public @Nullable ProfileSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable ProfileSnapshot initial) {
-        var gameMode = config.isGameMode() ? player.getGameMode() : null;
-        var op = config.isOp() ? player.isOp() : null;
+    public @Nullable ProfileSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable ProfileSnapshot baton) {
+        var gameMode = getOrHandover(player.getGameMode(), baton, ProfileSnapshot::gameMode, config.getGameMode());
+        var op = getOrHandover(player.isOp(), baton, ProfileSnapshot::op, config.getOp());
 
-        Integer level = null;
-        Float exp = null;
-        if (config.isExp()) {
-            level = player.getLevel();
-            exp = player.getExp();
-        } else if (initial != null) {
-            level = initial.level();
-            exp = initial.exp();
-        }
+        var level = getOrHandover(player.getLevel(), baton, ProfileSnapshot::level, config.getExp());
+        var exp = getOrHandover(player.getExp(), baton, ProfileSnapshot::exp, config.getExp());
 
-        Double health = null, maxHealth = null;
-        if (config.isHealth()) {
-            health = player.getHealth();
-            maxHealth = Optional.ofNullable(player.getAttribute(Attribute.GENERIC_MAX_HEALTH)).map(AttributeInstance::getBaseValue).orElse(null);
-        } else if (initial != null) {
-            health = initial.health();
-            maxHealth = initial.maxHealth();
-        }
+        var health = getOrHandover(player.getHealth(), baton, ProfileSnapshot::health, config.getHealth());
+        var maxHealth = getOrHandover(getMaxHealth(player), baton, ProfileSnapshot::maxHealth, config.getHealth());
 
-        Integer foodLevel = null;
-        Float saturation = null, exhaustion = null;
-        if (config.isFood()) {
-            foodLevel = player.getFoodLevel();
-            saturation = player.getSaturation();
-            exhaustion = player.getExhaustion();
-        } else if (initial != null) {
-            foodLevel = initial.foodLevel();
-            saturation = initial.saturation();
-            exhaustion = initial.exhaustion();
-        }
+        var foodLevel = getOrHandover(player.getFoodLevel(), baton, ProfileSnapshot::foodLevel, config.getFood());
+        var saturation = getOrHandover(player.getSaturation(), baton, ProfileSnapshot::saturation, config.getFood());
+        var exhaustion = getOrHandover(player.getExhaustion(), baton, ProfileSnapshot::exhaustion, config.getFood());
 
-        Integer remainingAir = null;
-        if (config.isAir()) {
-            remainingAir = player.getRemainingAir();
-        } else if (initial != null) {
-            remainingAir = initial.remainingAir();
-        }
+        var remainingAir = getOrHandover(player.getRemainingAir(), baton, ProfileSnapshot::remainingAir, config.getAir());
 
         var snapshot = new ProfileSnapshot(
                 snapshotId,
@@ -104,28 +99,28 @@ public class ProfileSnapshotHandler extends CacheableSnapshotHandler<ProfileSnap
 
     @Override
     public boolean apply(@NotNull Player player, @NotNull ProfileSnapshot snapshot) {
-        if (config.isGameMode()) {
+        if (config.getGameMode() == Enabled.TRUE) {
             Optional.ofNullable(snapshot.gameMode()).ifPresent(player::setGameMode);
         }
-        if (config.isOp()) {
+        if (config.getOp() == Enabled.TRUE) {
             Optional.ofNullable(snapshot.op()).ifPresent(player::setOp);
         }
-        if (config.isExp()) {
+        if (config.getExp() == Enabled.TRUE) {
             Optional.ofNullable(snapshot.level()).ifPresent(player::setLevel);
             Optional.ofNullable(snapshot.exp()).ifPresent(player::setExp);
         }
-        if (config.isHealth()) {
+        if (config.getHealth() == Enabled.TRUE) {
             Optional.ofNullable(snapshot.health()).ifPresent(player::setHealth);
             Optional.ofNullable(snapshot.maxHealth()).ifPresent(maxHealth -> {
                 Optional.ofNullable(player.getAttribute(Attribute.GENERIC_MAX_HEALTH)).ifPresent(attr -> attr.setBaseValue(maxHealth));
             });
         }
-        if (config.isFood()) {
+        if (config.getFood() == Enabled.TRUE) {
             Optional.ofNullable(snapshot.foodLevel()).ifPresent(player::setFoodLevel);
             Optional.ofNullable(snapshot.saturation()).ifPresent(player::setSaturation);
             Optional.ofNullable(snapshot.exhaustion()).ifPresent(player::setExhaustion);
         }
-        if (config.isAir()) {
+        if (config.getAir() == Enabled.TRUE) {
             Optional.ofNullable(snapshot.remainingAir()).ifPresent(player::setRemainingAir);
         }
         return true;

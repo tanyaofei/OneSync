@@ -56,32 +56,32 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
     @ToString
     public final static class SynchronizeConfig {
 
-        private boolean inventory;
-        private boolean enderChest;
-        private boolean pdc;
-        private boolean gameMode;
-        private boolean op;
-        private boolean health;
-        private boolean exp;
-        private boolean food;
-        private boolean air;
-        private boolean advancements;
-        private boolean potionEffects;
-        private boolean vault;
+        private Enabled inventory;
+        private Enabled enderChest;
+        private Enabled pdc;
+        private Enabled gameMode;
+        private Enabled op;
+        private Enabled health;
+        private Enabled exp;
+        private Enabled food;
+        private Enabled air;
+        private Enabled advancements;
+        private Enabled potionEffects;
+        private Enabled vault;
 
         public void reload(@NotNull FileConfiguration file) {
-            this.inventory = file.getBoolean("synchronize.inventory", true);
-            this.enderChest = file.getBoolean("synchronize.ender-chest", true);
-            this.pdc = file.getBoolean("synchronize.pdc", false);
-            this.gameMode = file.getBoolean("synchronize.profile.game-mode", false);
-            this.op = file.getBoolean("synchronize.profile.op", false);
-            this.health = file.getBoolean("synchronize.profile.health", false);
-            this.exp = file.getBoolean("synchronize.profile.exp", false);
-            this.food = file.getBoolean("synchronize.profile.food", false);
-            this.air = file.getBoolean("synchronize.profile.air", false);
-            this.advancements = file.getBoolean("synchronize.advancements", false);
-            this.potionEffects = file.getBoolean("synchronize.potion-effects", false);
-            this.vault = file.getBoolean("synchronize.vault", false);
+            this.inventory = Enabled.ofValue(file.getString("synchronize.inventory", "true"));
+            this.enderChest = Enabled.ofValue(file.getString("synchronize.ender-chest", "true"));
+            this.pdc = Enabled.ofValue(file.getString("synchronize.pdc", "false"));
+            this.gameMode = Enabled.ofValue(file.getString("synchronize.profile.game-mode", "false"));
+            this.op = Enabled.ofValue(file.getString("synchronize.profile.op", "false"));
+            this.health = Enabled.ofValue(file.getString("synchronize.profile.health", "false"));
+            this.exp = Enabled.ofValue(file.getString("synchronize.profile.exp", "false"));
+            this.food = Enabled.ofValue(file.getString("synchronize.profile.food", "false"));
+            this.air = Enabled.ofValue(file.getString("synchronize.profile.air", "false"));
+            this.advancements = Enabled.ofValue(file.getString("synchronize.advancements", "false"));
+            this.potionEffects = Enabled.ofValue(file.getString("synchronize.potion-effects", "false"));
+            this.vault = Enabled.ofValue(file.getString("synchronize.vault", "false"));
         }
     }
 

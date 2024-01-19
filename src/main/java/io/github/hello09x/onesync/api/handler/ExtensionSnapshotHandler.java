@@ -36,7 +36,7 @@ public abstract class ExtensionSnapshotHandler<T extends SnapshotComponent> impl
     public abstract @NotNull T deserialize(@NotNull ExtensionSnapshot snapshot);
 
     @Override
-    public void save(@NotNull Long snapshotId, @NotNull Player player) {
+    public void save(@NotNull Long snapshotId, @NotNull Player player, @Nullable T baton) {
         var snapshot = new ExtensionSnapshot(
                 null,
                 snapshotId,

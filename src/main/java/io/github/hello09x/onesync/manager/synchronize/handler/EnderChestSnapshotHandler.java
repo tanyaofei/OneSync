@@ -2,6 +2,7 @@ package io.github.hello09x.onesync.manager.synchronize.handler;
 
 import io.github.hello09x.bedrock.util.InventoryUtils;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
+import io.github.hello09x.onesync.config.Enabled;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
 import io.github.hello09x.onesync.repository.EnderChestSnapshotRepository;
@@ -35,13 +36,15 @@ public class EnderChestSnapshotHandler extends CacheableSnapshotHandler<EnderChe
     }
 
     @Override
-    public @Nullable EnderChestSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable EnderChestSnapshot initial) {
-        if (!config.isEnderChest()) {
-            if (initial != null) {
-                var snapshot = new EnderChestSnapshot(snapshotId, initial.playerId(), initial.items());
+    public @Nullable EnderChestSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable EnderChestSnapshot baton) {
+        if (config.getEnderChest() == Enabled.FALSE) {
+            return null;
+        }
+        if (config.getEnderChest() == Enabled.ISOLATED) {
+            if (baton != null) {
+                var snapshot = new EnderChestSnapshot(snapshotId, baton.playerId(), baton.items());
                 repository.insert(snapshot);
                 return snapshot;
-
             }
             return null;
         }
@@ -63,7 +66,7 @@ public class EnderChestSnapshotHandler extends CacheableSnapshotHandler<EnderChe
 
     @Override
     public boolean apply(@NotNull Player player, @NotNull EnderChestSnapshot snapshot) {
-        if (!config.isEnderChest()) {
+        if (config.getEnderChest() != Enabled.TRUE) {
             return false;
         }
 

@@ -129,7 +129,7 @@ public record ProfileSnapshot(
                 }
 
                 try {
-                    ProfileSnapshotHandler.instance.apply(player, this, true);
+                    ProfileSnapshotHandler.instance.apply(player, this);
                     viewer.sendMessage(textOfChildren(text("为 ", GRAY), text(player.getName(), WHITE), text(" 恢复数据成功", GRAY)));
                 } catch (Throwable e) {
                     log.severe(Throwables.getStackTraceAsString(e));
