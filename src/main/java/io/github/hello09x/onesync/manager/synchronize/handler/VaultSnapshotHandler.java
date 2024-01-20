@@ -96,9 +96,12 @@ public class VaultSnapshotHandler extends CacheableSnapshotHandler<VaultSnapshot
             throw new IllegalStateException("服务器没有启用经济插件, 无法恢复 %s 的经济快照".formatted(player.getName()));
         }
 
-        var current = this.holder.economy.getBalance(player);
-        this.holder.economy.withdrawPlayer(player, current);
-        this.holder.economy.depositPlayer(player, snapshot.balance());
+        var diff = snapshot.balance() - this.holder.economy.getBalance(player);
+        if (diff > 0) {
+            this.holder.economy.depositPlayer(player, diff);
+        } else if (diff < 0) {
+            this.holder.economy.withdrawPlayer(player, -diff);
+        }
         return true;
     }
 
