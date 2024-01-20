@@ -47,6 +47,7 @@ public class TeleportManager implements PluginMessageListener {
     private final static String CTL_ASK = "ask";
     private final static String CTL_ACCEPT = "accept";
     private final static String CTL_DENY = "deny";
+    private final static String CTL_IGNORE = "disabled";
     private final static String CTL_TELEPORT = "teleport";
 
     private final ServerManager serverList = ServerManager.instance;
@@ -168,6 +169,25 @@ public class TeleportManager implements PluginMessageListener {
     }
 
     /**
+     * 回应没有启用跨服传送
+     *
+     * @param receiver  接收方
+     * @param requester 发送方
+     */
+    public void ignore(@NotNull Player receiver, @NotNull String requester) {
+        repository.deleteByRequesterAndReceiver(requester, receiver.getName());
+
+        var out = ByteStreams.newDataOutput();
+        out.writeUTF(CTL_IGNORE);
+        out.writeUTF(requester);
+        out.writeUTF(receiver.getName());
+        var message = out.toByteArray();
+
+        BungeeCord.sendPluginMessage(Main.getInstance(), receiver, BungeeCord.asForward(SUB_CHANNEL, message));
+        this.onPluginMessageReceived(BungeeCord.CHANNEL, receiver, BungeeCord.asReceivedForward(SUB_CHANNEL, message));
+    }
+
+    /**
      * 取消传送请求
      *
      * @param requester 发起人
@@ -213,6 +233,7 @@ public class TeleportManager implements PluginMessageListener {
 
         switch (in.readUTF()) {
             case CTL_ASK -> this.onAsk(in);
+            case CTL_IGNORE -> this.onIgnored(in);
             case CTL_ACCEPT -> this.onAccept(in);
             case CTL_DENY -> this.onDeny(in);
             case CTL_TELEPORT -> this.onTeleport(in);
@@ -229,6 +250,12 @@ public class TeleportManager implements PluginMessageListener {
         if (receiver == null) {
             return;
         }
+
+        if (!config.isEnabled()) {
+            this.ignore(receiver, requester);
+            return;
+        }
+
         var force = in.readBoolean();
         if (force) {
             this.answer(receiver, requester, true, true);
@@ -360,6 +387,23 @@ public class TeleportManager implements PluginMessageListener {
     }
 
     /**
+     * 接收到 {@link #CTL_IGNORE}, 当发送人在此服务器时处理
+     * <p>告诉发送人对方所在服务器没有启用跨服传送</p>
+     */
+    public void onIgnored(@NotNull ByteArrayDataInput in) {
+        var requester = in.readUTF();
+        var receiver = in.readUTF();
+
+        var player = Bukkit.getPlayerExact(requester);
+        if (player == null) {
+            // 发起者不在此服务器
+            return;
+        }
+
+        player.sendMessage(textOfChildren(text(receiver, WHITE), text(" 所在的服务器没有开启跨服传送", GRAY)));
+    }
+
+    /**
      * 接收到 {@link #CTL_TELEPORT}, 当接风人是此服务器时处理
      * <ul>
      *     <li>将坐标记录起来</li>
@@ -423,8 +467,8 @@ public class TeleportManager implements PluginMessageListener {
         }
 
         return before.getBlockX() != now.getBlockX()
-                || before.getBlockY() != now.getBlockY()
-                || before.getBlockZ() != now.getBlockZ();
+               || before.getBlockY() != now.getBlockY()
+               || before.getBlockZ() != now.getBlockZ();
     }
 
     /**
