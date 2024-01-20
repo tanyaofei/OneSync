@@ -79,10 +79,10 @@ public class TeleportManager implements PluginMessageListener {
     /**
      * 发起一个传送请求
      *
-     * @param requester 发起人
-     * @param receiver  接收人
+     * @param requester 发送方
+     * @param receiver  接收方
      * @param type      传送类型
-     * @return 返回给发送人的提示消息
+     * @return 返回给发送方的提示消息
      */
     public @NotNull Component ask(@NotNull Player requester, @NotNull String receiver, @NotNull TeleportType type, boolean force) {
         var expirations = LocalDateTime.now().plus(config.getExpiresIn());
@@ -120,10 +120,10 @@ public class TeleportManager implements PluginMessageListener {
     /**
      * 回应传送请求
      *
-     * @param receiver  接收人
-     * @param requester 发起人
+     * @param receiver  接收方
+     * @param requester 发送方
      * @param accept    是否接受传送
-     * @return 返回给接收人的提示消息
+     * @return 返回给接收方的提示消息
      */
     public @NotNull Component answer(@NotNull Player receiver, @Nullable String requester, boolean accept) {
         return this.answer(receiver, requester, accept, false);
@@ -132,8 +132,8 @@ public class TeleportManager implements PluginMessageListener {
     /**
      * 回应传送请求
      *
-     * @param receiver  接收人
-     * @param requester 发起人
+     * @param receiver  接收方
+     * @param requester 发送方
      * @param accept    是否接受传送
      * @param force     是否是强制接受
      * @return 返回给接受人的消息
@@ -190,9 +190,9 @@ public class TeleportManager implements PluginMessageListener {
     /**
      * 取消传送请求
      *
-     * @param requester 发起人
-     * @param receiver  接收人
-     * @return 返回给发送人的提示消息
+     * @param requester 发送方
+     * @param receiver  接收方
+     * @return 返回给发送方的提示消息
      */
     public @NotNull Component cancel(@NotNull Player requester, @Nullable String receiver) {
         var expirations = LocalDateTime.now().plus(config.getExpiresIn());
@@ -241,7 +241,7 @@ public class TeleportManager implements PluginMessageListener {
     }
 
     /**
-     * 接收到 {@link #CTL_ASK}, 当接收人在此服务器时处理
+     * 接收到 {@link #CTL_ASK}, 当接收方在此服务器时处理
      */
     public void onAsk(@NotNull ByteArrayDataInput in) {
         var type = TeleportType.valueOf(in.readUTF());
@@ -304,7 +304,7 @@ public class TeleportManager implements PluginMessageListener {
         var receiver = in.readUTF();
         var force = in.readBoolean();
 
-        // 发起人在此服务器
+        // 发送方在此服务器
         Optional.ofNullable(Bukkit.getPlayerExact(requester)).ifPresent(p -> p.sendMessage(textOfChildren(
                 text(receiver, WHITE),
                 text(" 已接受你的传送请求", GRAY)
@@ -369,8 +369,8 @@ public class TeleportManager implements PluginMessageListener {
     }
 
     /**
-     * 接收到 {@link #CTL_DENY}, 当发送人在此服务器时处理
-     * <p>告诉发送人他的传送请求被拒绝了</p>
+     * 接收到 {@link #CTL_DENY}, 当发送方在此服务器时处理
+     * <p>告诉发送方他的传送请求被拒绝了</p>
      */
     public void onDeny(@NotNull ByteArrayDataInput in) {
         in.readUTF();   // type
@@ -387,8 +387,8 @@ public class TeleportManager implements PluginMessageListener {
     }
 
     /**
-     * 接收到 {@link #CTL_IGNORE}, 当发送人在此服务器时处理
-     * <p>告诉发送人对方所在服务器没有启用跨服传送</p>
+     * 接收到 {@link #CTL_IGNORE}, 当发送方在此服务器时处理
+     * <p>告诉发送方对方所在服务器没有启用跨服传送</p>
      */
     public void onIgnored(@NotNull ByteArrayDataInput in) {
         var requester = in.readUTF();
@@ -446,7 +446,7 @@ public class TeleportManager implements PluginMessageListener {
                 }
             });
         } else {
-            // 传送人不在服务器, 让他切换服务器
+            // 传送放不在服务器, 让他切换服务器
             this.teleportLocations.put(teleported, Pair.of(player.getLocation(), new MutableInt(1200)));
             if (!BungeeCord.connectOther(Main.getInstance(), teleported, serverList.getCurrent())) {
                 this.teleportLocations.remove(teleported);
