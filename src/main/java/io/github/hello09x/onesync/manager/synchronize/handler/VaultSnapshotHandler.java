@@ -96,6 +96,7 @@ public class VaultSnapshotHandler extends CacheableSnapshotHandler<VaultSnapshot
             throw new IllegalStateException("服务器没有启用经济插件, 无法恢复 %s 的经济快照".formatted(player.getName()));
         }
 
+        // fixme: Folia 并发不在一个事务里
         var diff = snapshot.balance() - this.holder.economy.getBalance(player);
         if (diff > 0) {
             this.holder.economy.depositPlayer(player, diff);
