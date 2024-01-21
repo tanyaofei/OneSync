@@ -44,11 +44,11 @@ public class TeleportManager implements PluginMessageListener {
     public final static TeleportManager instance = new TeleportManager();
     private final static Logger log = Main.getInstance().getLogger();
 
-    private final static String CTL_ASK = "ask";
-    private final static String CTL_ACCEPT = "accept";
-    private final static String CTL_DENY = "deny";
-    private final static String CTL_IGNORE = "disabled";
-    private final static String CTL_TELEPORT = "teleport";
+    private final static String CTL_ASK = "ASK";
+    private final static String CTL_ACCEPT = "ACCEPT";
+    private final static String CTL_DENY = "DENY";
+    private final static String CTL_IGNORE = "IGNORE";
+    private final static String CTL_TELEPORT = "TELEPORT";
 
     private final ServerManager serverList = ServerManager.instance;
     private final WarmupManager warmupManager = WarmupManager.instance;
