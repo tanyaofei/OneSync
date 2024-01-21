@@ -15,7 +15,7 @@ import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 
 public class TeleportCommand {
 
-    public final static String ALL_PLAYERS = "--all";
+    public final static String ALL_PLAYERS = "-a";
 
     public final static TeleportCommand instance = new TeleportCommand();
 
