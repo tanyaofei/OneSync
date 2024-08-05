@@ -1,11 +1,11 @@
 package io.github.hello09x.onesync.repository.model;
 
-import io.github.hello09x.bedrock.database.Table;
-import io.github.hello09x.bedrock.database.TableField;
-import io.github.hello09x.bedrock.database.TableId;
-import io.github.hello09x.bedrock.util.Components;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.core.utils.ComponentUtils;
+import io.github.hello09x.devtools.database.jdbc.RowMapper;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
-import io.github.hello09x.onesync.util.PotionEffectListTypeHandler;
+import io.github.hello09x.onesync.util.PotionEffectListTypeCodec;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -15,26 +15,27 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static io.github.hello09x.bedrock.util.Components.noItalic;
+import static io.github.hello09x.devtools.core.utils.ComponentUtils.noItalic;
 import static net.kyori.adventure.text.Component.*;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 
-@Table("potion_effect_snapshot")
 public record PotionEffectSnapshot(
 
-        @TableId("snapshot_id")
         Long snapshotId,
 
-        @TableField("player_id")
+        @NotNull
         UUID playerId,
 
-        @TableField(value = "effects", typeHandler = PotionEffectListTypeHandler.class)
+        @NotNull
         List<PotionEffect> effects
 
 ) implements SnapshotComponent {
@@ -48,7 +49,7 @@ public record PotionEffectSnapshot(
     public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> prevMenu) {
         var item = new ItemStack(Material.POTION);
         item.editMeta(meta -> {
-            meta.displayName(noItalic("效果", DARK_PURPLE));
+            meta.displayName(noItalic(text("效果", DARK_PURPLE)));
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             meta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
 
@@ -63,7 +64,7 @@ public record PotionEffectSnapshot(
                                         text(" : ", GRAY),
                                         text(getDuration(effect.getDuration()))
                                 ).color(WHITE)), Stream.of(empty()))
-                        .map(Components::noItalic)
+                        .map(ComponentUtils::noItalic)
                         .toList());
             }
         });
@@ -104,6 +105,26 @@ public record PotionEffectSnapshot(
             return "%02d:%02d".formatted(minutes, seconds);
         } else {
             return "%02d:%02d:%02d".formatted(hours, minutes, seconds);
+        }
+    }
+
+    @Singleton
+    public static class PotionEffectSnapshotRowMapper implements RowMapper<PotionEffectSnapshot> {
+
+        private final PotionEffectListTypeCodec potionEffectListTypeCodec;
+
+        @Inject
+        public PotionEffectSnapshotRowMapper(PotionEffectListTypeCodec potionEffectListTypeCodec) {
+            this.potionEffectListTypeCodec = potionEffectListTypeCodec;
+        }
+
+        @Override
+        public @Nullable PotionEffectSnapshot mapRow(@NotNull ResultSet rs, int rowNum) throws SQLException {
+            return new PotionEffectSnapshot(
+                    rs.getObject("snapshot_id", Long.class),
+                    UUID.fromString(rs.getString("snapshot_id")),
+                    potionEffectListTypeCodec.deserialize(rs.getString("effects"))
+            );
         }
     }
 

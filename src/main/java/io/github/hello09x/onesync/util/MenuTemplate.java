@@ -1,7 +1,7 @@
 package io.github.hello09x.onesync.util;
 
-import io.github.hello09x.bedrock.util.InventoryUtils;
-import io.github.hello09x.bedrock.util.Mth;
+import io.github.hello09x.devtools.core.utils.InventoryUtils;
+import io.github.hello09x.devtools.core.utils.Mth;
 import io.github.hello09x.onesync.Main;
 import net.kyori.adventure.text.Component;
 import org.apache.commons.lang3.mutable.MutableBoolean;

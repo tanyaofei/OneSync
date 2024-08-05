@@ -1,92 +1,69 @@
 package io.github.hello09x.onesync.repository;
 
-import io.github.hello09x.bedrock.database.Repository;
-import io.github.hello09x.onesync.Main;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.database.jdbc.JdbcTemplate;
 import io.github.hello09x.onesync.repository.model.Locking;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.util.UUID;
 
-public class LockingRepository extends Repository<Locking> {
+@Singleton
+public class LockingRepository {
 
 
-    public final static LockingRepository instance = new LockingRepository(Main.getInstance());
+    private final JdbcTemplate jdbc;
+    private final Locking.LockingRowMapper rowMapper;
 
-    public LockingRepository(@NotNull Plugin plugin) {
-        super(plugin);
+    @Inject
+    public LockingRepository(JdbcTemplate jdbc, Locking.LockingRowMapper rowMapper) {
+        this.jdbc = jdbc;
+        this.rowMapper = rowMapper;
+        this.initTables();
     }
 
     public @Nullable Locking selectById(@NotNull UUID id) {
-        return super.selectById(id.toString());
+        return jdbc.queryForObject("select * from locking where id = ?", rowMapper, id);
     }
 
-    public @Nullable Locking selectById(@NotNull Serializable id) {
-        throw new UnsupportedOperationException();
-    }
-
-    public boolean setLock(@NotNull UUID playerId, @NotNull String serverId, boolean lock) {
-        var modification = lock
+    @CanIgnoreReturnValue
+    public int insertOrUpdate(@NotNull UUID playerId, @NotNull String serverId, boolean lock) {
+        var sql = lock
                 ? "replace into `locking` (player_id, server_id) values (?, ?)"
                 : "delete from `locking` where player_id = ? and server_id = ?";
 
-        return execute(connection -> {
-            try (PreparedStatement stm = connection.prepareStatement(modification)) {
-                stm.setString(1, playerId.toString());
-                stm.setString(2, serverId);
-                return stm.executeUpdate() > 0;
-            }
-        });
+        return jdbc.update(sql, playerId.toString(), serverId);
     }
 
+    @CanIgnoreReturnValue
     public int updateServerId(@NotNull String from, @NotNull String to) {
         var sql = "update `locking` set server_id = ? where server_id = ?";
-        return execute(connection -> {
-            try (PreparedStatement stm = connection.prepareStatement(sql)) {
-                stm.setString(1, to);
-                stm.setString(2, from);
-                return stm.executeUpdate();
-            }
-        });
+
+        return jdbc.update(sql, to, from);
     }
 
+    @CanIgnoreReturnValue
     public int deleteByPlayerId(@NotNull UUID playerId) {
         var sql = "delete from locking where player_id = ?";
-        return execute(connection -> {
-            try (PreparedStatement stm = connection.prepareStatement(sql)) {
-                stm.setString(1, playerId.toString());
-                return stm.executeUpdate();
-            }
-        });
+        return jdbc.update(sql, playerId.toString());
     }
 
+    @CanIgnoreReturnValue
     public int deleteByServerId(@NotNull String serverId) {
         var sql = "delete from locking where server_id = ?";
-        return execute(connection -> {
-            try (PreparedStatement stm = connection.prepareStatement(sql)) {
-                stm.setString(1, serverId);
-                return stm.executeUpdate();
-            }
-        });
+        return jdbc.update(sql, serverId);
     }
 
+    @CanIgnoreReturnValue
     public int deleteAll() {
-        return execute(connection -> {
-            try (Statement stm = connection.createStatement()) {
-                return stm.executeUpdate("delete from locking");
-            }
-        });
+        return jdbc.update("delete from locking");
     }
 
-    @Override
     protected void initTables() {
-        execute(connection -> {
-            var stm = connection.createStatement();
-            stm.executeUpdate("""
+        jdbc.execute("""
                     create table if not exists locking
                     (
                         player_id  char(36)                           not null comment '玩家 ID'
@@ -95,7 +72,6 @@ public class LockingRepository extends Repository<Locking> {
                         created_at datetime default CURRENT_TIMESTAMP not null comment '创建时间'
                     );
                     """);
-        });
     }
 
 

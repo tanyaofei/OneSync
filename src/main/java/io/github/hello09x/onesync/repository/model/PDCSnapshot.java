@@ -1,8 +1,7 @@
 package io.github.hello09x.onesync.repository.model;
 
-import io.github.hello09x.bedrock.database.Table;
-import io.github.hello09x.bedrock.database.TableField;
-import io.github.hello09x.bedrock.database.TableId;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.database.jdbc.RowMapper;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -11,28 +10,28 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import static io.github.hello09x.bedrock.util.Components.noItalic;
+import static io.github.hello09x.devtools.core.utils.ComponentUtils.noItalic;
 import static net.kyori.adventure.text.Component.empty;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.DARK_GREEN;
 import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 
-@Table("pdc_snapshot")
 public record PDCSnapshot(
 
-        @TableId("snapshot_id")
         Long snapshotId,
 
-        @TableField("player_id")
+        @NotNull
         UUID playerId,
 
-        @TableField("data")
-        byte[] data
+        byte @NotNull [] data
 
 ) implements SnapshotComponent {
 
@@ -44,13 +43,26 @@ public record PDCSnapshot(
     public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> prevMenu) {
         var item = new ItemStack(Material.STRUCTURE_VOID);
         item.editMeta(meta -> {
-            meta.displayName(noItalic("PDC", DARK_GREEN));
+            meta.displayName(noItalic(text("PDC", DARK_GREEN)));
             meta.lore(List.of(
                     text("该数据不支持预览", GRAY),
                     empty()
             ));
         });
         return new MenuItem(item);
+    }
+
+    @Singleton
+    public static class PDCSnapshotRowMapper implements RowMapper<PDCSnapshot> {
+
+        @Override
+        public @Nullable PDCSnapshot mapRow(@NotNull ResultSet rs, int rowNum) throws SQLException {
+            return new PDCSnapshot(
+                    rs.getObject("snapshot_id", Long.class),
+                    UUID.fromString(rs.getString("player_id")),
+                    rs.getBytes("data")
+            );
+        }
     }
 
 }

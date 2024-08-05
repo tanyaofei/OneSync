@@ -1,23 +1,41 @@
 package io.github.hello09x.onesync.repository.model;
 
-import io.github.hello09x.bedrock.database.Table;
-import io.github.hello09x.bedrock.database.TableField;
-import io.github.hello09x.bedrock.database.TableId;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.database.jdbc.RowMapper;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Objects;
 import java.util.UUID;
 
-@Table("locking")
 public record Locking(
 
-        @TableId("player_id")
         UUID playerId,
 
-        @TableId("server_id")
+        @NotNull
         String serverId,
 
-        @TableField("created_at")
+        @NotNull
         LocalDateTime createdAt
 
 ) {
+
+        @Singleton
+        public static class LockingRowMapper implements RowMapper<Locking> {
+
+                @Override
+                public @Nullable Locking mapRow(@NotNull ResultSet rs, int rowNum) throws SQLException {
+                        return new Locking(
+                                UUID.fromString(rs.getString("player_id")),
+                                rs.getString("server_id"),
+                                LocalDateTime.ofInstant(rs.getDate("created_at").toInstant(), ZoneId.systemDefault())
+                        );
+                }
+        }
+
+
 }

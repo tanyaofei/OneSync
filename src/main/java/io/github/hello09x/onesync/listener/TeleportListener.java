@@ -1,5 +1,7 @@
 package io.github.hello09x.onesync.listener;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.manager.teleport.TeleportManager;
 import org.bukkit.Sound;
@@ -13,13 +15,17 @@ import org.jetbrains.annotations.NotNull;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.RED;
 
-
+@Singleton
 public class TeleportListener implements Listener {
 
-    public final static TeleportListener instance = new TeleportListener();
+    private final TeleportManager manager;
+    private final OneSyncConfig.TeleportConfig config;
 
-    private final TeleportManager manager = TeleportManager.instance;
-    private final OneSyncConfig.TeleportConfig config = OneSyncConfig.instance.getTeleport();
+    @Inject
+    public TeleportListener(TeleportManager manager, OneSyncConfig config) {
+        this.manager = manager;
+        this.config = config.getTeleport();
+    }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onJoin(@NotNull PlayerJoinEvent event) {

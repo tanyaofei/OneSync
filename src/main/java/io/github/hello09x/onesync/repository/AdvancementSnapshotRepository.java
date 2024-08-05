@@ -1,41 +1,60 @@
 package io.github.hello09x.onesync.repository;
 
-import io.github.hello09x.bedrock.database.Repository;
-import io.github.hello09x.bedrock.database.typehandler.JsonTypeHandler;
-import io.github.hello09x.bedrock.util.Exceptions;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.gson.Gson;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.core.utils.Exceptions;
+import io.github.hello09x.devtools.database.jdbc.JdbcTemplate;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.AdvancementSnapshot;
-import org.bukkit.plugin.Plugin;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.sql.PreparedStatement;
-import java.sql.Statement;
+import java.util.List;
 
-public class AdvancementSnapshotRepository extends Repository<AdvancementSnapshot> {
+@Singleton
+public class AdvancementSnapshotRepository {
 
-    public final static AdvancementSnapshotRepository instance = new AdvancementSnapshotRepository(Main.getInstance());
+    private final JdbcTemplate jdbc;
+    private final AdvancementSnapshot.AdvancementSnapshotRowMapper rowMapper;
+    private final Gson gson;
 
-    public AdvancementSnapshotRepository(@NotNull Plugin plugin) {
-        super(plugin);
+    @Inject
+    public AdvancementSnapshotRepository(JdbcTemplate jdbc, AdvancementSnapshot.AdvancementSnapshotRowMapper rowMapper, Gson gson) {
+        this.jdbc = jdbc;
+        this.rowMapper = rowMapper;
+        this.gson = gson;
+        this.initTables();
     }
 
+    public @Nullable AdvancementSnapshot selectBySnapshotId(@NotNull Long snapshotId) {
+        return jdbc.queryForObject("select * from advancement_snapshot where snapshot_id = ?", rowMapper, snapshotId);
+    }
+
+    @CanIgnoreReturnValue
+    public int deleteBySnapshotIds(@NotNull List<Long> ids) {
+        if (ids.isEmpty()) {
+            return 0;
+        }
+        return jdbc.update("delete from advancement_snapshot where snapshot_id in (?)", StringUtils.join(ids, ","));
+    }
+
+    @CanIgnoreReturnValue
     public int insert(@NotNull AdvancementSnapshot snapshot) {
         var sql = "insert into advancement_snapshot (snapshot_id, player_id, advancements) values (?, ?, ?)";
-        return execute(connection -> {
-            try (PreparedStatement stm = connection.prepareStatement(sql)) {
-                stm.setLong(1, snapshot.snapshotId());
-                stm.setString(2, snapshot.playerId().toString());
-                stm.setString(3, JsonTypeHandler.gson.toJson(snapshot.advancements()));
-                return stm.executeUpdate();
-            }
-        });
+        return jdbc.update(
+                sql,
+                snapshot.snapshotId(),
+                snapshot.snapshotId(),
+                snapshot.playerId().toString(),
+                gson.toJson(snapshot.advancements())
+        );
     }
 
-    @Override
     protected void initTables() {
-        execute(connection -> {
-            Statement stm = connection.createStatement();
-            stm.executeUpdate("""
+        jdbc.execute("""
                     create table if not exists advancement_snapshot
                     (
                         snapshot_id  bigint   not null comment '快照 ID'
@@ -44,12 +63,13 @@ public class AdvancementSnapshotRepository extends Repository<AdvancementSnapsho
                         advancements json     not null comment '成就数据'
                     );
                     """);
-            Exceptions.noException(() -> {
-                stm.executeUpdate("""
+
+        Exceptions.suppress(Main.getInstance(), () -> {
+            jdbc.execute("""
                         create index advancement_snapshot_player_id_index
                             on advancement_snapshot (player_id);
                         """);
-            });
-        });
+        }, false);
+
     }
 }

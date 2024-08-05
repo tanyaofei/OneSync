@@ -2,8 +2,10 @@ package io.github.hello09x.onesync.manager.synchronize;
 
 import com.google.common.base.Throwables;
 import com.google.common.io.ByteStreams;
-import io.github.hello09x.bedrock.util.BungeeCord;
-import io.github.hello09x.bedrock.util.MCUtils;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.core.event.ConfigReloadedEvent;
+import io.github.hello09x.devtools.core.utils.BungeeCordUtils;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.constant.SubChannels;
@@ -11,6 +13,8 @@ import io.github.hello09x.onesync.repository.LockingRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,33 +22,34 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+@Singleton
 @SuppressWarnings("UnstableApiUsage")
-public class LockingManager implements PluginMessageListener {
+public class LockingManager implements PluginMessageListener, Listener {
 
-    public final static LockingManager instance = new LockingManager();
     public final static String COMMAND_ACQUIRE = "Acquire";
     private final static String ACQUIRE_ALL = "ALL";
     private final static String SUB_CHANNEL = SubChannels.Locking;
     private final static Logger log = Main.getInstance().getLogger();
 
-    private final LockingRepository repository = LockingRepository.instance;
+    private final LockingRepository repository;
 
-    private String serverId = OneSyncConfig.instance.getServerId();
+    private final OneSyncConfig config;
+    private String serverId;
 
-    public LockingManager() {
-        OneSyncConfig.instance.addListener(config -> {
-            if (!config.getServerId().equals(this.serverId)) {
-                var old = this.serverId;
-                try {
-                    repository.updateServerId(old, config.getServerId());
-                } catch (Throwable e) {
-                    config.setServerId(old); // rollback
-                    throw e;
-                }
-                this.serverId = config.getServerId();
-                log.info("服务器 ID 已发生变化, %s -> %s".formatted(old, config.getServerId()));
-            }
-        });
+    @Inject
+    public LockingManager(LockingRepository repository, OneSyncConfig config) {
+        this.repository = repository;
+        this.config = config;
+        this.serverId = config.getServerId();
+    }
+
+    @EventHandler
+    public void onConfigReloaded(@NotNull ConfigReloadedEvent event) {
+        var oldServerId = this.serverId;
+        if (!this.config.getServerId().equals(this.serverId)) {
+            this.serverId = this.config.getServerId();
+            log.info("服务器 ID 已发生变化, %s -> %s".formatted(oldServerId, this.serverId));
+        }
     }
 
     /**
@@ -64,7 +69,7 @@ public class LockingManager implements PluginMessageListener {
      */
     public void acquire(@NotNull UUID playerId) {
         Optional.ofNullable(Bukkit.getPlayer(playerId))
-                .ifPresent(p -> repository.setLock(p.getUniqueId(), this.serverId, true));
+                .ifPresent(p -> repository.insertOrUpdate(p.getUniqueId(), this.serverId, true));
     }
 
     /**
@@ -73,8 +78,10 @@ public class LockingManager implements PluginMessageListener {
      * @param player 玩家
      */
     public void acquire(@NotNull Player player) {
-        MCUtils.ensureMainThread();
-        repository.setLock(player.getUniqueId(), this.serverId, true);
+        if (!Bukkit.isPrimaryThread()) {
+            throw new IllegalStateException("Not in main thread");
+        }
+        repository.insertOrUpdate(player.getUniqueId(), this.serverId, true);
     }
 
     /**
@@ -83,8 +90,10 @@ public class LockingManager implements PluginMessageListener {
      * @param player 玩家
      */
     public void release(@NotNull Player player) {
-        MCUtils.ensureMainThread();
-        repository.setLock(player.getUniqueId(), this.serverId, false);
+        if (!Bukkit.isPrimaryThread()) {
+            throw new IllegalStateException("Not in main thread");
+        }
+        repository.insertOrUpdate(player.getUniqueId(), this.serverId, false);
     }
 
     /**
@@ -100,10 +109,12 @@ public class LockingManager implements PluginMessageListener {
      * 对所有当前服务器在线的玩家上锁
      */
     public void acquireAll() {
-        MCUtils.ensureMainThread();
+        if (!Bukkit.isPrimaryThread()) {
+            throw new IllegalStateException("Not in main thread");
+        }
         for (var p : Bukkit.getOnlinePlayers()) {
             try {
-                repository.setLock(p.getUniqueId(), this.serverId, true);
+                repository.insertOrUpdate(p.getUniqueId(), this.serverId, true);
             } catch (Throwable e) {
                 log.severe(Throwables.getStackTraceAsString(e));
             }
@@ -140,7 +151,7 @@ public class LockingManager implements PluginMessageListener {
      * @param player 玩家
      */
     public void broadcastRequire(@NotNull OfflinePlayer player) {
-        BungeeCord.sendForwardPluginMessage(Main.getInstance(), SUB_CHANNEL, () -> {
+        BungeeCordUtils.sendForwardPluginMessage(Main.getInstance(), SUB_CHANNEL, () -> {
             var message = ByteStreams.newDataOutput();
             message.writeUTF(COMMAND_ACQUIRE);
             message.writeUTF(player.getUniqueId().toString());
@@ -152,7 +163,7 @@ public class LockingManager implements PluginMessageListener {
      * 发送插件消息, 让其他服务器重新上锁
      */
     private void broadcastRequireAll() {
-        BungeeCord.sendForwardPluginMessage(Main.getInstance(), SUB_CHANNEL, () -> {
+        BungeeCordUtils.sendForwardPluginMessage(Main.getInstance(), SUB_CHANNEL, () -> {
             var message = ByteStreams.newDataOutput();
             message.writeUTF(COMMAND_ACQUIRE);
             message.writeUTF(ACQUIRE_ALL);
@@ -166,11 +177,11 @@ public class LockingManager implements PluginMessageListener {
             @NotNull Player player,
             byte @NotNull [] message
     ) {
-        if (!channel.equals(BungeeCord.CHANNEL)) {
+        if (!channel.equals(BungeeCordUtils.CHANNEL)) {
             return;
         }
 
-        var in = BungeeCord.parseReceivedForward(SUB_CHANNEL, message);
+        var in = BungeeCordUtils.parseReceivedForwardMessage(SUB_CHANNEL, message);
         if (in == null) {
             return;
         }

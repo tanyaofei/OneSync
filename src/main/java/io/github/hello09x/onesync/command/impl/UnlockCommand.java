@@ -1,5 +1,7 @@
 package io.github.hello09x.onesync.command.impl;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import dev.jorel.commandapi.executors.CommandArguments;
 import io.github.hello09x.onesync.manager.synchronize.LockingManager;
 import net.kyori.adventure.text.Component;
@@ -16,10 +18,8 @@ import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 import static net.kyori.adventure.text.format.NamedTextColor.WHITE;
 
+@Singleton
 public class UnlockCommand {
-
-    public final static UnlockCommand instance = new UnlockCommand();
-    private final LockingManager manager = LockingManager.instance;
 
     private final static MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
 
@@ -35,6 +35,13 @@ public class UnlockCommand {
             text(">> 解锁成功 <<", WHITE),
             text("=========================================================================", GRAY)
     );
+
+    private final LockingManager manager;
+
+    @Inject
+    public UnlockCommand(LockingManager manager) {
+        this.manager = manager;
+    }
 
     /**
      * 解锁指定玩家

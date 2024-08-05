@@ -41,8 +41,8 @@
 
 | 命令         | 权限                       |
 |------------|--------------------------|
-| tpa        | onesync.teleport.tpa     |
-| tpahere    | onesync.teleport.tpahere |
+| tpa        | onesync.teleportRequest.tpa     |
+| tpahere    | onesync.teleportRequest.tpahere |
 | tp         | OP                       |
 | tphere     | OP                       |
 | tphereall  | OP                       |
@@ -166,7 +166,7 @@ snapshot:
 
 
 # 跨服传送配置
-teleport:
+teleportRequest:
 
   # 是否启用
   # 请保持多个服务器的这个配置统一, 否则会发生奇怪的事情

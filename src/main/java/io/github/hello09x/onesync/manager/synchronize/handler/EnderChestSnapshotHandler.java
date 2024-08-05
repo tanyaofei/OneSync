@@ -1,6 +1,8 @@
 package io.github.hello09x.onesync.manager.synchronize.handler;
 
-import io.github.hello09x.bedrock.util.InventoryUtils;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.core.utils.InventoryUtils;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.Enabled;
 import io.github.hello09x.onesync.config.OneSyncConfig;
@@ -15,15 +17,22 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
 
+@Singleton
 public class EnderChestSnapshotHandler extends CacheableSnapshotHandler<EnderChestSnapshot> {
 
-    public final static EnderChestSnapshotHandler instance = new EnderChestSnapshotHandler();
     private final static SnapshotType TYPE = new SnapshotType(
             "onesync:snapshot.ender-chest",
             "末影箱"
     );
-    private final EnderChestSnapshotRepository repository = EnderChestSnapshotRepository.instance;
-    private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
+
+    private final EnderChestSnapshotRepository repository;
+    private final OneSyncConfig.SynchronizeConfig config;
+
+    @Inject
+    public EnderChestSnapshotHandler(EnderChestSnapshotRepository repository, OneSyncConfig.SynchronizeConfig config) {
+        this.repository = repository;
+        this.config = config;
+    }
 
     @Override
     public @NotNull SnapshotType snapshotType() {
@@ -32,7 +41,7 @@ public class EnderChestSnapshotHandler extends CacheableSnapshotHandler<EnderChe
 
     @Override
     public @Nullable EnderChestSnapshot getOne0(@NotNull Long snapshotId) {
-        return repository.selectById(snapshotId);
+        return repository.selectBySnapshotId(snapshotId);
     }
 
     @Override
@@ -61,7 +70,7 @@ public class EnderChestSnapshotHandler extends CacheableSnapshotHandler<EnderChe
 
     @Override
     public void remove0(@NotNull List<Long> snapshotIds) {
-        repository.deleteByIds(snapshotIds);
+        repository.deleteBySnapshotIds(snapshotIds);
     }
 
     @Override

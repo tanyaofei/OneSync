@@ -1,23 +1,32 @@
 package io.github.hello09x.onesync.repository;
 
-import io.github.hello09x.bedrock.database.Repository;
-import io.github.hello09x.bedrock.util.Exceptions;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.database.jdbc.JdbcTemplate;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.ProfileSnapshot;
-import org.bukkit.plugin.Plugin;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.sql.PreparedStatement;
-import java.sql.Statement;
+import java.util.List;
 import java.util.Optional;
 
-public class ProfileSnapshotRepository extends Repository<ProfileSnapshot> {
+import static io.github.hello09x.devtools.core.utils.Exceptions.suppress;
 
-    public final static ProfileSnapshotRepository instance = new ProfileSnapshotRepository(Main.getInstance());
+@Singleton
+public class ProfileSnapshotRepository {
 
+    private final JdbcTemplate jdbc;
 
-    public ProfileSnapshotRepository(@NotNull Plugin plugin) {
-        super(plugin);
+    private final ProfileSnapshot.ProfileSnapshotRowMapper rowMapper;
+
+    @Inject
+    public ProfileSnapshotRepository(JdbcTemplate jdbc, ProfileSnapshot.ProfileSnapshotRowMapper rowMapper) {
+        this.jdbc = jdbc;
+        this.rowMapper = rowMapper;
+        this.initTables();
     }
 
     public int insert(@NotNull ProfileSnapshot snapshot) {
@@ -38,53 +47,63 @@ public class ProfileSnapshotRepository extends Repository<ProfileSnapshot> {
                 )
                 values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
-        return execute(connection -> {
-            try (PreparedStatement stm = connection.prepareStatement(sql)) {
-                stm.setLong(1, snapshot.snapshotId());
-                stm.setString(2, snapshot.playerId().toString());
-                stm.setString(3, Optional.ofNullable(snapshot.gameMode()).map(Enum::name).orElse(null));
-                stm.setObject(4, snapshot.op());
-                stm.setObject(5, snapshot.level());
-                stm.setObject(6, snapshot.exp());
-                stm.setObject(7, snapshot.health());
-                stm.setObject(8, snapshot.maxHealth());
-                stm.setObject(9, snapshot.foodLevel());
-                stm.setObject(10, snapshot.saturation());
-                stm.setObject(11, snapshot.exhaustion());
-                stm.setObject(12, snapshot.remainingAir());
-                return stm.executeUpdate();
-            }
-        });
+
+
+        return jdbc.update(
+                sql,
+                snapshot.snapshotId(),
+                snapshot.playerId().toString(),
+                Optional.ofNullable(snapshot.gameMode()).map(Enum::name).orElse(null),
+                snapshot.op(),
+                snapshot.level(),
+                snapshot.exp(),
+                snapshot.health(),
+                snapshot.maxHealth(),
+                snapshot.foodLevel(),
+                snapshot.saturation(),
+                snapshot.exhaustion(),
+                snapshot.remainingAir()
+        );
     }
 
-    @Override
+    public @Nullable ProfileSnapshot selectBySnapshotId(@NotNull Long snapshotId) {
+        return jdbc.queryForObject("select * from profile_snapshot where snapshot_id=?", rowMapper, snapshotId);
+    }
+
+    @CanIgnoreReturnValue
+    public int deleteBySnapshotIds(@NotNull List<Long> snapshotIds) {
+        if (snapshotIds.isEmpty()) {
+            return 0;
+        }
+        return jdbc.update("delete from profile_snapshot where snapshot_id in (?)", StringUtils.join(snapshotIds, ","));
+    }
+
     protected void initTables() {
-        execute(connection -> {
-            Statement stm = connection.createStatement();
-            stm.executeUpdate("""
-                    create table if not exists profile_snapshot
-                    (
-                        snapshot_id   bigint      not null comment '快照 ID'
-                            primary key,
-                        player_id     char(36)    not null comment '玩家 ID',
-                        game_mode     varchar(32) null comment '游戏模式',
-                        op            tinyint(1)  null comment '是否 OP',
-                        level         int         null comment '等级',
-                        exp           float       null comment '当前经验值',
-                        health        double      null comment '生命值',
-                        max_health    double      null comment '最大生命值',
-                        food_level    int         null comment '饥饿值',
-                        saturation    float       null comment '饱食度',
-                        exhaustion    float       null comment '饥饿程度',
-                        remaining_air int         null comment '氧气值'
-                    );
-                    """);
-            Exceptions.noException(() -> {
-                stm.executeUpdate("""
+        jdbc.execute("""
+                     create table if not exists profile_snapshot
+                     (
+                         snapshot_id   bigint      not null comment '快照 ID'
+                             primary key,
+                         player_id     char(36)    not null comment '玩家 ID',
+                         game_mode     varchar(32) null comment '游戏模式',
+                         op            tinyint(1)  null comment '是否 OP',
+                         level         int         null comment '等级',
+                         exp           float       null comment '当前经验值',
+                         health        double      null comment '生命值',
+                         max_health    double      null comment '最大生命值',
+                         food_level    int         null comment '饥饿值',
+                         saturation    float       null comment '饱食度',
+                         exhaustion    float       null comment '饥饿程度',
+                         remaining_air int         null comment '氧气值'
+                     );
+                     """);
+
+        suppress(Main.getInstance(), () -> {
+            jdbc.execute("""
                         create index profile_snapshot_player_id_index
                             on profile_snapshot (player_id);
                         """);
-            });
-        });
+        }, false);
+
     }
 }

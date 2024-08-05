@@ -1,40 +1,52 @@
 package io.github.hello09x.onesync.repository;
 
-import io.github.hello09x.bedrock.database.Repository;
-import io.github.hello09x.bedrock.util.Exceptions;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.database.jdbc.JdbcTemplate;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.VaultSnapshot;
-import org.bukkit.plugin.Plugin;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.sql.PreparedStatement;
-import java.sql.Statement;
+import java.util.List;
 
-public class VaultSnapshotRepository extends Repository<VaultSnapshot> {
+import static io.github.hello09x.devtools.core.utils.Exceptions.suppress;
 
-    public final static VaultSnapshotRepository instance = new VaultSnapshotRepository(Main.getInstance());
+@Singleton
+public class VaultSnapshotRepository {
 
-    public VaultSnapshotRepository(@NotNull Plugin plugin) {
-        super(plugin);
+    private final JdbcTemplate jdbc;
+    private final VaultSnapshot.VaultSnapshotRowMapper rowMapper;
+
+    @Inject
+    public VaultSnapshotRepository(JdbcTemplate jdbc, VaultSnapshot.VaultSnapshotRowMapper rowMapper) {
+        this.jdbc = jdbc;
+        this.rowMapper = rowMapper;
+        this.initTables();
     }
 
+    @CanIgnoreReturnValue
     public int insert(@NotNull VaultSnapshot snapshot) {
         var sql = "insert into vault_snapshot (snapshot_id, player_id, balance) values (?, ?, ?)";
-        return execute(connection -> {
-            try (PreparedStatement stm = connection.prepareStatement(sql)) {
-                stm.setLong(1, snapshot.snapshotId());
-                stm.setString(2, snapshot.playerId().toString());
-                stm.setDouble(3, snapshot.balance());
-                return stm.executeUpdate();
-            }
-        });
+        return jdbc.update(sql, snapshot.snapshotId(), snapshot.playerId().toString(), snapshot.balance());
     }
 
-    @Override
+    public @Nullable VaultSnapshot selectBySnapshotId(@NotNull Long snapshotId) {
+        return jdbc.queryForObject("select * from vault_snapshot where snapshot_id = ?", rowMapper, snapshotId);
+    }
+
+    @CanIgnoreReturnValue
+    public int deleteBySnapshotIds(@NotNull List<Long> snapshotIds) {
+        if (snapshotIds.isEmpty()) {
+            return 0;
+        }
+        return jdbc.update("delete from vault_snapshot where snapshotIds in (?)", StringUtils.join(snapshotIds, ","));
+    }
+
     protected void initTables() {
-        execute(connection -> {
-            Statement stm = connection.createStatement();
-            stm.executeUpdate("""
+        jdbc.execute("""
                     create table if not exists vault_snapshot
                     (
                         snapshot_id bigint   not null comment '快照 ID'
@@ -44,12 +56,12 @@ public class VaultSnapshotRepository extends Repository<VaultSnapshot> {
                     );
                     """);
 
-            Exceptions.noException(() -> {
-                stm.executeUpdate("""
-                        create index vault_snapshot_player_id_index
-                            on vault_snapshot (player_id);
-                        """);
-            });
-        });
+
+        suppress(Main.getInstance(), () -> {
+            jdbc.execute("""
+                         create index vault_snapshot_player_id_index
+                             on vault_snapshot (player_id);
+                         """);
+        }, false);
     }
 }

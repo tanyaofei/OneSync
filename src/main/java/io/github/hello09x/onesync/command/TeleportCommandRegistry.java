@@ -1,5 +1,7 @@
 package io.github.hello09x.onesync.command;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import dev.jorel.commandapi.CommandPermission;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.ArgumentSuggestions;
@@ -12,19 +14,29 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.stream.Collectors;
 
-import static io.github.hello09x.bedrock.command.Commands.command;
-import static io.github.hello09x.bedrock.command.Commands.literal;
+import static io.github.hello09x.devtools.command.Commands.command;
 
+
+@Singleton
 public class TeleportCommandRegistry {
 
-    public static @NotNull Argument<String> globalPlayer(@NotNull String nodeName, boolean all) {
+    @Inject
+    private TeleportCommand teleportCommand;
+
+    @Inject
+    private PlayerManager playerManager;
+
+    @Inject
+    private OneSyncConfig.TeleportConfig teleportConfig;
+
+    public @NotNull Argument<String> globalPlayer(@NotNull String nodeName, boolean all) {
         return new CustomArgument<>(new StringArgument(nodeName), info -> {
             var input = info.currentInput();
-            if (all && info.sender().isOp() && input.equals(TeleportCommand.ALL_PLAYERS)) {
-                return TeleportCommand.ALL_PLAYERS;
+            if (all && info.sender().isOp() && input.equals(io.github.hello09x.onesync.command.impl.TeleportCommand.ALL_PLAYERS)) {
+                return io.github.hello09x.onesync.command.impl.TeleportCommand.ALL_PLAYERS;
             }
 
-            var name = PlayerManager.instance
+            var name = playerManager
                     .getPlayers()
                     .stream()
                     .filter(n -> n.equals(input))
@@ -44,14 +56,14 @@ public class TeleportCommandRegistry {
             var senderName = info.sender().getName();
             var input = info.currentArg().toLowerCase();
 
-            var suggestions = PlayerManager.instance
+            var suggestions = playerManager
                     .getPlayers()
                     .stream()
                     .filter(n -> n.toLowerCase().contains(input) && !n.equals(senderName))
                     .collect(Collectors.toList());
 
             if (all && info.sender().isOp()) {
-                suggestions.add(TeleportCommand.ALL_PLAYERS);
+                suggestions.add(io.github.hello09x.onesync.command.impl.TeleportCommand.ALL_PLAYERS);
             }
 
             return suggestions;
@@ -59,52 +71,52 @@ public class TeleportCommandRegistry {
     }
 
 
-    public static void register() {
-        var commands = OneSyncConfig.instance.getTeleport().getCommands();
+    public void register() {
+        var commands = teleportConfig.getCommands();
         command(commands.getOrDefault("stpa", "stpa"))
                 .withAliases("stpa", "onesync:tpa")
                 .withPermission(Permissions.TPA)
                 .withArguments(globalPlayer("player", true))
-                .executesPlayer(TeleportCommand.instance::tpa)
+                .executesPlayer(teleportCommand::tpa)
                 .override();
 
         command(commands.getOrDefault("stp", "stp"))
                 .withAliases("stp", "onesync:tp")
                 .withPermission(CommandPermission.OP)
                 .withArguments(globalPlayer("player", true))
-                .executesPlayer(TeleportCommand.instance::tp)
+                .executesPlayer(teleportCommand::tp)
                 .override();
 
         command(commands.getOrDefault("stphere", "stphere"))
                 .withAliases("stphere", "onesync:tphere")
                 .withPermission(CommandPermission.OP)
                 .withArguments(globalPlayer("player", true))
-                .executesPlayer(TeleportCommand.instance::tphere)
+                .executesPlayer(teleportCommand::tphere)
                 .override();
 
         command(commands.getOrDefault("stpahere", "stpahere"))
                 .withAliases("stpahere", "onesync:tpahere")
                 .withPermission(Permissions.TPAHERE)
                 .withArguments(globalPlayer("player", true))
-                .executesPlayer(TeleportCommand.instance::tpahere)
+                .executesPlayer(teleportCommand::tpahere)
                 .override();
 
         command(commands.getOrDefault("stpaccept", "stpaccept"))
                 .withAliases("stpaccept", "onesync:tpaccept")
                 .withOptionalArguments(globalPlayer("player", false))
-                .executesPlayer(TeleportCommand.instance::tpaccept)
+                .executesPlayer(teleportCommand::tpaccept)
                 .override();
 
         command(commands.getOrDefault("stpdeny", "stpdeny"))
                 .withAliases("stpdeny", "onesync:tpdeny")
                 .withOptionalArguments(globalPlayer("player", false))
-                .executesPlayer(TeleportCommand.instance::tpdeny)
+                .executesPlayer(teleportCommand::tpdeny)
                 .override();
 
         command(commands.getOrDefault("stpcancel", "stpcancel"))
                 .withAliases("stpcancel", "onesync:tpcancel")
                 .withOptionalArguments(globalPlayer("player", false))
-                .executesPlayer(TeleportCommand.instance::tpcancel)
+                .executesPlayer(teleportCommand::tpcancel)
                 .override();
 
 

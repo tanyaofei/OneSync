@@ -1,58 +1,72 @@
 package io.github.hello09x.onesync.repository;
 
-import io.github.hello09x.bedrock.database.Repository;
-import io.github.hello09x.bedrock.util.Exceptions;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.core.utils.Exceptions;
+import io.github.hello09x.devtools.database.jdbc.JdbcTemplate;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.InventorySnapshot;
-import io.github.hello09x.onesync.util.ItemStackMapTypeHandler;
+import io.github.hello09x.onesync.util.ItemStackCodec;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.sql.PreparedStatement;
-import java.sql.Statement;
+import java.util.List;
 import java.util.Map;
 
-public class InventorySnapshotRepository extends Repository<InventorySnapshot> {
+@Singleton
+public class InventorySnapshotRepository {
 
-    public final static InventorySnapshotRepository instance = new InventorySnapshotRepository(Main.getInstance());
+    private final JdbcTemplate jdbc;
+    private final InventorySnapshot.InventorySnapshotRowMapper rowMapper;
+    private final ItemStackCodec itemStackCodec;
 
-    public InventorySnapshotRepository(@NotNull Plugin plugin) {
-        super(plugin);
+    @Inject
+    public InventorySnapshotRepository(JdbcTemplate jdbc, InventorySnapshot.InventorySnapshotRowMapper rowMapper, ItemStackCodec itemStackCodec) {
+        this.jdbc = jdbc;
+        this.rowMapper = rowMapper;
+        this.itemStackCodec = itemStackCodec;
+        this.initTables();
     }
 
+    @CanIgnoreReturnValue
     public int insert(@NotNull InventorySnapshot snapshot) {
         var sql = """
                 insert into inventory_snapshot (snapshot_id, player_id, items, held_item_slot)
                 values (?, ?, ?, ?)
                 """;
-        return execute(connection -> {
-            try (PreparedStatement stm = connection.prepareStatement(sql)) {
-                stm.setLong(1, snapshot.snapshotId());
-                stm.setString(2, snapshot.playerId().toString());
-                ItemStackMapTypeHandler.instance.setParameter(stm, 3, snapshot.items());
-                stm.setInt(4, snapshot.heldItemSlot());
-                return stm.executeUpdate();
-            }
-        });
+
+        return jdbc.update(
+                sql,
+                snapshot.snapshotId(),
+                snapshot.playerId().toString(),
+                itemStackCodec.serialize(snapshot.items()),
+                snapshot.heldItemSlot()
+        );
     }
 
+    public @Nullable InventorySnapshot selectBySnapshotId(@NotNull Long snapshotId) {
+        return jdbc.queryForObject("select * from inventory_snapshot where snapshot_id = ?", rowMapper, snapshotId);
+    }
+
+    @CanIgnoreReturnValue
+    public int deleteBySnapshotIds(@NotNull List<Long> snapshotIds) {
+        if (snapshotIds.isEmpty()) {
+            return 0;
+        }
+        return jdbc.update("delete from inventory_snapshot where snapshot_id in (?)", StringUtils.join(snapshotIds, ","));
+    }
+
+    @CanIgnoreReturnValue
     public int updateItemsBySnapshotId(@NotNull Long snapshotId, @NotNull Map<Integer, ItemStack> items) {
         var sql = "update inventory_snapshot set items = ? where snapshot_id = ?";
-        return execute(connection -> {
-            try (PreparedStatement stm = connection.prepareStatement(sql)) {
-                ItemStackMapTypeHandler.instance.setParameter(stm, 1, items);
-                stm.setLong(2, snapshotId);
-                return stm.executeUpdate();
-            }
-        });
+        return jdbc.update(sql, itemStackCodec.serialize(items), snapshotId);
     }
 
-    @Override
     protected void initTables() {
-        execute(connection -> {
-            Statement stm = connection.createStatement();
-            stm.executeUpdate("""
+        jdbc.execute("""
                     create table if not exists `inventory_snapshot`
                     (
                         snapshot_id        bigint        not null comment '快照 ID'
@@ -62,13 +76,13 @@ public class InventorySnapshotRepository extends Repository<InventorySnapshot> {
                         held_item_slot     int default 0 not null comment '选中的物品槽'
                     );
                     """);
-            Exceptions.noException(() -> {
-                stm.executeUpdate("""
+
+        Exceptions.suppress(Main.getInstance(), () -> {
+            jdbc.execute("""
                         create index inventory_snapshot_player_id_index
                             on inventory_snapshot (player_id);
                         """);
-            });
-        });
+        }, false);
     }
 
 }

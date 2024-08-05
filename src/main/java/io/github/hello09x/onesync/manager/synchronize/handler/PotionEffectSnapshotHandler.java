@@ -1,5 +1,7 @@
 package io.github.hello09x.onesync.manager.synchronize.handler;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.Enabled;
 import io.github.hello09x.onesync.config.OneSyncConfig;
@@ -13,16 +15,22 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
+@Singleton
 public class PotionEffectSnapshotHandler extends CacheableSnapshotHandler<PotionEffectSnapshot> {
 
-    public final static PotionEffectSnapshotHandler instance = new PotionEffectSnapshotHandler();
     private final static SnapshotType TYPE = new SnapshotType(
             "onesync.snapshot.potion-effect",
             "效果"
     );
 
-    private final PotionEffectSnapshotRepository repository = PotionEffectSnapshotRepository.instance;
-    private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
+    private final PotionEffectSnapshotRepository repository;
+    private final OneSyncConfig.SynchronizeConfig config;
+
+    @Inject
+    public PotionEffectSnapshotHandler(PotionEffectSnapshotRepository repository, OneSyncConfig.SynchronizeConfig config) {
+        this.repository = repository;
+        this.config = config;
+    }
 
     @Override
     public @NotNull SnapshotType snapshotType() {
@@ -31,7 +39,7 @@ public class PotionEffectSnapshotHandler extends CacheableSnapshotHandler<Potion
 
     @Override
     public @Nullable PotionEffectSnapshot getOne0(@NotNull Long snapshotId) {
-        return repository.selectById(snapshotId);
+        return repository.selectBySnapshotId(snapshotId);
     }
 
     @Override
@@ -61,7 +69,7 @@ public class PotionEffectSnapshotHandler extends CacheableSnapshotHandler<Potion
 
     @Override
     public void remove0(@NotNull List<Long> snapshotIds) {
-        repository.deleteByIds(snapshotIds);
+        repository.deleteBySnapshotIds(snapshotIds);
     }
 
     @Override

@@ -1,11 +1,12 @@
 package io.github.hello09x.onesync.manager.synchronize.handler;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.Enabled;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
 import io.github.hello09x.onesync.repository.PDCSnapshotRepository;
-import io.github.hello09x.onesync.repository.model.AdvancementSnapshot;
 import io.github.hello09x.onesync.repository.model.PDCSnapshot;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -14,15 +15,22 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.util.List;
 
+@Singleton
 public class PDCSnapshotHandler extends CacheableSnapshotHandler<PDCSnapshot> {
 
-    public final static PDCSnapshotHandler instance = new PDCSnapshotHandler();
     private final static SnapshotType TYPE = new SnapshotType(
             "onesync:snapshot.pdc",
             "PDC"
     );
-    private final PDCSnapshotRepository repository = PDCSnapshotRepository.instance;
-    private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
+
+    private final PDCSnapshotRepository repository;
+    private final OneSyncConfig.SynchronizeConfig config;
+
+    @Inject
+    public PDCSnapshotHandler(PDCSnapshotRepository repository, OneSyncConfig.SynchronizeConfig config) {
+        this.repository = repository;
+        this.config = config;
+    }
 
     @Override
     public @NotNull SnapshotType snapshotType() {
@@ -31,7 +39,7 @@ public class PDCSnapshotHandler extends CacheableSnapshotHandler<PDCSnapshot> {
 
     @Override
     public @Nullable PDCSnapshot getOne0(@NotNull Long snapshotId) {
-        return repository.selectById(snapshotId);
+        return repository.selectBySnapshotId(snapshotId);
     }
 
     @Override
@@ -68,7 +76,7 @@ public class PDCSnapshotHandler extends CacheableSnapshotHandler<PDCSnapshot> {
 
     @Override
     public void remove0(@NotNull List<Long> snapshotIds) {
-        repository.deleteByIds(snapshotIds);
+        repository.deleteBySnapshotIds(snapshotIds);
     }
 
     @Override

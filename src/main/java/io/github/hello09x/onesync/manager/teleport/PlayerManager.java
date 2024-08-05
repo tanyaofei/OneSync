@@ -1,9 +1,11 @@
 package io.github.hello09x.onesync.manager.teleport;
 
 import com.google.common.io.ByteStreams;
-import io.github.hello09x.bedrock.util.BungeeCord;
-import io.github.hello09x.bedrock.util.Folia;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.core.utils.BungeeCordUtils;
+import io.github.hello09x.devtools.core.utils.ServerUtils;
 import io.github.hello09x.onesync.Main;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jetbrains.annotations.NotNull;
@@ -14,17 +16,21 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+@Singleton
 @SuppressWarnings("UnstableApiUsage")
 public class PlayerManager implements PluginMessageListener {
 
-    public final static PlayerManager instance = new PlayerManager();
 
     private Set<String> players = new HashSet<>();
 
     private final static int TICK_PERIOD = 20;
 
-    private PlayerManager() {
-        Folia.runTaskTimer(Main.getInstance(), this::tick, TICK_PERIOD, TICK_PERIOD);
+    public PlayerManager() {
+        if (ServerUtils.isFolia()) {
+            Bukkit.getGlobalRegionScheduler().runAtFixedRate(Main.getInstance(), ignored -> this.tick(), TICK_PERIOD, TICK_PERIOD);
+        } else {
+            Bukkit.getScheduler().runTaskTimer(Main.getInstance(), this::tick, TICK_PERIOD, TICK_PERIOD);
+        }
     }
 
     public @NotNull @Unmodifiable Set<String> getPlayers() {
@@ -37,7 +43,7 @@ public class PlayerManager implements PluginMessageListener {
         if ((System.currentTimeMillis() - updatedAt) / 1000 < TICK_PERIOD / 20) {
             return;
         }
-        BungeeCord.getPlayerList(Main.getInstance());
+        BungeeCordUtils.getPlayerList(Main.getInstance());
     }
 
 
@@ -47,12 +53,12 @@ public class PlayerManager implements PluginMessageListener {
             @NotNull Player player,
             byte @NotNull [] message
     ) {
-        if (!channel.equals(BungeeCord.CHANNEL)) {
+        if (!channel.equals(BungeeCordUtils.CHANNEL)) {
             return;
         }
 
         var in = ByteStreams.newDataInput(message);
-        if (!in.readUTF().equals(BungeeCord.SubChannel.PLAYER_LIST)) {
+        if (!in.readUTF().equals(BungeeCordUtils.SubChannel.PLAYER_LIST)) {
             return;
         }
 

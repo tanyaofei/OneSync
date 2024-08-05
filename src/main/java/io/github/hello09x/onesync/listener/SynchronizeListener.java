@@ -3,6 +3,8 @@ package io.github.hello09x.onesync.listener;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.*;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.manager.synchronize.SynchronizeManager;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
@@ -18,19 +20,23 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+@Singleton
 public class SynchronizeListener extends PacketAdapter implements Listener {
 
-    public final static SynchronizeListener instance = new SynchronizeListener();
     private final static Logger log = Main.getInstance().getLogger();
-    private final SynchronizeManager synchronizeManager = SynchronizeManager.instance;
 
-    public SynchronizeListener() {
+
+    private final SynchronizeManager synchronizeManager;
+
+    @Inject
+    public SynchronizeListener(SynchronizeManager synchronizeManager) {
         super(
                 Main.getInstance(),
                 ListenerPriority.LOWEST,
                 List.of(PacketType.Configuration.Server.FINISH_CONFIGURATION),
                 ListenerOptions.ASYNC
         );
+        this.synchronizeManager = synchronizeManager;
     }
 
     @Override

@@ -1,17 +1,18 @@
 package io.github.hello09x.onesync.manager.teleport;
 
 import com.google.common.io.ByteStreams;
-import io.github.hello09x.bedrock.util.BungeeCord;
-import io.github.hello09x.bedrock.util.Folia;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.core.utils.BungeeCordUtils;
+import io.github.hello09x.devtools.core.utils.ServerUtils;
 import io.github.hello09x.onesync.Main;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jetbrains.annotations.NotNull;
 
+@Singleton
 @SuppressWarnings("UnstableApiUsage")
 public class ServerManager implements PluginMessageListener {
-
-    public final static ServerManager instance = new ServerManager();
 
     private final static int TICK_PERIOD = 100;
 
@@ -20,8 +21,12 @@ public class ServerManager implements PluginMessageListener {
 
     private long updatedAt = 0;
 
-    private ServerManager() {
-        Folia.runTaskTimer(Main.getInstance(), this::tick, 20, 100);
+    public ServerManager() {
+        if (ServerUtils.isFolia()) {
+            Bukkit.getGlobalRegionScheduler().runAtFixedRate(Main.getInstance(), ignored -> this.tick(), 20, 100);
+        } else {
+            Bukkit.getScheduler().runTaskTimer(Main.getInstance(), this::tick, 20, 100);
+        }
     }
 
     private void tick() {
@@ -29,7 +34,7 @@ public class ServerManager implements PluginMessageListener {
             return;
         }
 
-        BungeeCord.getServer(Main.getInstance());
+        BungeeCordUtils.getServer(Main.getInstance());
     }
 
     public @NotNull String getCurrent() {
@@ -38,12 +43,12 @@ public class ServerManager implements PluginMessageListener {
 
     @Override
     public void onPluginMessageReceived(@NotNull String channel, @NotNull Player player, byte @NotNull [] message) {
-        if (!channel.equals(BungeeCord.CHANNEL)) {
+        if (!channel.equals(BungeeCordUtils.CHANNEL)) {
             return;
         }
 
         var in = ByteStreams.newDataInput(message);
-        if (!in.readUTF().equals(BungeeCord.SubChannel.GET_SERVER)) {
+        if (!in.readUTF().equals(BungeeCordUtils.SubChannel.GET_SERVER)) {
             return;
         }
 

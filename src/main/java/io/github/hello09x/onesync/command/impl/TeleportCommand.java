@@ -1,5 +1,7 @@
 package io.github.hello09x.onesync.command.impl;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import dev.jorel.commandapi.executors.CommandArguments;
 import io.github.hello09x.onesync.manager.teleport.PlayerManager;
 import io.github.hello09x.onesync.manager.teleport.TeleportManager;
@@ -13,42 +15,48 @@ import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.textOfChildren;
 import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 
+@Singleton
 public class TeleportCommand {
 
     public final static String ALL_PLAYERS = "-a";
 
-    public final static TeleportCommand instance = new TeleportCommand();
+    private final TeleportManager teleportManager;
+    private final PlayerManager playerManager;
 
-    private final TeleportManager manager = TeleportManager.instance;
+    @Inject
+    public TeleportCommand(TeleportManager teleportManager, PlayerManager playerManager) {
+        this.teleportManager = teleportManager;
+        this.playerManager = playerManager;
+    }
 
     public void tp(@NotNull Player sender, @NotNull CommandArguments args) {
         var receiver = (String) Objects.requireNonNull(args.get("player"));
         if (!receiver.equals(ALL_PLAYERS)) {
-            manager.ask(sender, receiver, TeleportType.TP, true);
+            teleportManager.ask(sender, receiver, TeleportType.TP, true);
             return;
         }
 
-        for (var r : PlayerManager.instance.getPlayers()) {
+        for (var r : playerManager.getPlayers()) {
             if (r.equals(sender.getName())) {
                 continue;
             }
-            manager.ask(sender, r, TeleportType.TP, true);
+            teleportManager.ask(sender, r, TeleportType.TP, true);
         }
     }
 
     public void tpa(@NotNull Player sender, @NotNull CommandArguments args) {
         var receiver = (String) Objects.requireNonNull(args.get("player"));
         if (!receiver.equals(ALL_PLAYERS)) {
-            sender.sendMessage(manager.ask(sender, receiver, TeleportType.TP, false));
+            sender.sendMessage(teleportManager.ask(sender, receiver, TeleportType.TP, false));
             return;
         }
 
         int count = 0;
-        for (var r : PlayerManager.instance.getPlayers()) {
+        for (var r : playerManager.getPlayers()) {
             if (r.equals(sender.getName())) {
                 continue;
             }
-            manager.ask(sender, r, TeleportType.TP, false);
+            teleportManager.ask(sender, r, TeleportType.TP, false);
             count++;
         }
 
@@ -66,31 +74,31 @@ public class TeleportCommand {
     public void tphere(@NotNull Player sender, @NotNull CommandArguments args) {
         var receiver = (String) Objects.requireNonNull(args.get("player"));
         if (!receiver.equals(ALL_PLAYERS)) {
-            manager.ask(sender, receiver, TeleportType.TPHERE, true);
+            teleportManager.ask(sender, receiver, TeleportType.TPHERE, true);
             return;
         }
 
-        for (var r : PlayerManager.instance.getPlayers()) {
+        for (var r : playerManager.getPlayers()) {
             if (r.equals(sender.getName())) {
                 continue;
             }
-            manager.ask(sender, r, TeleportType.TPHERE, true);
+            teleportManager.ask(sender, r, TeleportType.TPHERE, true);
         }
     }
 
     public void tpahere(@NotNull Player sender, @NotNull CommandArguments args) {
         var receiver = (String) Objects.requireNonNull(args.get("player"));
         if (!receiver.equals(ALL_PLAYERS)) {
-            sender.sendMessage(manager.ask(sender, receiver, TeleportType.TPHERE, false));
+            sender.sendMessage(teleportManager.ask(sender, receiver, TeleportType.TPHERE, false));
             return;
         }
 
         int count = 0;
-        for (var r : PlayerManager.instance.getPlayers()) {
+        for (var r : playerManager.getPlayers()) {
             if (r.equals(sender.getName())) {
                 continue;
             }
-            manager.ask(sender, r, TeleportType.TPHERE, false);
+            teleportManager.ask(sender, r, TeleportType.TPHERE, false);
             count++;
         }
 
@@ -105,22 +113,21 @@ public class TeleportCommand {
         }
     }
 
-
     public void tpaccept(@NotNull Player sender, @NotNull CommandArguments args) {
         var requester = (String) args.get("player");
-        var message = manager.answer(sender, requester, true);
+        var message = teleportManager.answer(sender, requester, true);
         sender.sendMessage(message);
     }
 
     public void tpdeny(@NotNull Player sender, @NotNull CommandArguments args) {
         var requester = (String) args.get("player");
-        var message = manager.answer(sender, requester, false);
+        var message = teleportManager.answer(sender, requester, false);
         sender.sendMessage(message);
     }
 
     public void tpcancel(@NotNull Player sender, @NotNull CommandArguments args) {
         var receiver = (String) args.get("player");
-        var message = manager.cancel(sender, receiver);
+        var message = teleportManager.cancel(sender, receiver);
         sender.sendMessage(message);
     }
 

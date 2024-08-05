@@ -1,5 +1,7 @@
 package io.github.hello09x.onesync.command.impl;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import dev.jorel.commandapi.executors.CommandArguments;
 import io.github.hello09x.onesync.manager.synchronize.MenuManager;
 import io.github.hello09x.onesync.manager.synchronize.SnapshotManager;
@@ -21,12 +23,18 @@ import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 import static net.kyori.adventure.text.format.NamedTextColor.WHITE;
 
+@Singleton
 public class SnapshotCommand {
 
-    public final static SnapshotCommand instance = new SnapshotCommand();
-    private final MenuManager menus = MenuManager.instance;
-    private final SnapshotManager manager = SnapshotManager.instance;
-    private final MiniMessage miniMessage = MiniMessage.miniMessage();
+    private final static MiniMessage miniMessage = MiniMessage.miniMessage();
+    private final MenuManager menus;
+    private final SnapshotManager manager;
+
+    @Inject
+    public SnapshotCommand(MenuManager menus, SnapshotManager manager) {
+        this.menus = menus;
+        this.manager = manager;
+    }
 
     /**
      * 打开快照菜单

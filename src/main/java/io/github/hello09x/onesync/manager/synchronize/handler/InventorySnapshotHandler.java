@@ -1,6 +1,8 @@
 package io.github.hello09x.onesync.manager.synchronize.handler;
 
-import io.github.hello09x.bedrock.util.InventoryUtils;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.core.utils.InventoryUtils;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.Enabled;
@@ -17,17 +19,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+@Singleton
 public class InventorySnapshotHandler extends CacheableSnapshotHandler<InventorySnapshot> {
 
-    public final static InventorySnapshotHandler instance = new InventorySnapshotHandler();
     private final static SnapshotType TYPE = new SnapshotType(
             "onesync:snapshot.inventory",
             "背包"
     );
+
     private final static Logger log = Main.getInstance().getLogger();
 
-    private final InventorySnapshotRepository repository = InventorySnapshotRepository.instance;
-    private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
+    private final InventorySnapshotRepository repository;
+    private final OneSyncConfig.SynchronizeConfig config;
+
+    @Inject
+    public InventorySnapshotHandler(InventorySnapshotRepository repository, OneSyncConfig.SynchronizeConfig config) {
+        this.repository = repository;
+        this.config = config;
+    }
 
     @Override
     public @NotNull SnapshotType snapshotType() {
@@ -36,7 +45,7 @@ public class InventorySnapshotHandler extends CacheableSnapshotHandler<Inventory
 
     @Override
     public @Nullable InventorySnapshot getOne0(@NotNull Long snapshotId) {
-        return repository.selectById(snapshotId);
+        return repository.selectBySnapshotId(snapshotId);
     }
 
     @Override
@@ -66,7 +75,7 @@ public class InventorySnapshotHandler extends CacheableSnapshotHandler<Inventory
 
     @Override
     public void remove0(@NotNull List<Long> snapshotIds) {
-        repository.deleteByIds(snapshotIds);
+        repository.deleteBySnapshotIds(snapshotIds);
     }
 
     @Override

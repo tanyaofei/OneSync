@@ -1,40 +1,52 @@
 package io.github.hello09x.onesync.repository;
 
-import io.github.hello09x.bedrock.database.Repository;
-import io.github.hello09x.bedrock.util.Exceptions;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.core.utils.Exceptions;
+import io.github.hello09x.devtools.database.jdbc.JdbcTemplate;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.repository.model.PDCSnapshot;
-import org.bukkit.plugin.Plugin;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.sql.PreparedStatement;
-import java.sql.Statement;
+import java.util.List;
 
-public class PDCSnapshotRepository extends Repository<PDCSnapshot> {
+@Singleton
+public class PDCSnapshotRepository {
 
-    public final static PDCSnapshotRepository instance = new PDCSnapshotRepository(Main.getInstance());
+    private final JdbcTemplate jdbc;
 
-    public PDCSnapshotRepository(@NotNull Plugin plugin) {
-        super(plugin);
+    private final PDCSnapshot.PDCSnapshotRowMapper rowMapper;
+
+    @Inject
+    public PDCSnapshotRepository(JdbcTemplate jdbc, PDCSnapshot.PDCSnapshotRowMapper rowMapper) {
+        this.jdbc = jdbc;
+        this.rowMapper = rowMapper;
+        this.initTables();
     }
 
+    @CanIgnoreReturnValue
     public int insert(@NotNull PDCSnapshot snapshot) {
         var sql = "insert into pdc_snapshot (snapshot_id, player_id, `data`) values (?, ?, ?)";
-        return execute(connection -> {
-            try (PreparedStatement stm = connection.prepareStatement(sql)) {
-                stm.setLong(1, snapshot.snapshotId());
-                stm.setString(2, snapshot.playerId().toString());
-                stm.setBytes(3, snapshot.data());
-                return stm.executeUpdate();
-            }
-        });
+        return jdbc.update(sql, snapshot.snapshotId(), snapshot.playerId().toString(), snapshot.data());
     }
 
-    @Override
+    public @Nullable PDCSnapshot selectBySnapshotId(@NotNull Long snapshotId) {
+        return jdbc.queryForObject("select * from pdc_snapshot where snapshot_id = ?", rowMapper, snapshotId);
+    }
+
+    @CanIgnoreReturnValue
+    public int deleteBySnapshotIds(@NotNull List<Long> snapshotIds) {
+        if (snapshotIds.isEmpty()) {
+            return 0;
+        }
+        return jdbc.update("delete from pdc_snapshot where snapshot_id in (?)", StringUtils.join(snapshotIds, ","));
+    }
+
     protected void initTables() {
-        execute(connection -> {
-            Statement stm = connection.createStatement();
-            stm.executeUpdate("""
+        jdbc.execute("""
                     create table if not exists pdc_snapshot
                     (
                         snapshot_id bigint   not null comment '快照 ID'
@@ -43,12 +55,13 @@ public class PDCSnapshotRepository extends Repository<PDCSnapshot> {
                         `data`      blob     not null comment 'PDC 数据'
                     );
                     """);
-            Exceptions.noException(() -> {
-                stm.executeUpdate("""
+
+        Exceptions.suppress(Main.getInstance(), () -> {
+            jdbc.execute("""
                         create index pdc_snapshot_player_id_index
                             on pdc_snapshot (player_id);
                         """);
-            });
-        });
+        }, false);
+
     }
 }

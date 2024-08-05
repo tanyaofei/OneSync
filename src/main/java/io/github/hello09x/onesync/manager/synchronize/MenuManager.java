@@ -1,8 +1,10 @@
 package io.github.hello09x.onesync.manager.synchronize;
 
 import com.google.common.base.Throwables;
-import io.github.hello09x.bedrock.menu.ChestMenuBuilder;
-import io.github.hello09x.bedrock.util.Lores;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.core.utils.ItemStackUtils;
+import io.github.hello09x.devtools.menu.ChestMenuBuilder;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
@@ -18,21 +20,26 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-import static io.github.hello09x.bedrock.util.Components.noItalic;
+import static io.github.hello09x.devtools.core.utils.ComponentUtils.noItalic;
 import static net.kyori.adventure.text.Component.empty;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 
+@Singleton
 public class MenuManager {
 
-    public final static MenuManager instance = new MenuManager();
     private final static Logger log = Main.getInstance().getLogger();
-    private final SnapshotRepository repository = SnapshotRepository.instance;
+
+    private final SnapshotRepository repository;
+
+    @Inject
+    public MenuManager(SnapshotRepository repository) {
+        this.repository = repository;
+    }
 
     /**
      * 获取所有快照的菜单
@@ -132,9 +139,7 @@ public class MenuManager {
             }
 
             var button = snapshot.toMenuItem(viewer, here);
-            Lores.append(button.item(), List.of(
-                    noItalic("「右键」恢复", GRAY)
-            ));
+            ItemStackUtils.appendLore(button.item(), noItalic(text("「右键」恢复", GRAY)));
             menu.onClickButton(i++, button.item(), event -> {
                 if (event.getClick() == ClickType.RIGHT) {
                     // 右键恢复
@@ -170,7 +175,7 @@ public class MenuManager {
                 .title(title)
                 .size(45)
                 .onClickOutside(onClickOutside);
-        menu.onClickButton(22, Material.GREEN_STAINED_GLASS_PANE, noItalic("确定", GREEN), event -> onConfirm.run());
+        menu.onClickButton(22, Material.GREEN_STAINED_GLASS_PANE, noItalic(text("确定", GREEN)), event -> onConfirm.run());
         Stream.of(12, 13, 14, 21, 23, 30, 31, 32)
                 .forEach(slot -> menu.onClickButton(slot, Material.BLACK_STAINED_GLASS_PANE, empty(), ChestMenuBuilder.ignore()));
         viewer.openInventory(menu.build());

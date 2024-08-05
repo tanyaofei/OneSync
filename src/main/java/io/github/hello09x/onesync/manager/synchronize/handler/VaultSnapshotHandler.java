@@ -1,5 +1,7 @@
 package io.github.hello09x.onesync.manager.synchronize.handler;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.Enabled;
@@ -19,23 +21,26 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+@Singleton
 public class VaultSnapshotHandler extends CacheableSnapshotHandler<VaultSnapshot> {
 
-
-    public final static VaultSnapshotHandler instance = new VaultSnapshotHandler();
     private final static SnapshotType TYPE = new SnapshotType(
             "onesync.snapshot.vault",
             "经济"
     );
+
     private final static Logger log = Main.getInstance().getLogger();
 
-    private final VaultSnapshotRepository repository = VaultSnapshotRepository.instance;
+    private final VaultSnapshotRepository repository;
 
-    private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
+    private final OneSyncConfig.SynchronizeConfig config;
 
     private final Holder holder;
 
-    public VaultSnapshotHandler() {
+    @Inject
+    public VaultSnapshotHandler(VaultSnapshotRepository repository, OneSyncConfig.SynchronizeConfig config) {
+        this.repository = repository;
+        this.config = config;
         this.holder = Optional.of(Bukkit.getPluginManager().isPluginEnabled("Vault"))
                 .filter(isEnabled -> isEnabled)
                 .map(x -> new Holder())
@@ -78,12 +83,12 @@ public class VaultSnapshotHandler extends CacheableSnapshotHandler<VaultSnapshot
 
     @Override
     protected @Nullable VaultSnapshot getOne0(@NotNull Long snapshotId) {
-        return repository.selectById(snapshotId);
+        return repository.selectBySnapshotId(snapshotId);
     }
 
     @Override
     protected void remove0(@NotNull List<Long> snapshotIds) {
-        repository.deleteByIds(snapshotIds);
+        repository.deleteBySnapshotIds(snapshotIds);
     }
 
     @Override

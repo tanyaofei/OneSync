@@ -1,7 +1,9 @@
 package io.github.hello09x.onesync.config;
 
-import io.github.hello09x.bedrock.config.Config;
-import io.github.hello09x.onesync.Main;
+import com.google.inject.Inject;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.core.config.PluginConfig;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,7 +12,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.*;
@@ -18,9 +19,8 @@ import java.util.stream.Collectors;
 
 @Getter
 @ToString
-public class OneSyncConfig extends Config<OneSyncConfig> {
-
-    public final static OneSyncConfig instance = new OneSyncConfig(Main.getInstance(), "4");
+@Singleton
+public class OneSyncConfig extends PluginConfig {
 
     private final SynchronizeConfig synchronize = new SynchronizeConfig();
     private final SnapshotConfig snapshot = new SnapshotConfig();
@@ -30,9 +30,25 @@ public class OneSyncConfig extends Config<OneSyncConfig> {
     @Setter
     private String serverId = UUID.randomUUID().toString();
 
-    public OneSyncConfig(@NotNull Plugin plugin, @Nullable String version) {
-        super(plugin, version);
-        this.reload(false);
+    @Inject
+    public OneSyncConfig(@NotNull Plugin plugin) {
+        super(plugin, false);
+        this.reload0();
+    }
+
+    @Provides
+    public SynchronizeConfig synchronizeConfig() {
+        return this.synchronize;
+    }
+
+    @Provides
+    public SnapshotConfig snapshotConfig() {
+        return this.snapshot;
+    }
+
+    @Provides
+    public TeleportConfig teleportConfig() {
+        return this.teleport;
     }
 
     private static @NotNull String getNonBlankString(@NotNull FileConfiguration file, @NotNull String path, @NotNull String def) {

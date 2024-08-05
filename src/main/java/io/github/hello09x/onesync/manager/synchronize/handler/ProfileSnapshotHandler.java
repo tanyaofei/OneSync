@@ -1,5 +1,7 @@
 package io.github.hello09x.onesync.manager.synchronize.handler;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.Enabled;
 import io.github.hello09x.onesync.config.OneSyncConfig;
@@ -16,16 +18,22 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+@Singleton
 public class ProfileSnapshotHandler extends CacheableSnapshotHandler<ProfileSnapshot> {
 
-    public final static ProfileSnapshotHandler instance = new ProfileSnapshotHandler();
     private final static SnapshotType TYPE = new SnapshotType(
             "onesync.snapshot.profile",
             "档案"
     );
 
-    private final ProfileSnapshotRepository repository = ProfileSnapshotRepository.instance;
-    private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
+    private final ProfileSnapshotRepository repository;
+    private final OneSyncConfig.SynchronizeConfig config;
+
+    @Inject
+    public ProfileSnapshotHandler(ProfileSnapshotRepository repository, OneSyncConfig.SynchronizeConfig config) {
+        this.repository = repository;
+        this.config = config;
+    }
 
     @Override
     public @NotNull SnapshotType snapshotType() {
@@ -34,7 +42,7 @@ public class ProfileSnapshotHandler extends CacheableSnapshotHandler<ProfileSnap
 
     @Override
     public @Nullable ProfileSnapshot getOne0(@NotNull Long snapshotId) {
-        return repository.selectById(snapshotId);
+        return repository.selectBySnapshotId(snapshotId);
     }
 
     private static <V> @Nullable V getOrHandover(
@@ -94,7 +102,7 @@ public class ProfileSnapshotHandler extends CacheableSnapshotHandler<ProfileSnap
 
     @Override
     public void remove0(@NotNull List<Long> snapshotIds) {
-        repository.deleteByIds(snapshotIds);
+        repository.deleteBySnapshotIds(snapshotIds);
     }
 
     @Override

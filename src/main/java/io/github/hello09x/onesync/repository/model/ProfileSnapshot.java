@@ -1,10 +1,9 @@
 package io.github.hello09x.onesync.repository.model;
 
 import com.google.common.base.Throwables;
-import io.github.hello09x.bedrock.database.Table;
-import io.github.hello09x.bedrock.database.TableField;
-import io.github.hello09x.bedrock.database.TableId;
-import io.github.hello09x.bedrock.util.Components;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.core.utils.ComponentUtils;
+import io.github.hello09x.devtools.database.jdbc.RowMapper;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.onesync.manager.synchronize.handler.ProfileSnapshotHandler;
@@ -20,6 +19,8 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -42,53 +43,40 @@ import static net.kyori.adventure.text.format.NamedTextColor.*;
  * @param saturation 饱食度
  * @param exhaustion 饥饿度
  */
-@Table("profile_snapshot")
 public record ProfileSnapshot(
 
-        @TableId("snapshot_id")
         Long snapshotId,
 
-        @TableField("player_id")
         UUID playerId,
 
         @Nullable
-        @TableField("game_mode")
         GameMode gameMode,
 
         @Nullable
-        @TableField("op")
         Boolean op,
 
         @Nullable
-        @TableField("level")
         Integer level,
 
         @Nullable
-        @TableField("exp")
         Float exp,
 
         @Nullable
-        @TableField("health")
         Double health,
 
         @Nullable
-        @TableField("max_health")
         Double maxHealth,
 
         @Nullable
-        @TableField("food_level")
         Integer foodLevel,
 
         @Nullable
-        @TableField("saturation")
         Float saturation,
 
         @Nullable
-        @TableField("exhaustion")
         Float exhaustion,
 
         @Nullable
-        @TableField("remaining_air")
         Integer remainingAir
 
 ) implements SnapshotComponent {
@@ -104,7 +92,7 @@ public record ProfileSnapshot(
     public @NotNull MenuItem toMenuItem(@NotNull Player viewer, @NotNull Consumer<InventoryClickEvent> prevMenu) {
         var item = new ItemStack(Material.PLAYER_HEAD);
         item.editMeta(meta -> {
-            meta.displayName(Components.noItalic("档案", YELLOW));
+            meta.displayName(ComponentUtils.noItalic(text("档案", YELLOW)));
             meta.lore(Stream.of(
                     textOfChildren(text("游戏模式: ", GRAY), Optional.ofNullable(this.gameMode).map(v -> (Component) translatable(v, WHITE)).orElse(text("<无>", WHITE))),
                     textOfChildren(text("OP: ", GRAY), text(Optional.ofNullable(this.op).map(v -> v ? "是" : "否").orElse("<无>"), WHITE)),
@@ -117,7 +105,7 @@ public record ProfileSnapshot(
                     textOfChildren(text("饥饿度: ", GRAY), text(Optional.ofNullable(this.exhaustion).map(Object::toString).orElse("<无>"), WHITE)),
                     textOfChildren(text("氧气值: ", GRAY), text(Optional.ofNullable(this.remainingAir).map(air -> air / 20 + " 秒").orElse("<无>"), WHITE)),
                     empty()
-            ).map(Components::noItalic).toList());
+            ).map(ComponentUtils::noItalic).toList());
         });
         return new MenuItem(item, event -> {
             if (event.getClick() == ClickType.RIGHT) {
@@ -129,7 +117,7 @@ public record ProfileSnapshot(
                 }
 
                 try {
-                    ProfileSnapshotHandler.instance.apply(player, this);
+                    Main.getInjector().getInstance(ProfileSnapshotHandler.class).apply(player, this);
                     viewer.sendMessage(textOfChildren(text("为 ", GRAY), text(player.getName(), WHITE), text(" 恢复数据成功", GRAY)));
                 } catch (Throwable e) {
                     log.severe(Throwables.getStackTraceAsString(e));
@@ -139,6 +127,28 @@ public record ProfileSnapshot(
                 viewer.closeInventory();
             }
         });
+    }
+
+    @Singleton
+    public static class ProfileSnapshotRowMapper implements RowMapper<ProfileSnapshot> {
+
+        @Override
+        public @Nullable ProfileSnapshot mapRow(@NotNull ResultSet rs, int rowNum) throws SQLException {
+            return new ProfileSnapshot(
+                    rs.getObject("snapshot_id", Long.class),
+                    UUID.fromString(rs.getString("player_id")),
+                    Optional.ofNullable(rs.getString("game_mode")).map(GameMode::valueOf).orElse(null),
+                    rs.getObject("op", Boolean.class),
+                    rs.getObject("level", Integer.class),
+                    rs.getObject("exp", Float.class),
+                    rs.getObject("health", Double.class),
+                    rs.getObject("max_health", Double.class),
+                    rs.getObject("food_level", Integer.class),
+                    rs.getObject("saturation", Float.class),
+                    rs.getObject("exhaustion", Float.class),
+                    rs.getObject("remaining_air", Integer.class)
+            );
+        }
     }
 
 }

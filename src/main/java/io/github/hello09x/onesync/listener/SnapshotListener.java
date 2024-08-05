@@ -1,5 +1,7 @@
 package io.github.hello09x.onesync.listener;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.manager.synchronize.SnapshotManager;
@@ -16,15 +18,21 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.logging.Logger;
 
+@Singleton
 public class SnapshotListener implements Listener {
 
-    public final static SnapshotListener instance = new SnapshotListener();
-
     private final static Logger log = Main.getInstance().getLogger();
-    private final SnapshotManager snapshotManager = SnapshotManager.instance;
-    private final SynchronizeManager synchronizeManager = SynchronizeManager.instance;
 
-    private final OneSyncConfig config = OneSyncConfig.instance;
+    private final SnapshotManager snapshotManager;
+    private final SynchronizeManager synchronizeManager;
+    private final OneSyncConfig config;
+
+    @Inject
+    public SnapshotListener(SnapshotManager snapshotManager, SynchronizeManager synchronizeManager, OneSyncConfig config) {
+        this.snapshotManager = snapshotManager;
+        this.synchronizeManager = synchronizeManager;
+        this.config = config;
+    }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onSaveWorld(@NotNull WorldSaveEvent event) {

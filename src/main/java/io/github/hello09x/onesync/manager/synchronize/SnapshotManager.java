@@ -1,10 +1,11 @@
 package io.github.hello09x.onesync.manager.synchronize;
 
 import com.google.common.base.Throwables;
-import com.google.common.collect.Iterables;
-import io.github.hello09x.bedrock.util.Folia;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.core.utils.ServerUtils;
+import io.github.hello09x.devtools.core.utils.SingletonSupplier;
 import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.SnapshotRepository;
@@ -18,25 +19,32 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+@Singleton
 public class SnapshotManager {
 
-    public final static SnapshotManager instance = new SnapshotManager();
     private final static Logger log = Main.getInstance().getLogger();
-    private final SnapshotRepository repository = SnapshotRepository.instance;
-    private final BatonManager batonManager = BatonManager.instance;
-    private final OneSyncConfig.SnapshotConfig config = OneSyncConfig.instance.getSnapshot();
+    private final SnapshotRepository repository;
+    private final BatonManager batonManager;
+    private final SingletonSupplier<SynchronizeManager> synchronizeManager = new SingletonSupplier<>(() -> Main.getInjector().getInstance(SynchronizeManager.class));
+    private final OneSyncConfig.SnapshotConfig config;
 
     private int periodicals = 0;
 
-    private SnapshotManager() {
+    @Inject
+    public SnapshotManager(SnapshotRepository repository, BatonManager batonManager, OneSyncConfig config) {
+        this.repository = repository;
+        this.batonManager = batonManager;
+        this.config = config.getSnapshot();
+
         // 定时保存策略
-        Folia.runTaskTimer(Main.getInstance(), () -> {
-            if (!config.getWhen().contains(SnapshotCause.PERIODICAL)) {
+        Runnable doSavePeriodical = () -> {
+            if (!this.config.getWhen().contains(SnapshotCause.PERIODICAL)) {
                 return;
             }
 
@@ -48,8 +56,13 @@ public class SnapshotManager {
             }
 
             this.create(players, SnapshotCause.PERIODICAL);
-        }, Ticks.TICKS_PER_SECOND * 5 * 60, Ticks.TICKS_PER_SECOND * 5 * 60);   // 每 5 分钟
+        };
 
+        if (ServerUtils.isFolia()) {
+            Bukkit.getGlobalRegionScheduler().runAtFixedRate(Main.getInstance(), ignored -> doSavePeriodical.run(), Ticks.TICKS_PER_SECOND * 5 * 60, Ticks.TICKS_PER_SECOND * 5 * 60);
+        } else {
+            Bukkit.getScheduler().runTaskTimer(Main.getInstance(), doSavePeriodical, Ticks.TICKS_PER_SECOND * 5 * 60, Ticks.TICKS_PER_SECOND * 5 * 60);
+        }
     }
 
     /**
@@ -60,7 +73,7 @@ public class SnapshotManager {
      * @return 快照 ID
      */
     public @NotNull Long create(@NotNull Player player, @NotNull SnapshotCause cause) {
-        if (SynchronizeManager.instance.isRestoring(player)) {
+        if (synchronizeManager.get().isRestoring(player)) {
             throw new IllegalStateException("%s has a prepared snapshot that hasn't be used to restore, cannot create snapshot for him".formatted(player.getName()));
         }
 
@@ -68,7 +81,7 @@ public class SnapshotManager {
                 null,
                 player.getUniqueId(),
                 cause,
-                null
+                LocalDateTime.now()
         ));
 
         for (var registration : SnapshotHandler.getRegistrations()) {
@@ -109,7 +122,7 @@ public class SnapshotManager {
         stopwatch.start();
         int success = 0;
         for (var player : players) {
-            if (SynchronizeManager.instance.isRestoring(player)) {
+            if (synchronizeManager.get().isRestoring(player)) {
                 continue;
             }
 

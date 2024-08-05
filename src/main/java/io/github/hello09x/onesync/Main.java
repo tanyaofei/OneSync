@@ -2,10 +2,12 @@ package io.github.hello09x.onesync;
 
 import com.comphenix.protocol.ProtocolLibrary;
 import com.google.common.base.Throwables;
-import com.google.gson.Gson;
-import io.github.hello09x.bedrock.menu.ChestMenuRegistry;
-import io.github.hello09x.bedrock.util.AnyLevelLoggerHandler;
-import io.github.hello09x.bedrock.util.BungeeCord;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import io.github.hello09x.devtools.core.CoreModule;
+import io.github.hello09x.devtools.core.utils.BungeeCordUtils;
+import io.github.hello09x.devtools.database.DatabaseModule;
+import io.github.hello09x.devtools.menu.ChestMenuRegistry;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.command.SynchronizeCommandRegistry;
 import io.github.hello09x.onesync.command.TeleportCommandRegistry;
@@ -26,86 +28,80 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.logging.Level;
-
 
 public final class Main extends JavaPlugin {
 
     @Getter
-    private final static Gson gson = new Gson();
-    @Getter
     private static Main instance;
     @Getter
     private static ChestMenuRegistry chestMenuRegistry;
+    @Getter
+    private static Injector injector;
 
     @Override
     public void onLoad() {
         instance = this;
-
-        super.getLogger().addHandler(new AnyLevelLoggerHandler(this));
-        if (OneSyncConfig.instance.isDebug()) {
-            super.getLogger().setLevel(Level.CONFIG);
-        }
-        OneSyncConfig.instance.addListener(config -> {
-            if (config.isDebug()) {
-                super.getLogger().setLevel(Level.CONFIG);
-            } else {
-                super.getLogger().setLevel(Level.INFO);
-            }
-        });
+        injector = Guice.createInjector(
+                new OneSyncModule(),
+                new CoreModule(),
+                new DatabaseModule()
+        );
     }
 
     @Override
     public void onEnable() {
         try {
             chestMenuRegistry = new ChestMenuRegistry(this);
-            SynchronizeCommandRegistry.register();
+            injector.getInstance(SynchronizeCommandRegistry.class).register();
 
             {
                 var sm = Bukkit.getServicesManager();
-                sm.register(SnapshotHandler.class, EnderChestSnapshotHandler.instance, this, ServicePriority.Highest);
-                sm.register(SnapshotHandler.class, InventorySnapshotHandler.instance, this, ServicePriority.Highest);
-                sm.register(SnapshotHandler.class, ProfileSnapshotHandler.instance, this, ServicePriority.Normal);
-                sm.register(SnapshotHandler.class, AdvancementSnapshotHandler.instance, this, ServicePriority.Normal);
-                sm.register(SnapshotHandler.class, PDCSnapshotHandler.instance, this, ServicePriority.Normal);
-                sm.register(SnapshotHandler.class, PotionEffectSnapshotHandler.instance, this, ServicePriority.Normal);
-                sm.register(SnapshotHandler.class, VaultSnapshotHandler.instance, this, ServicePriority.Normal);
+                sm.register(SnapshotHandler.class, injector.getInstance(EnderChestSnapshotHandler.class), this, ServicePriority.Highest);
+                sm.register(SnapshotHandler.class, injector.getInstance(InventorySnapshotHandler.class), this, ServicePriority.Highest);
+                sm.register(SnapshotHandler.class, injector.getInstance(ProfileSnapshotHandler.class), this, ServicePriority.Normal);
+                sm.register(SnapshotHandler.class, injector.getInstance(AdvancementSnapshotHandler.class), this, ServicePriority.Normal);
+                sm.register(SnapshotHandler.class, injector.getInstance(PDCSnapshotHandler.class), this, ServicePriority.Normal);
+                sm.register(SnapshotHandler.class, injector.getInstance(PotionEffectSnapshotHandler.class), this, ServicePriority.Normal);
+                sm.register(SnapshotHandler.class, injector.getInstance(VaultSnapshotHandler.class), this, ServicePriority.Normal);
             }
 
             {
                 var pm = super.getServer().getPluginManager();
-                pm.registerEvents(SynchronizeListener.instance, this);
-                pm.registerEvents(SnapshotListener.instance, this);
-                pm.registerEvents(TeleportListener.instance, this);
-                pm.registerEvents(BatonListener.instance, this);
+                pm.registerEvents(injector.getInstance(SynchronizeListener.class), this);
+                pm.registerEvents(injector.getInstance(SnapshotListener.class), this);
+                pm.registerEvents(injector.getInstance(TeleportListener.class), this);
+                pm.registerEvents(injector.getInstance(BatonListener.class), this);
+                pm.registerEvents(injector.getInstance(LockingManager.class), this);
             }
 
             {
                 var messenger = getServer().getMessenger();
-                messenger.registerIncomingPluginChannel(this, BungeeCord.CHANNEL, LockingManager.instance);
-                messenger.registerOutgoingPluginChannel(this, BungeeCord.CHANNEL);
+                messenger.registerIncomingPluginChannel(this, BungeeCordUtils.CHANNEL, injector.getInstance(LockingManager.class));
+                messenger.registerOutgoingPluginChannel(this, BungeeCordUtils.CHANNEL);
 
-                messenger.registerIncomingPluginChannel(this, BungeeCord.CHANNEL, ServerManager.instance);
-                messenger.registerOutgoingPluginChannel(this, BungeeCord.CHANNEL);
+                messenger.registerIncomingPluginChannel(this, BungeeCordUtils.CHANNEL, injector.getInstance(ServerManager.class));
+                messenger.registerOutgoingPluginChannel(this, BungeeCordUtils.CHANNEL);
 
-                messenger.registerIncomingPluginChannel(this, BungeeCord.CHANNEL, PlayerManager.instance);
-                messenger.registerOutgoingPluginChannel(this, BungeeCord.CHANNEL);
+                messenger.registerIncomingPluginChannel(this, BungeeCordUtils.CHANNEL, injector.getInstance(PlayerManager.class));
+                messenger.registerOutgoingPluginChannel(this, BungeeCordUtils.CHANNEL);
 
-                messenger.registerIncomingPluginChannel(this, BungeeCord.CHANNEL, TeleportManager.instance);
-                messenger.registerOutgoingPluginChannel(this, BungeeCord.CHANNEL);
+                messenger.registerIncomingPluginChannel(this, BungeeCordUtils.CHANNEL, injector.getInstance(TeleportManager.class));
+                messenger.registerOutgoingPluginChannel(this, BungeeCordUtils.CHANNEL);
             }
 
             {
                 var mgr = ProtocolLibrary.getProtocolManager();
-                mgr.addPacketListener(SynchronizeListener.instance);
+                mgr.addPacketListener(injector.getInstance(SynchronizeListener.class));
             }
 
-            LockingManager.instance.releaseAll();           // 崩服重启, 释放上一次会话的锁
-            LockingManager.instance.acquireAll();           // 热重载
+            {
+                var lockingManager = injector.getInstance(LockingManager.class);
+                lockingManager.releaseAll();     // 崩服重启, 释放上一次会话的锁
+                lockingManager.acquireAll();     // 热重载
+            }
 
-            if (OneSyncConfig.instance.getTeleport().isEnabled()) {
-                // 命令不支持 reload
-                TeleportCommandRegistry.register();
+            if (injector.getInstance(OneSyncConfig.TeleportConfig.class).isEnabled()) {
+                injector.getInstance(TeleportCommandRegistry.class).register();
             }
         } catch (Throwable e) {
             getLogger().severe("加载插件失败, 为了数据安全, 关闭当前服务器!\n" + Throwables.getStackTraceAsString(e));
@@ -117,7 +113,7 @@ public final class Main extends JavaPlugin {
     @Override
     public void onDisable() {
         super.onDisable();
-        SynchronizeManager.instance.saveAndUnlockAll(SnapshotCause.PLUGIN_DISABLE);  // 关闭服务器不会调用 PlayerQuitEvent 事件, 因此需要全量保存一次
+        injector.getInstance(SynchronizeManager.class).saveAndUnlockAll(SnapshotCause.PLUGIN_DISABLE); // 关闭服务器不会调用 PlayerQuitEvent 事件, 因此需要全量保存一次
 
         {
             var messenger = getServer().getMessenger();

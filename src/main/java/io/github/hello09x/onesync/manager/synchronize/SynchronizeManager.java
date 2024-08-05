@@ -1,7 +1,9 @@
 package io.github.hello09x.onesync.manager.synchronize;
 
 import com.google.common.base.Throwables;
-import io.github.hello09x.bedrock.util.Folia;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.core.utils.ServerUtils;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.event.PlayerAttemptRestoreEvent;
 import io.github.hello09x.onesync.api.event.PlayerFinishRestoreEvent;
@@ -24,14 +26,23 @@ import java.util.logging.Logger;
 
 import static net.kyori.adventure.text.Component.text;
 
+@Singleton
 public class SynchronizeManager {
 
-    public final static SynchronizeManager instance = new SynchronizeManager();
     private final static Logger log = Main.getInstance().getLogger();
-    private final LockingManager lockingManager = LockingManager.instance;
-    private final SnapshotManager snapshotManager = SnapshotManager.instance;
-    private final BatonManager batonManager  = BatonManager.instance;
+
     private final Map<UUID, List<PreparedSnapshotComponent>> prepared = new ConcurrentHashMap<>();
+
+    private final LockingManager lockingManager;
+    private final SnapshotManager snapshotManager;
+    private final BatonManager batonManager;
+
+    @Inject
+    public SynchronizeManager(LockingManager lockingManager, SnapshotManager snapshotManager, BatonManager batonManager) {
+        this.lockingManager = lockingManager;
+        this.snapshotManager = snapshotManager;
+        this.batonManager = batonManager;
+    }
 
     /**
      * 判断玩家是否正在恢复数据
@@ -234,7 +245,12 @@ public class SynchronizeManager {
     }
 
     private void kickOnNextTick(@NotNull Player player, @NotNull Component reason) {
-        Folia.runTaskLater(Main.getInstance(), player, () -> player.kick(reason), 1);
+        Runnable doKick = () -> player.kick(reason);
+        if (ServerUtils.isFolia()) {
+            player.getScheduler().runDelayed(Main.getInstance(), ignored -> doKick.run(), null, 1);
+        } else {
+            Bukkit.getScheduler().runTaskLater(Main.getInstance(), doKick, 1);
+        }
     }
 
 

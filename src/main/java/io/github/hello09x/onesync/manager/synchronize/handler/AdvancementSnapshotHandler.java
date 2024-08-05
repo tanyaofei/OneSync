@@ -1,5 +1,7 @@
 package io.github.hello09x.onesync.manager.synchronize.handler;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.Enabled;
@@ -21,9 +23,8 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+@Singleton
 public class AdvancementSnapshotHandler extends CacheableSnapshotHandler<AdvancementSnapshot> {
-
-    public final static AdvancementSnapshotHandler instance = new AdvancementSnapshotHandler();
 
     private final static SnapshotType TYPE = new SnapshotType(
             "onesync:snapshot.advancement",
@@ -31,12 +32,18 @@ public class AdvancementSnapshotHandler extends CacheableSnapshotHandler<Advance
     );
 
     private final static Logger log = Main.getInstance().getLogger();
-    private final static Map<String, Advancement> ADVANCEMENTS = StreamSupport
+    private final static Map<String, Advancement> ALL_ADVANCEMENTS = StreamSupport
             .stream(((Iterable<Advancement>) Bukkit::advancementIterator).spliterator(), false)
             .collect(Collectors.toMap(adv -> adv.getKey().asString(), Function.identity()));
 
-    private final AdvancementSnapshotRepository repository = AdvancementSnapshotRepository.instance;
-    private final OneSyncConfig.SynchronizeConfig config = OneSyncConfig.instance.getSynchronize();
+    private final AdvancementSnapshotRepository repository;
+    private final OneSyncConfig.SynchronizeConfig config;
+
+    @Inject
+    public AdvancementSnapshotHandler(AdvancementSnapshotRepository repository, OneSyncConfig.SynchronizeConfig config) {
+        this.repository = repository;
+        this.config = config;
+    }
 
 
     @Override
@@ -46,7 +53,7 @@ public class AdvancementSnapshotHandler extends CacheableSnapshotHandler<Advance
 
     @Override
     public @Nullable AdvancementSnapshot getOne0(@NotNull Long snapshotId) {
-        return repository.selectById(snapshotId);
+        return repository.selectBySnapshotId(snapshotId);
     }
 
     @Override
@@ -78,7 +85,7 @@ public class AdvancementSnapshotHandler extends CacheableSnapshotHandler<Advance
 
     @Override
     public void remove0(@NotNull List<Long> snapshotIds) {
-        repository.deleteByIds(snapshotIds);
+        repository.deleteBySnapshotIds(snapshotIds);
     }
 
     @Override
@@ -87,7 +94,7 @@ public class AdvancementSnapshotHandler extends CacheableSnapshotHandler<Advance
             return false;
         }
 
-        for (var entry : ADVANCEMENTS.entrySet()) {
+        for (var entry : ALL_ADVANCEMENTS.entrySet()) {
             var key = entry.getKey();
             var advancement = entry.getValue();
             var criteria = snapshot.advancements().get(key);

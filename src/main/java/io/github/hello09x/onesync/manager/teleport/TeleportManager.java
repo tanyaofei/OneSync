@@ -2,15 +2,17 @@ package io.github.hello09x.onesync.manager.teleport;
 
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
-import io.github.hello09x.bedrock.util.BungeeCord;
-import io.github.hello09x.bedrock.util.Folia;
-import io.github.hello09x.bedrock.util.Locations;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.core.utils.BungeeCordUtils;
+import io.github.hello09x.devtools.core.utils.LocationUtils;
+import io.github.hello09x.devtools.core.utils.ServerUtils;
 import io.github.hello09x.onesync.Main;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.constant.SubChannels;
-import io.github.hello09x.onesync.repository.TeleportRepository;
+import io.github.hello09x.onesync.repository.TeleportRequestRepository;
 import io.github.hello09x.onesync.repository.constant.TeleportType;
-import io.github.hello09x.onesync.repository.model.Teleport;
+import io.github.hello09x.onesync.repository.model.TeleportRequest;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -36,12 +38,12 @@ import static net.kyori.adventure.sound.Sound.sound;
 import static net.kyori.adventure.text.Component.*;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 
+@Singleton
 @SuppressWarnings("UnstableApiUsage")
 public class TeleportManager implements PluginMessageListener {
 
     public final static String SUB_CHANNEL = SubChannels.Teleport;
 
-    public final static TeleportManager instance = new TeleportManager();
     private final static Logger log = Main.getInstance().getLogger();
 
     private final static String CTL_ASK = "ASK";
@@ -50,20 +52,27 @@ public class TeleportManager implements PluginMessageListener {
     private final static String CTL_IGNORE = "IGNORE";
     private final static String CTL_TELEPORT = "TELEPORT";
 
-    private final ServerManager serverList = ServerManager.instance;
-    private final WarmupManager warmupManager = WarmupManager.instance;
-    private final TeleportRepository repository = TeleportRepository.instance;
-    private final OneSyncConfig.TeleportConfig config = OneSyncConfig.instance.getTeleport();
+    private final ServerManager serverList;
+    private final WarmupManager warmupManager;
+    private final TeleportRequestRepository repository;
+    private final OneSyncConfig.TeleportConfig config;
 
-    private final Map<String, Pair<Location, MutableInt>> teleportLocations = Folia.isFolia()
+    private final Map<String, Pair<Location, MutableInt>> teleportLocations = ServerUtils.isFolia()
             ? new ConcurrentHashMap<>()
             : new HashMap<>();
 
-    public TeleportManager() {
-        Folia.runTaskTimer(Main.getInstance(), this::tickExpiredTeleportLocation, 20, 1);
-        if (Folia.isFolia()) {
+    @Inject
+    public TeleportManager(ServerManager serverList, WarmupManager warmupManager, TeleportRequestRepository repository, OneSyncConfig config) {
+        this.serverList = serverList;
+        this.warmupManager = warmupManager;
+        this.repository = repository;
+        this.config = config.getTeleport();
+
+        if (ServerUtils.isFolia()) {
+            Bukkit.getGlobalRegionScheduler().runAtFixedRate(Main.getInstance(), ignored -> this.tickExpiredTeleportLocation(), 20, 1);
             Bukkit.getAsyncScheduler().runAtFixedRate(Main.getInstance(), task -> this.tickExpiredTeleports(), 5, 5, TimeUnit.MINUTES);
         } else {
+            Bukkit.getScheduler().runTaskTimer(Main.getInstance(), this::tickExpiredTeleportLocation, 20, 1);
             Bukkit.getScheduler().runTaskTimerAsynchronously(Main.getInstance(), this::tickExpiredTeleports, 20 * 60 * 5, 20 * 60 * 5);
         }
     }
@@ -95,7 +104,7 @@ public class TeleportManager implements PluginMessageListener {
             }
         }
 
-        var teleport = new Teleport(requester.getName(), receiver, type, null);
+        var teleport = new TeleportRequest(requester.getName(), receiver, type, null);
         repository.insert(teleport);
 
         var out = ByteStreams.newDataOutput();
@@ -106,8 +115,8 @@ public class TeleportManager implements PluginMessageListener {
         out.writeBoolean(force);
         var message = out.toByteArray();
 
-        BungeeCord.sendPluginMessage(Main.getInstance(), requester, BungeeCord.asForward(SUB_CHANNEL, message));
-        this.onPluginMessageReceived(BungeeCord.CHANNEL, requester, BungeeCord.asReceivedForward(SUB_CHANNEL, message));
+        BungeeCordUtils.sendPluginMessage(Main.getInstance(), requester, BungeeCordUtils.asForwardMessage(SUB_CHANNEL, message));
+        this.onPluginMessageReceived(BungeeCordUtils.CHANNEL, requester, BungeeCordUtils.asReceivedForwardMessage(SUB_CHANNEL, message));
 
         return textOfChildren(
                 text("传送请求已发送给 "), text(receiver, WHITE), text(", 等待对方接受"),
@@ -157,8 +166,8 @@ public class TeleportManager implements PluginMessageListener {
         out.writeBoolean(force);
         var message = out.toByteArray();
 
-        BungeeCord.sendPluginMessage(Main.getInstance(), receiver, BungeeCord.asForward(SUB_CHANNEL, message));
-        this.onPluginMessageReceived(BungeeCord.CHANNEL, receiver, BungeeCord.asReceivedForward(SUB_CHANNEL, message));
+        BungeeCordUtils.sendPluginMessage(Main.getInstance(), receiver, BungeeCordUtils.asForwardMessage(SUB_CHANNEL, message));
+        this.onPluginMessageReceived(BungeeCordUtils.CHANNEL, receiver, BungeeCordUtils.asReceivedForwardMessage(SUB_CHANNEL, message));
 
         return textOfChildren(
                 text("你"),
@@ -183,8 +192,8 @@ public class TeleportManager implements PluginMessageListener {
         out.writeUTF(receiver.getName());
         var message = out.toByteArray();
 
-        BungeeCord.sendPluginMessage(Main.getInstance(), receiver, BungeeCord.asForward(SUB_CHANNEL, message));
-        this.onPluginMessageReceived(BungeeCord.CHANNEL, receiver, BungeeCord.asReceivedForward(SUB_CHANNEL, message));
+        BungeeCordUtils.sendPluginMessage(Main.getInstance(), receiver, BungeeCordUtils.asForwardMessage(SUB_CHANNEL, message));
+        this.onPluginMessageReceived(BungeeCordUtils.CHANNEL, receiver, BungeeCordUtils.asReceivedForwardMessage(SUB_CHANNEL, message));
     }
 
     /**
@@ -210,7 +219,7 @@ public class TeleportManager implements PluginMessageListener {
 
     /**
      * 获取玩家在此服务器传送的坐标点
-     * <p>当玩家从 A 服务器传送到 B 服务器时, B 服务器会记录传送坐标点, 然后发送消息给 BungeeCord 让玩家切换服务器, 等加入游戏时传送他</p>
+     * <p>当玩家从 A 服务器传送到 B 服务器时, B 服务器会记录传送坐标点, 然后发送消息给 BungeeCordUtils 让玩家切换服务器, 等加入游戏时传送他</p>
      * <p><b>玩家有可能切换服务器后传送失败</b></p>
      *
      * @param player 玩家
@@ -222,11 +231,11 @@ public class TeleportManager implements PluginMessageListener {
 
     @Override
     public void onPluginMessageReceived(@NotNull String channel, @NotNull Player player, byte @NotNull [] message) {
-        if (!channel.equals(BungeeCord.CHANNEL)) {
+        if (!channel.equals(BungeeCordUtils.CHANNEL)) {
             return;
         }
 
-        var in = BungeeCord.parseReceivedForward(SUB_CHANNEL, message);
+        var in = BungeeCordUtils.parseReceivedForwardMessage(SUB_CHANNEL, message);
         if (in == null) {
             return;
         }
@@ -324,8 +333,8 @@ public class TeleportManager implements PluginMessageListener {
             out.writeUTF(receiver);
             var message = out.toByteArray();
 
-            BungeeCord.sendPluginMessage(Main.getInstance(), teleported, BungeeCord.asForward(SUB_CHANNEL, message));
-            this.onPluginMessageReceived(BungeeCord.CHANNEL, teleported, BungeeCord.asReceivedForward(SUB_CHANNEL, message));
+            BungeeCordUtils.sendPluginMessage(Main.getInstance(), teleported, BungeeCordUtils.asForwardMessage(SUB_CHANNEL, message));
+            this.onPluginMessageReceived(BungeeCordUtils.CHANNEL, teleported, BungeeCordUtils.asReceivedForwardMessage(SUB_CHANNEL, message));
         };
 
         var warmup = config.getWarmup();
@@ -339,32 +348,39 @@ public class TeleportManager implements PluginMessageListener {
             ));
 
             // 延迟 10 tick 再开始预热, 让玩家接收到 title 提示后有一点反应时间
-            Folia.runTaskLater(Main.getInstance(), teleported, () -> {
+
+            Runnable doWarmup = () -> {
                 if (!teleported.isOnline()) {
                     return;
                 }
                 var pos = teleported.getLocation();
                 warmupManager.add(teleported, new WarmupManager.Warmup(
-                                x -> {
-                                    if (this.isMoved(pos, teleported.getLocation())) {
-                                        teleported.resetTitle();
-                                        teleported.sendMessage(text("你动了, 行动取消", GRAY));
-                                        return false;
-                                    }
-                                    if (config.isParticle()) {
-                                        var center = teleported.getEyeLocation();
-                                        var points = Locations.getCirclePoints(center, 0.5, 10);
-                                        for (var point : points) {
-                                            point.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, point, 1, 0.125D, 0, 0.125D);
-                                        }
-                                    }
-                                    return true;
-                                },
-                                x -> doTeleport.run(),
-                                new MutableInt(warmup * 20)
-                        )
+                                          x -> {
+                                              if (this.isMoved(pos, teleported.getLocation())) {
+                                                  teleported.resetTitle();
+                                                  teleported.sendMessage(text("你动了, 行动取消", GRAY));
+                                                  return false;
+                                              }
+                                              if (config.isParticle()) {
+                                                  var center = teleported.getEyeLocation();
+                                                  var points = LocationUtils.getCirclePoints(center, 0.5, 10);
+                                                  for (var point : points) {
+                                                      point.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, point, 1, 0.125D, 0, 0.125D);
+                                                  }
+                                              }
+                                              return true;
+                                          },
+                                          x -> doTeleport.run(),
+                                          new MutableInt(warmup * 20)
+                                  )
                 );
-            }, 10);
+            };
+
+            if (ServerUtils.isFolia()) {
+                teleported.getScheduler().runDelayed(Main.getInstance(), ignored -> doWarmup.run(), null, 10);
+            } else {
+                Bukkit.getScheduler().runTaskLater(Main.getInstance(), doWarmup, 10);
+            }
         }
     }
 
@@ -407,7 +423,7 @@ public class TeleportManager implements PluginMessageListener {
      * 接收到 {@link #CTL_TELEPORT}, 当接风人是此服务器时处理
      * <ul>
      *     <li>将坐标记录起来</li>
-     *     <li>发送 BungeeCord 消息, 让传送人切换到此服务器</li>
+     *     <li>发送 BungeeCordUtils 消息, 让传送人切换到此服务器</li>
      *     <li>当传送人加入游戏时, 将他传送到记录的坐标里</li>
      * </ul>
      */
@@ -448,7 +464,7 @@ public class TeleportManager implements PluginMessageListener {
         } else {
             // 传送放不在服务器, 让他切换服务器
             this.teleportLocations.put(teleported, Pair.of(player.getLocation(), new MutableInt(1200)));
-            if (!BungeeCord.connectOther(Main.getInstance(), teleported, serverList.getCurrent())) {
+            if (!BungeeCordUtils.connectOther(Main.getInstance(), teleported, serverList.getCurrent())) {
                 this.teleportLocations.remove(teleported);
             }
         }

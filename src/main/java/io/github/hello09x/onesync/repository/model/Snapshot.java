@@ -1,23 +1,27 @@
 package io.github.hello09x.onesync.repository.model;
 
 
-import io.github.hello09x.bedrock.database.Table;
-import io.github.hello09x.bedrock.database.TableField;
-import io.github.hello09x.bedrock.database.TableId;
-import io.github.hello09x.bedrock.util.Components;
-import io.github.hello09x.bedrock.util.KeyBinds;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.core.constant.Keybinds;
+import io.github.hello09x.devtools.core.utils.ComponentUtils;
+import io.github.hello09x.devtools.database.jdbc.RowMapper;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import static io.github.hello09x.devtools.core.utils.ComponentUtils.noItalic;
 import static net.kyori.adventure.text.Component.*;
 import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 import static net.kyori.adventure.text.format.NamedTextColor.WHITE;
@@ -30,19 +34,16 @@ import static net.kyori.adventure.text.format.NamedTextColor.WHITE;
  * @param cause     生成快照原因
  * @param createdAt 创建时间
  */
-@Table("snapshot")
 public record Snapshot(
 
-        @TableId("id")
         Long id,
 
-        @TableField("player_id")
+        @NotNull
         UUID playerId,
 
-        @TableField("cause")
+        @NotNull
         SnapshotCause cause,
 
-        @TableField("created_at")
         LocalDateTime createdAt
 
 ) {
@@ -67,7 +68,7 @@ public record Snapshot(
     public @NotNull ItemStack toMenuItem() {
         var item = new ItemStack(this.cause.getIcon());
         item.editMeta(meta -> {
-            meta.displayName(Components.noItalic("快照"));
+            meta.displayName(noItalic(text("快照")));
             meta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
             meta.lore(Stream.of(
                     textOfChildren(text("编号: ", GRAY), text("#" + this.id, WHITE)),
@@ -76,11 +77,25 @@ public record Snapshot(
                     empty(),
                     text("「左键」查看详情", GRAY),
                     text("「右键」恢复数据", GRAY),
-                    textOfChildren(text("「"), keybind(KeyBinds.DROP), text(" 键」删除")).color(GRAY)
-            ).map(Components::noItalic).toList());
+                    textOfChildren(text("「"), keybind(Keybinds.DROP), text(" 键」删除")).color(GRAY)
+            ).map(ComponentUtils::noItalic).toList());
         });
 
         return item;
+    }
+
+    @Singleton
+    public static class SnapshotRowMapper implements RowMapper<Snapshot> {
+
+        @Override
+        public @Nullable Snapshot mapRow(@NotNull ResultSet rs, int rowNum) throws SQLException {
+            return new Snapshot(
+                    rs.getObject("id", Long.class),
+                    UUID.fromString(rs.getString("player_id")),
+                    SnapshotCause.valueOf(rs.getString("cause")),
+                    LocalDateTime.ofInstant(rs.getDate("created_at").toInstant(), ZoneId.systemDefault())
+            );
+        }
     }
 
 }
