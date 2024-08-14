@@ -3,9 +3,9 @@ package io.github.hello09x.onesync.repository.model;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.hello09x.devtools.database.jdbc.RowMapper;
-import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.OneSync;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
-import io.github.hello09x.onesync.manager.synchronize.handler.InventorySnapshotHandler;
+import io.github.hello09x.onesync.manager.handler.InventorySnapshotHandler;
 import io.github.hello09x.onesync.util.ItemStackCodec;
 import io.github.hello09x.onesync.util.MenuTemplate;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -76,7 +76,7 @@ public record InventorySnapshot(
                         text("背包"),
                         InventoryType.PLAYER,
                         this.items,
-                        newItems -> Main.getInjector().getInstance(InventorySnapshotHandler.class).updateItems(this.snapshotId, newItems),
+                        newItems -> OneSync.getInjector().getInstance(InventorySnapshotHandler.class).updateItems(this.snapshotId, newItems),
                         event -> {
                             if (modified.booleanValue()) {
                                 // 先关闭保存数据再打开加载数据

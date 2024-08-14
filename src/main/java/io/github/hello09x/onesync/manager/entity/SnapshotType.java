@@ -1,4 +1,4 @@
-package io.github.hello09x.onesync.manager.synchronize.entity;
+package io.github.hello09x.onesync.manager.entity;
 
 import org.jetbrains.annotations.NotNull;
 

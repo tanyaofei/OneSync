@@ -1,6 +1,6 @@
 package io.github.hello09x.onesync.util;
 
-import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.OneSync;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 
 public class SnapshotHelper {
 
-    private final static Logger log = Main.getInstance().getLogger();
+    private final static Logger log = OneSync.getInstance().getLogger();
 
     public static <ID, T> @Nullable T getRefsToOrItself(
             @NotNull ID id,

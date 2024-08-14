@@ -2,7 +2,10 @@ package io.github.hello09x.onesync;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import io.github.hello09x.devtools.menu.ChestMenuRegistry;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author tanyaofei
@@ -11,8 +14,15 @@ import org.bukkit.plugin.Plugin;
 public class OneSyncModule extends AbstractModule {
 
     @Provides
+    @Singleton
     public Plugin plugin() {
-        return Main.getInstance();
+        return OneSync.getInstance();
+    }
+
+    @Provides
+    @Singleton
+    public ChestMenuRegistry chestMenuRegistry(@NotNull Plugin plugin) {
+        return new ChestMenuRegistry(plugin);
     }
 
 }

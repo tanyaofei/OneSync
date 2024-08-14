@@ -5,7 +5,7 @@ datasource:
   url: jdbc:mysql://127.0.0.1:3306/onesync
   username: root
   password: 123456
-  size: 2
+  maxPoolSize: 2
 
 # 是否打印调试日志
 debug: true
@@ -40,6 +40,7 @@ synchronize:
 
   # 经济, 对 Vault 插件的支持
   # 注意: 只是提供了支持了 Vault 的跨服, 你仍需 ESS、CMI 之类的经济插件
+  # 开启了此选项你不能修改增加或扣除离线玩家的金币
   vault: false
 
   # 玩家档案
@@ -83,41 +84,3 @@ snapshot:
   when:
     - WORLD_SAVE
     - PLAYER_GAME_MODE_CHANGE
-
-
-# 跨服传送配置
-teleport:
-
-  # 是否启用
-  # 修改此项配置重启才生效
-  enabled: false
-
-  # 预热
-  # 玩家开始传送前需要等待多少秒
-  # 等待期间如果移动了则取消传送
-  # 单位: 秒
-  warmup: 3
-
-  # 玩家发起传送请求的有效时间
-  # 单位: 秒
-  expires-in: 60
-
-  # 命令别名
-  # 默认配置下覆盖常规的 tp 命令, 如果你不想覆盖可以修改为 '' 或者与原命令保持一致
-  # 修改此项配置重启才生效
-  commands:
-    stpa: tpa
-    stpahere: tpahere
-    stpaccept: tpaccept
-    stpdeny: tpdeny
-    stpcancel: tpcancel
-    stp: tp
-    stphere: tphere
-    stphereall: tphereall
-    stpahereall: tpahereall
-
-  # 当玩家预热时是否产生粒子特效(像念咒语一样)
-  particle: true
-
-  # 当玩家传送完毕后是否发出音效(末影人传送音效)
-  sound: true

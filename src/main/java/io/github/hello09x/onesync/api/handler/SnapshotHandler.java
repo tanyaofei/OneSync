@@ -1,6 +1,6 @@
 package io.github.hello09x.onesync.api.handler;
 
-import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
+import io.github.hello09x.onesync.manager.entity.SnapshotType;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;

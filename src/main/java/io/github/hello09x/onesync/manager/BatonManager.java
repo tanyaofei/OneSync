@@ -1,4 +1,4 @@
-package io.github.hello09x.onesync.manager.synchronize;
+package io.github.hello09x.onesync.manager;
 
 import com.google.inject.Singleton;
 import io.github.hello09x.devtools.core.utils.ServerUtils;

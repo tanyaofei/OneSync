@@ -9,7 +9,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Objects;
 import java.util.UUID;
 
 public record Locking(
@@ -32,7 +31,7 @@ public record Locking(
                         return new Locking(
                                 UUID.fromString(rs.getString("player_id")),
                                 rs.getString("server_id"),
-                                LocalDateTime.ofInstant(rs.getDate("created_at").toInstant(), ZoneId.systemDefault())
+                                LocalDateTime.ofInstant(rs.getTime("created_at").toInstant(), ZoneId.systemDefault())
                         );
                 }
         }

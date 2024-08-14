@@ -3,7 +3,7 @@ package io.github.hello09x.onesync.command.impl;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import dev.jorel.commandapi.executors.CommandArguments;
-import io.github.hello09x.onesync.manager.synchronize.LockingManager;
+import io.github.hello09x.onesync.manager.LockingManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.OfflinePlayer;

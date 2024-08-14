@@ -2,7 +2,9 @@ package io.github.hello09x.onesync.util;
 
 import io.github.hello09x.devtools.core.utils.InventoryUtils;
 import io.github.hello09x.devtools.core.utils.Mth;
-import io.github.hello09x.onesync.Main;
+import io.github.hello09x.devtools.core.utils.SingletonSupplier;
+import io.github.hello09x.devtools.menu.ChestMenuRegistry;
+import io.github.hello09x.onesync.OneSync;
 import net.kyori.adventure.text.Component;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.bukkit.Material;
@@ -15,8 +17,11 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class MenuTemplate {
+
+    private final static Supplier<ChestMenuRegistry> cmr = new SingletonSupplier<>(() -> OneSync.getInjector().getInstance(ChestMenuRegistry.class));
 
     /**
      * 打开箱子菜单
@@ -41,7 +46,7 @@ public class MenuTemplate {
         var size = type.getDefaultSize();
         int alignedSize = Mth.align(size, 9);
 
-        var menu = Main.getChestMenuRegistry()
+        var menu = cmr.get()
                 .builder()
                 .title(title)
                 .size(alignedSize)

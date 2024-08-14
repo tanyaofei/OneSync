@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.hello09x.devtools.database.jdbc.JdbcTemplate;
 import io.github.hello09x.onesync.repository.model.Locking;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,8 +24,8 @@ public class LockingRepository {
         this.initTables();
     }
 
-    public @Nullable Locking selectById(@NotNull UUID id) {
-        return jdbc.queryForObject("select * from locking where id = ?", rowMapper, id);
+    public @Nullable Locking selectByPlayerId(@NotNull UUID playerId) {
+        return jdbc.queryForObject("select * from locking where player_id = ?", rowMapper, playerId.toString());
     }
 
     @CanIgnoreReturnValue

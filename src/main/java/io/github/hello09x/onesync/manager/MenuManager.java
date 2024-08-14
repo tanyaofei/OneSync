@@ -1,11 +1,12 @@
-package io.github.hello09x.onesync.manager.synchronize;
+package io.github.hello09x.onesync.manager;
 
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.hello09x.devtools.core.utils.ItemStackUtils;
 import io.github.hello09x.devtools.menu.ChestMenuBuilder;
-import io.github.hello09x.onesync.Main;
+import io.github.hello09x.devtools.menu.ChestMenuRegistry;
+import io.github.hello09x.onesync.OneSync;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.repository.SnapshotRepository;
@@ -32,13 +33,16 @@ import static net.kyori.adventure.text.format.NamedTextColor.*;
 @Singleton
 public class MenuManager {
 
-    private final static Logger log = Main.getInstance().getLogger();
+    private final static Logger log = OneSync.getInstance().getLogger();
 
     private final SnapshotRepository repository;
 
+    private final ChestMenuRegistry cmr;
+
     @Inject
-    public MenuManager(SnapshotRepository repository) {
+    public MenuManager(SnapshotRepository repository, ChestMenuRegistry cmr) {
         this.repository = repository;
+        this.cmr = cmr;
     }
 
     /**
@@ -50,7 +54,7 @@ public class MenuManager {
     public void openSnapshotPage(@NotNull Player viewer, int page, @NotNull OfflinePlayer player) {
         var p = repository.selectPageByPlayerId(page, 45, player.getUniqueId());
 
-        var menu = Main.getChestMenuRegistry()
+        var menu = cmr
                 .builder()
                 .title(text(player.getName() + " 的快照 [%d]".formatted(page)))
                 .size(54)
@@ -124,7 +128,7 @@ public class MenuManager {
             return;
         }
         var owner = Bukkit.getOfflinePlayer(header.playerId());
-        var menu = Main.getChestMenuRegistry()
+        var menu = cmr
                 .builder()
                 .title(text("%s 的快照 #%d".formatted(owner.getName(), header.id())))
                 .onClickOutside(onClickOutside);
@@ -170,7 +174,7 @@ public class MenuManager {
      * @param onClickOutside 取消操作函数
      */
     public void openConfirm(@NotNull Player viewer, @NotNull Component title, @NotNull Runnable onConfirm, @NotNull Consumer<InventoryClickEvent> onClickOutside) {
-        var menu = Main.getChestMenuRegistry()
+        var menu = cmr
                 .builder()
                 .title(title)
                 .size(45)

@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.hello09x.devtools.core.utils.Exceptions;
 import io.github.hello09x.devtools.database.jdbc.JdbcTemplate;
-import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.OneSync;
 import io.github.hello09x.onesync.repository.model.PDCSnapshot;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -56,7 +56,7 @@ public class PDCSnapshotRepository {
                     );
                     """);
 
-        Exceptions.suppress(Main.getInstance(), () -> {
+        Exceptions.suppress(OneSync.getInstance(), () -> {
             jdbc.execute("""
                         create index pdc_snapshot_player_id_index
                             on pdc_snapshot (player_id);

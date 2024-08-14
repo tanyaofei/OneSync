@@ -14,6 +14,7 @@
     <properties>
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <detools.version>0.1.4-SNAPSHOT</detools.version>
     </properties>
 
     <build>
@@ -122,21 +123,27 @@
         </dependency>
 
         <dependency>
-            <groupId>io.github.hello09x</groupId>
-            <artifactId>devtools-database</artifactId>
-            <version>0.1.1-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.github.hello09x</groupId>
+            <groupId>com.github.tanyaofei.devtools</groupId>
             <artifactId>devtools-core</artifactId>
-            <version>0.1.1-SNAPSHOT</version>
+            <version>${detools.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>io.github.hello09x</groupId>
+            <groupId>com.github.tanyaofei.devtools</groupId>
+            <artifactId>devtools-command</artifactId>
+            <version>${detools.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.tanyaofei.devtools</groupId>
+            <artifactId>devtools-database</artifactId>
+            <version>${detools.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.tanyaofei.devtools</groupId>
             <artifactId>devtools-menu</artifactId>
-            <version>0.1.1-SNAPSHOT</version>
+            <version>${detools.version}</version>
         </dependency>
 
         <dependency>

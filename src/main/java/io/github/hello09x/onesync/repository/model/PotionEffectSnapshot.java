@@ -122,7 +122,7 @@ public record PotionEffectSnapshot(
         public @Nullable PotionEffectSnapshot mapRow(@NotNull ResultSet rs, int rowNum) throws SQLException {
             return new PotionEffectSnapshot(
                     rs.getObject("snapshot_id", Long.class),
-                    UUID.fromString(rs.getString("snapshot_id")),
+                    UUID.fromString(rs.getString("player_id")),
                     potionEffectListTypeCodec.deserialize(rs.getString("effects"))
             );
         }

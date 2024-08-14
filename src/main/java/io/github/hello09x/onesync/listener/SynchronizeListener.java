@@ -5,8 +5,8 @@ import com.comphenix.protocol.events.*;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.manager.synchronize.SynchronizeManager;
+import io.github.hello09x.onesync.OneSync;
+import io.github.hello09x.onesync.manager.SynchronizeManager;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import org.apache.commons.lang3.time.StopWatch;
 import org.bukkit.event.EventHandler;
@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 @Singleton
 public class SynchronizeListener extends PacketAdapter implements Listener {
 
-    private final static Logger log = Main.getInstance().getLogger();
+    private final static Logger log = OneSync.getInstance().getLogger();
 
 
     private final SynchronizeManager synchronizeManager;
@@ -31,7 +31,7 @@ public class SynchronizeListener extends PacketAdapter implements Listener {
     @Inject
     public SynchronizeListener(SynchronizeManager synchronizeManager) {
         super(
-                Main.getInstance(),
+                OneSync.getInstance(),
                 ListenerPriority.LOWEST,
                 List.of(PacketType.Configuration.Server.FINISH_CONFIGURATION),
                 ListenerOptions.ASYNC

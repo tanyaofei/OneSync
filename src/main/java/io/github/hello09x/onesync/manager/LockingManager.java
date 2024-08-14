@@ -1,4 +1,4 @@
-package io.github.hello09x.onesync.manager.synchronize;
+package io.github.hello09x.onesync.manager;
 
 import com.google.common.base.Throwables;
 import com.google.common.io.ByteStreams;
@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.hello09x.devtools.core.event.ConfigReloadedEvent;
 import io.github.hello09x.devtools.core.utils.BungeeCordUtils;
-import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.OneSync;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.constant.SubChannels;
 import io.github.hello09x.onesync.repository.LockingRepository;
@@ -29,7 +29,7 @@ public class LockingManager implements PluginMessageListener, Listener {
     public final static String COMMAND_ACQUIRE = "Acquire";
     private final static String ACQUIRE_ALL = "ALL";
     private final static String SUB_CHANNEL = SubChannels.Locking;
-    private final static Logger log = Main.getInstance().getLogger();
+    private final static Logger log = OneSync.getInstance().getLogger();
 
     private final LockingRepository repository;
 
@@ -59,7 +59,7 @@ public class LockingManager implements PluginMessageListener, Listener {
      * @return 是否已上锁
      */
     public boolean isLocked(@NotNull UUID playerId) {
-        return this.repository.selectById(playerId) != null;
+        return this.repository.selectByPlayerId(playerId) != null;
     }
 
     /**
@@ -151,7 +151,7 @@ public class LockingManager implements PluginMessageListener, Listener {
      * @param player 玩家
      */
     public void broadcastRequire(@NotNull OfflinePlayer player) {
-        BungeeCordUtils.sendForwardPluginMessage(Main.getInstance(), SUB_CHANNEL, () -> {
+        BungeeCordUtils.sendForwardPluginMessage(OneSync.getInstance(), SUB_CHANNEL, () -> {
             var message = ByteStreams.newDataOutput();
             message.writeUTF(COMMAND_ACQUIRE);
             message.writeUTF(player.getUniqueId().toString());
@@ -163,7 +163,7 @@ public class LockingManager implements PluginMessageListener, Listener {
      * 发送插件消息, 让其他服务器重新上锁
      */
     private void broadcastRequireAll() {
-        BungeeCordUtils.sendForwardPluginMessage(Main.getInstance(), SUB_CHANNEL, () -> {
+        BungeeCordUtils.sendForwardPluginMessage(OneSync.getInstance(), SUB_CHANNEL, () -> {
             var message = ByteStreams.newDataOutput();
             message.writeUTF(COMMAND_ACQUIRE);
             message.writeUTF(ACQUIRE_ALL);

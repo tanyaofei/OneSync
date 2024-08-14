@@ -93,7 +93,7 @@ public record Snapshot(
                     rs.getObject("id", Long.class),
                     UUID.fromString(rs.getString("player_id")),
                     SnapshotCause.valueOf(rs.getString("cause")),
-                    LocalDateTime.ofInstant(rs.getDate("created_at").toInstant(), ZoneId.systemDefault())
+                    LocalDateTime.ofInstant(rs.getTimestamp("created_at").toInstant(), ZoneId.systemDefault())
             );
         }
     }

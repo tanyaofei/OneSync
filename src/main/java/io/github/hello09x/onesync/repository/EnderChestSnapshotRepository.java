@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.hello09x.devtools.core.utils.Exceptions;
 import io.github.hello09x.devtools.database.jdbc.JdbcTemplate;
-import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.OneSync;
 import io.github.hello09x.onesync.repository.model.EnderChestSnapshot;
 import io.github.hello09x.onesync.util.ItemStackCodec;
 import org.apache.commons.lang3.StringUtils;
@@ -70,7 +70,7 @@ public class EnderChestSnapshotRepository {
                     );
                     """);
 
-        Exceptions.suppress(Main.getInstance(), () -> {
+        Exceptions.suppress(OneSync.getInstance(), () -> {
             jdbc.execute("""
                         create index ender_chest_snapshot_player_id_index
                             on ender_chest_snapshot (player_id);

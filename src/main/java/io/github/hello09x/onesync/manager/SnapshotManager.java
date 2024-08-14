@@ -1,11 +1,11 @@
-package io.github.hello09x.onesync.manager.synchronize;
+package io.github.hello09x.onesync.manager;
 
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.hello09x.devtools.core.utils.ServerUtils;
 import io.github.hello09x.devtools.core.utils.SingletonSupplier;
-import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.OneSync;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
 import io.github.hello09x.onesync.config.OneSyncConfig;
 import io.github.hello09x.onesync.repository.SnapshotRepository;
@@ -28,10 +28,10 @@ import java.util.logging.Logger;
 @Singleton
 public class SnapshotManager {
 
-    private final static Logger log = Main.getInstance().getLogger();
+    private final static Logger log = OneSync.getInstance().getLogger();
     private final SnapshotRepository repository;
     private final BatonManager batonManager;
-    private final SingletonSupplier<SynchronizeManager> synchronizeManager = new SingletonSupplier<>(() -> Main.getInjector().getInstance(SynchronizeManager.class));
+    private final SingletonSupplier<SynchronizeManager> synchronizeManager = new SingletonSupplier<>(() -> OneSync.getInjector().getInstance(SynchronizeManager.class));
     private final OneSyncConfig.SnapshotConfig config;
 
     private int periodicals = 0;
@@ -59,9 +59,9 @@ public class SnapshotManager {
         };
 
         if (ServerUtils.isFolia()) {
-            Bukkit.getGlobalRegionScheduler().runAtFixedRate(Main.getInstance(), ignored -> doSavePeriodical.run(), Ticks.TICKS_PER_SECOND * 5 * 60, Ticks.TICKS_PER_SECOND * 5 * 60);
+            Bukkit.getGlobalRegionScheduler().runAtFixedRate(OneSync.getInstance(), ignored -> doSavePeriodical.run(), Ticks.TICKS_PER_SECOND * 5 * 60, Ticks.TICKS_PER_SECOND * 5 * 60);
         } else {
-            Bukkit.getScheduler().runTaskTimer(Main.getInstance(), doSavePeriodical, Ticks.TICKS_PER_SECOND * 5 * 60, Ticks.TICKS_PER_SECOND * 5 * 60);
+            Bukkit.getScheduler().runTaskTimer(OneSync.getInstance(), doSavePeriodical, Ticks.TICKS_PER_SECOND * 5 * 60, Ticks.TICKS_PER_SECOND * 5 * 60);
         }
     }
 

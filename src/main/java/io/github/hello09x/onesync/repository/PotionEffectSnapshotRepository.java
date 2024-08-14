@@ -4,7 +4,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.hello09x.devtools.database.jdbc.JdbcTemplate;
-import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.OneSync;
 import io.github.hello09x.onesync.repository.model.PotionEffectSnapshot;
 import io.github.hello09x.onesync.util.PotionEffectListTypeCodec;
 import org.apache.commons.lang3.StringUtils;
@@ -54,7 +54,7 @@ public class PotionEffectSnapshotRepository {
                     );
                     """);
 
-        io.github.hello09x.devtools.core.utils.Exceptions.suppress(Main.getInstance(), () -> {
+        io.github.hello09x.devtools.core.utils.Exceptions.suppress(OneSync.getInstance(), () -> {
             jdbc.execute("""
                     create index potion_effect_snapshot_player_id_index
                         on potion_effect_snapshot (player_id);

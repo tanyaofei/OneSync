@@ -3,9 +3,9 @@ package io.github.hello09x.onesync.repository.model;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.hello09x.devtools.database.jdbc.RowMapper;
-import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.OneSync;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
-import io.github.hello09x.onesync.manager.synchronize.handler.EnderChestSnapshotHandler;
+import io.github.hello09x.onesync.manager.handler.EnderChestSnapshotHandler;
 import io.github.hello09x.onesync.util.ItemStackCodec;
 import io.github.hello09x.onesync.util.MenuTemplate;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -68,7 +68,7 @@ public record EnderChestSnapshot(
                         text("末影箱"),
                         InventoryType.ENDER_CHEST,
                         this.items,
-                        newItems -> Main.getInjector().getInstance(EnderChestSnapshotHandler.class).updateItems(this.snapshotId, newItems),
+                        newItems -> OneSync.getInjector().getInstance(EnderChestSnapshotHandler.class).updateItems(this.snapshotId, newItems),
                         event -> {
                             if (modified.booleanValue()) {
                                 // 先关闭保存数据再打开加载数据

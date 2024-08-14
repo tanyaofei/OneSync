@@ -1,12 +1,12 @@
-package io.github.hello09x.onesync.manager.synchronize.handler;
+package io.github.hello09x.onesync.manager.handler;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.OneSync;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.Enabled;
 import io.github.hello09x.onesync.config.OneSyncConfig;
-import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
+import io.github.hello09x.onesync.manager.entity.SnapshotType;
 import io.github.hello09x.onesync.repository.AdvancementSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.AdvancementSnapshot;
 import org.apache.commons.lang3.tuple.Pair;
@@ -31,7 +31,7 @@ public class AdvancementSnapshotHandler extends CacheableSnapshotHandler<Advance
             "成就"
     );
 
-    private final static Logger log = Main.getInstance().getLogger();
+    private final static Logger log = OneSync.getInstance().getLogger();
     private final static Map<String, Advancement> ALL_ADVANCEMENTS = StreamSupport
             .stream(((Iterable<Advancement>) Bukkit::advancementIterator).spliterator(), false)
             .collect(Collectors.toMap(adv -> adv.getKey().asString(), Function.identity()));

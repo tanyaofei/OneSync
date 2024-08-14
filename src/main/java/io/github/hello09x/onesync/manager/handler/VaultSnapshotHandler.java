@@ -1,12 +1,12 @@
-package io.github.hello09x.onesync.manager.synchronize.handler;
+package io.github.hello09x.onesync.manager.handler;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.OneSync;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.Enabled;
 import io.github.hello09x.onesync.config.OneSyncConfig;
-import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
+import io.github.hello09x.onesync.manager.entity.SnapshotType;
 import io.github.hello09x.onesync.repository.VaultSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.VaultSnapshot;
 import net.milkbowl.vault.economy.Economy;
@@ -29,7 +29,7 @@ public class VaultSnapshotHandler extends CacheableSnapshotHandler<VaultSnapshot
             "经济"
     );
 
-    private final static Logger log = Main.getInstance().getLogger();
+    private final static Logger log = OneSync.getInstance().getLogger();
 
     private final VaultSnapshotRepository repository;
 

@@ -1,15 +1,12 @@
-package io.github.hello09x.onesync.manager.synchronize;
+package io.github.hello09x.onesync.manager;
 
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.hello09x.devtools.core.utils.ServerUtils;
-import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.api.event.PlayerAttemptRestoreEvent;
-import io.github.hello09x.onesync.api.event.PlayerFinishRestoreEvent;
-import io.github.hello09x.onesync.api.event.PlayerPrepareRestoreEvent;
+import io.github.hello09x.onesync.OneSync;
 import io.github.hello09x.onesync.api.handler.SnapshotHandler;
-import io.github.hello09x.onesync.manager.synchronize.entity.PreparedSnapshotComponent;
+import io.github.hello09x.onesync.manager.entity.PreparedSnapshotComponent;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import net.kyori.adventure.text.Component;
 import org.apache.commons.lang3.time.StopWatch;
@@ -29,7 +26,7 @@ import static net.kyori.adventure.text.Component.text;
 @Singleton
 public class SynchronizeManager {
 
-    private final static Logger log = Main.getInstance().getLogger();
+    private final static Logger log = OneSync.getInstance().getLogger();
 
     private final Map<UUID, List<PreparedSnapshotComponent>> prepared = new ConcurrentHashMap<>();
 
@@ -57,9 +54,9 @@ public class SynchronizeManager {
     public void setRestoring(@NotNull Player player, boolean restoring) {
         // 反着来设置值会更可靠
         if (restoring) {
-            player.removeMetadata("onesync:restored", Main.getInstance());
+            player.removeMetadata("onesync:restored", OneSync.getInstance());
         } else {
-            player.setMetadata("onesync:restored", new FixedMetadataValue(Main.getInstance(), true));
+            player.setMetadata("onesync:restored", new FixedMetadataValue(OneSync.getInstance(), true));
         }
     }
 
@@ -117,15 +114,10 @@ public class SynchronizeManager {
                     throw e;
                 }
             }
-
-            var event = new PlayerPrepareRestoreEvent(
-                    !Bukkit.isPrimaryThread(), playerId, playerName, snapshot, components
-            );
-            event.callEvent();
-
-            this.prepared.put(playerId, event.getComponents());
+            this.prepared.put(playerId, components);
             return null;
         } catch (Throwable e) {
+            log.severe(Throwables.getStackTraceAsString(e));
             return "[OneSync] 加载数据失败, 请联系管理员";
         }
     }
@@ -155,10 +147,6 @@ public class SynchronizeManager {
                 return false;
             }
 
-            var event = new PlayerAttemptRestoreEvent(player, prepared);
-            event.callEvent();
-            prepared = event.getComponents();
-
             for (var pair : prepared) {
                 var registration = pair.registration();
                 var component = pair.component();
@@ -169,7 +157,6 @@ public class SynchronizeManager {
                 }
                 if (!registration.getPlugin().isEnabled()) {
                     this.kickOnNextTick(player, text("[OneSync] 玩家数据发生变化, 请重新登陆"));
-                    new PlayerFinishRestoreEvent(player, PlayerFinishRestoreEvent.Result.FAILED).callEvent();
                     log.severe("插件 [%s] 已卸载, 无法为 %s 恢复「%s」数据".formatted(player.getName(), registration.getPlugin().getName(), handler.snapshotType()));
                     return false;
                 }
@@ -191,11 +178,9 @@ public class SynchronizeManager {
 
             this.setRestoring(player, false);      // 设置玩家已经恢复完毕, 其他创建快照事件才会处理他
             lockingManager.acquire(player);  // 锁定玩家, 当玩家退出游戏时才解锁
-            new PlayerFinishRestoreEvent(player, PlayerFinishRestoreEvent.Result.SUCCESS).callEvent();
             return true;
         } catch (Throwable e) {
             this.kickOnNextTick(player, text("[OneSync] 恢复玩家数据失败, 请联系管理员"));
-            new PlayerFinishRestoreEvent(player, PlayerFinishRestoreEvent.Result.FAILED).callEvent();
             log.severe(Throwables.getStackTraceAsString(e));
             return false;
         }
@@ -247,9 +232,9 @@ public class SynchronizeManager {
     private void kickOnNextTick(@NotNull Player player, @NotNull Component reason) {
         Runnable doKick = () -> player.kick(reason);
         if (ServerUtils.isFolia()) {
-            player.getScheduler().runDelayed(Main.getInstance(), ignored -> doKick.run(), null, 1);
+            player.getScheduler().runDelayed(OneSync.getInstance(), ignored -> doKick.run(), null, 1);
         } else {
-            Bukkit.getScheduler().runTaskLater(Main.getInstance(), doKick, 1);
+            Bukkit.getScheduler().runTaskLater(OneSync.getInstance(), doKick, 1);
         }
     }
 

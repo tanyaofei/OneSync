@@ -1,11 +1,11 @@
-package io.github.hello09x.onesync.manager.synchronize.handler;
+package io.github.hello09x.onesync.manager.handler;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.Enabled;
 import io.github.hello09x.onesync.config.OneSyncConfig;
-import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
+import io.github.hello09x.onesync.manager.entity.SnapshotType;
 import io.github.hello09x.onesync.repository.PotionEffectSnapshotRepository;
 import io.github.hello09x.onesync.repository.model.PotionEffectSnapshot;
 import org.bukkit.entity.Player;

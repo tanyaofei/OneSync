@@ -4,9 +4,9 @@ import com.google.common.base.Throwables;
 import com.google.inject.Singleton;
 import io.github.hello09x.devtools.core.utils.ComponentUtils;
 import io.github.hello09x.devtools.database.jdbc.RowMapper;
-import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.OneSync;
 import io.github.hello09x.onesync.api.handler.SnapshotComponent;
-import io.github.hello09x.onesync.manager.synchronize.handler.ProfileSnapshotHandler;
+import io.github.hello09x.onesync.manager.handler.ProfileSnapshotHandler;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -81,7 +81,7 @@ public record ProfileSnapshot(
 
 ) implements SnapshotComponent {
 
-    private final static Logger log = Main.getInstance().getLogger();
+    private final static Logger log = OneSync.getInstance().getLogger();
 
     @Override
     public @NotNull OfflinePlayer owner() {
@@ -117,7 +117,7 @@ public record ProfileSnapshot(
                 }
 
                 try {
-                    Main.getInjector().getInstance(ProfileSnapshotHandler.class).apply(player, this);
+                    OneSync.getInjector().getInstance(ProfileSnapshotHandler.class).apply(player, this);
                     viewer.sendMessage(textOfChildren(text("为 ", GRAY), text(player.getName(), WHITE), text(" 恢复数据成功", GRAY)));
                 } catch (Throwable e) {
                     log.severe(Throwables.getStackTraceAsString(e));

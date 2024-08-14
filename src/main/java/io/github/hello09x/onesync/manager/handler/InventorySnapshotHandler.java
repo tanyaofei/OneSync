@@ -1,14 +1,15 @@
-package io.github.hello09x.onesync.manager.synchronize.handler;
+package io.github.hello09x.onesync.manager.handler;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.hello09x.devtools.core.utils.InventoryUtils;
+import io.github.hello09x.onesync.OneSync;
 import io.github.hello09x.onesync.api.handler.CacheableSnapshotHandler;
 import io.github.hello09x.onesync.config.Enabled;
 import io.github.hello09x.onesync.config.OneSyncConfig;
-import io.github.hello09x.onesync.manager.synchronize.entity.SnapshotType;
-import io.github.hello09x.onesync.repository.EnderChestSnapshotRepository;
-import io.github.hello09x.onesync.repository.model.EnderChestSnapshot;
+import io.github.hello09x.onesync.manager.entity.SnapshotType;
+import io.github.hello09x.onesync.repository.InventorySnapshotRepository;
+import io.github.hello09x.onesync.repository.model.InventorySnapshot;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -16,20 +17,23 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @Singleton
-public class EnderChestSnapshotHandler extends CacheableSnapshotHandler<EnderChestSnapshot> {
+public class InventorySnapshotHandler extends CacheableSnapshotHandler<InventorySnapshot> {
 
     private final static SnapshotType TYPE = new SnapshotType(
-            "onesync:snapshot.ender-chest",
-            "末影箱"
+            "onesync:snapshot.inventory",
+            "背包"
     );
 
-    private final EnderChestSnapshotRepository repository;
+    private final static Logger log = OneSync.getInstance().getLogger();
+
+    private final InventorySnapshotRepository repository;
     private final OneSyncConfig.SynchronizeConfig config;
 
     @Inject
-    public EnderChestSnapshotHandler(EnderChestSnapshotRepository repository, OneSyncConfig.SynchronizeConfig config) {
+    public InventorySnapshotHandler(InventorySnapshotRepository repository, OneSyncConfig.SynchronizeConfig config) {
         this.repository = repository;
         this.config = config;
     }
@@ -40,28 +44,29 @@ public class EnderChestSnapshotHandler extends CacheableSnapshotHandler<EnderChe
     }
 
     @Override
-    public @Nullable EnderChestSnapshot getOne0(@NotNull Long snapshotId) {
+    public @Nullable InventorySnapshot getOne0(@NotNull Long snapshotId) {
         return repository.selectBySnapshotId(snapshotId);
     }
 
     @Override
-    public @Nullable EnderChestSnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable EnderChestSnapshot baton) {
-        if (config.getEnderChest() == Enabled.FALSE) {
+    public @Nullable InventorySnapshot save0(@NotNull Long snapshotId, @NotNull Player player, @Nullable InventorySnapshot baton) {
+        if (config.getInventory() == Enabled.FALSE) {
             return null;
         }
-        if (config.getEnderChest() == Enabled.ISOLATED) {
+        if (config.getInventory() == Enabled.ISOLATED) {
             if (baton != null) {
-                var snapshot = new EnderChestSnapshot(snapshotId, baton.playerId(), baton.items());
+                var snapshot = new InventorySnapshot(snapshotId, baton.playerId(), baton.items(), baton.heldItemSlot());
                 repository.insert(snapshot);
                 return snapshot;
             }
             return null;
         }
 
-        var snapshot = new EnderChestSnapshot(
+        var snapshot = new InventorySnapshot(
                 snapshotId,
                 player.getUniqueId(),
-                InventoryUtils.toMap(player.getEnderChest())
+                InventoryUtils.toMap(player.getInventory()),
+                player.getInventory().getHeldItemSlot()
         );
 
         repository.insert(snapshot);
@@ -74,12 +79,13 @@ public class EnderChestSnapshotHandler extends CacheableSnapshotHandler<EnderChe
     }
 
     @Override
-    public boolean apply(@NotNull Player player, @NotNull EnderChestSnapshot snapshot) {
-        if (config.getEnderChest() != Enabled.TRUE) {
+    public boolean apply(@NotNull Player player, @NotNull InventorySnapshot snapshot) {
+        if (config.getInventory() != Enabled.TRUE) {
             return false;
         }
 
-        InventoryUtils.replace(player.getEnderChest(), snapshot.items(), true);
+        InventoryUtils.replace(player.getInventory(), snapshot.items(), true);
+        player.getInventory().setHeldItemSlot(snapshot.heldItemSlot());
         return true;
     }
 

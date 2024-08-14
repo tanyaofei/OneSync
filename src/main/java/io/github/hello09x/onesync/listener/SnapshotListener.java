@@ -2,10 +2,10 @@ package io.github.hello09x.onesync.listener;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.OneSync;
 import io.github.hello09x.onesync.config.OneSyncConfig;
-import io.github.hello09x.onesync.manager.synchronize.SnapshotManager;
-import io.github.hello09x.onesync.manager.synchronize.SynchronizeManager;
+import io.github.hello09x.onesync.manager.SnapshotManager;
+import io.github.hello09x.onesync.manager.SynchronizeManager;
 import io.github.hello09x.onesync.repository.constant.SnapshotCause;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 @Singleton
 public class SnapshotListener implements Listener {
 
-    private final static Logger log = Main.getInstance().getLogger();
+    private final static Logger log = OneSync.getInstance().getLogger();
 
     private final SnapshotManager snapshotManager;
     private final SynchronizeManager synchronizeManager;

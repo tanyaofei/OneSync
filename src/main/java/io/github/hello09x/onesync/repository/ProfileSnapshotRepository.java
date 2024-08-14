@@ -4,7 +4,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.hello09x.devtools.database.jdbc.JdbcTemplate;
-import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.OneSync;
 import io.github.hello09x.onesync.repository.model.ProfileSnapshot;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -98,7 +98,7 @@ public class ProfileSnapshotRepository {
                      );
                      """);
 
-        suppress(Main.getInstance(), () -> {
+        suppress(OneSync.getInstance(), () -> {
             jdbc.execute("""
                         create index profile_snapshot_player_id_index
                             on profile_snapshot (player_id);

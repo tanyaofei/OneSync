@@ -3,8 +3,8 @@ package io.github.hello09x.onesync.listener;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.hello09x.devtools.core.utils.ServerUtils;
-import io.github.hello09x.onesync.Main;
-import io.github.hello09x.onesync.manager.synchronize.BatonManager;
+import io.github.hello09x.onesync.OneSync;
+import io.github.hello09x.onesync.manager.BatonManager;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -30,9 +30,9 @@ public class BatonListener implements Listener {
             batonManager.remove(event.getPlayer());
         };
         if (ServerUtils.isFolia()) {
-            event.getPlayer().getScheduler().runDelayed(Main.getInstance(), ignored -> doRemoveBaton.run(), null, 1);
+            event.getPlayer().getScheduler().runDelayed(OneSync.getInstance(), ignored -> doRemoveBaton.run(), null, 1);
         } else {
-            Bukkit.getScheduler().runTaskLater(Main.getInstance(), doRemoveBaton, 1);
+            Bukkit.getScheduler().runTaskLater(OneSync.getInstance(), doRemoveBaton, 1);
         }
     }
 

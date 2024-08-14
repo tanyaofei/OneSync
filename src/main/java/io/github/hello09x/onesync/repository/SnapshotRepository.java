@@ -7,12 +7,13 @@ import io.github.hello09x.devtools.command.Page;
 import io.github.hello09x.devtools.database.jdbc.GeneratedKeyHolder;
 import io.github.hello09x.devtools.database.jdbc.JdbcTemplate;
 import io.github.hello09x.devtools.database.jdbc.rowmapper.IntegerRowMapper;
-import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.OneSync;
 import io.github.hello09x.onesync.repository.model.Snapshot;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -40,7 +41,7 @@ public class SnapshotRepository {
 
         var generatedKeyHolder = new GeneratedKeyHolder();
         jdbc.update(sql, generatedKeyHolder, snapshot.playerId().toString(), snapshot.cause().name());
-        return Objects.requireNonNull(generatedKeyHolder.getKeyAs(Long.class));
+        return Objects.requireNonNull(generatedKeyHolder.getKeyAs(BigInteger.class)).longValue();
     }
 
     public @Nullable Snapshot selectById(@NotNull Long snapshotId) {
@@ -105,7 +106,7 @@ public class SnapshotRepository {
                     );
                     """);
 
-        suppress(Main.getInstance(), () -> {
+        suppress(OneSync.getInstance(), () -> {
             jdbc.execute("""
                         create index snapshot_player_id_index
                             on `snapshot` (player_id);

@@ -24,7 +24,6 @@ public class OneSyncConfig extends PluginConfig {
 
     private final SynchronizeConfig synchronize = new SynchronizeConfig();
     private final SnapshotConfig snapshot = new SnapshotConfig();
-    private final TeleportConfig teleport = new TeleportConfig();
     private boolean debug;
 
     @Setter
@@ -46,11 +45,6 @@ public class OneSyncConfig extends PluginConfig {
         return this.snapshot;
     }
 
-    @Provides
-    public TeleportConfig teleportConfig() {
-        return this.teleport;
-    }
-
     private static @NotNull String getNonBlankString(@NotNull FileConfiguration file, @NotNull String path, @NotNull String def) {
         var value = file.getString(path, def);
         if (value.isBlank()) {
@@ -64,7 +58,6 @@ public class OneSyncConfig extends PluginConfig {
         this.debug = file.getBoolean("debug", true);
         this.synchronize.reload(file);
         this.snapshot.reload(file);
-        this.teleport.reload(file);
         Optional.ofNullable(file.getString("server-id")).filter(StringUtils::isNotBlank).ifPresent(this::setServerId);
     }
 
@@ -127,38 +120,6 @@ public class OneSyncConfig extends PluginConfig {
                     return null;
                 }
             }).filter(Objects::nonNull).collect(Collectors.toSet());
-        }
-    }
-
-    @Getter
-    @ToString
-    public final static class TeleportConfig {
-
-        private final Map<String, String> commands = new HashMap<>();
-        private boolean enabled;
-        private int warmup;
-        private Duration expiresIn;
-        private boolean particle;
-        private boolean sound;
-
-        public void reload(@NotNull FileConfiguration file) {
-            this.enabled = file.getBoolean("teleport.enabled", false);
-            this.expiresIn = Duration.ofSeconds(file.getInt("teleport.expires-in", 60));
-            this.warmup = file.getInt("teleport.warmup", 3);
-            this.particle = file.getBoolean("teleport.particle", true);
-            this.sound = file.getBoolean("teleport.sound", true);
-
-            this.commands.clear();
-            this.commands.put("stpa", getNonBlankString(file, "teleport.commands.stpa", "tpa"));
-            this.commands.put("stpahere", getNonBlankString(file, "teleport.commands.stpahere", "tpahere"));
-            this.commands.put("stpaccept", getNonBlankString(file, "teleport.commands.stpaccept", "tpaccept"));
-            this.commands.put("stpdeny", getNonBlankString(file, "teleport.commands.stpdeny", "tpdeny"));
-            this.commands.put("stpcacel", getNonBlankString(file, "teleport.commands.stpcacel", "tpcacel"));
-
-            this.commands.put("stp", getNonBlankString(file, "teleport.commands.stp", "tp"));
-            this.commands.put("stphere", getNonBlankString(file, "teleport.commands.stphere", "tphere"));
-            this.commands.put("stphereall", getNonBlankString(file, "teleport.commands.stphereall", "tphereall"));
-            this.commands.put("stpahereall", getNonBlankString(file, "teleport.commands.stpahereall", "tpahereall"));
         }
     }
 

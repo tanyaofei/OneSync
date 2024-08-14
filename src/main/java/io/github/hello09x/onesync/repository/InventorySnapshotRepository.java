@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.hello09x.devtools.core.utils.Exceptions;
 import io.github.hello09x.devtools.database.jdbc.JdbcTemplate;
-import io.github.hello09x.onesync.Main;
+import io.github.hello09x.onesync.OneSync;
 import io.github.hello09x.onesync.repository.model.InventorySnapshot;
 import io.github.hello09x.onesync.util.ItemStackCodec;
 import org.apache.commons.lang3.StringUtils;
@@ -77,7 +77,7 @@ public class InventorySnapshotRepository {
                     );
                     """);
 
-        Exceptions.suppress(Main.getInstance(), () -> {
+        Exceptions.suppress(OneSync.getInstance(), () -> {
             jdbc.execute("""
                         create index inventory_snapshot_player_id_index
                             on inventory_snapshot (player_id);
